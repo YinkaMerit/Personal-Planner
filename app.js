@@ -1,0 +1,3771 @@
+
+function verseOfDay(dateKeyStr){
+  // Offline, simple rotating set (KJV-style wording). Not a substitute for a full Bible integration.
+  const verses = [
+    { ref:"Jeremiah 29:11", text:"For I know the plans I have for you, saith the LORD, plans for good and not for disaster, to give you a future and a hope."},
+    { ref:"Psalm 23:1", text:"The LORD is my shepherd; I shall not want."},
+    { ref:"Philippians 4:6-7", text:"Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus."},
+    { ref:"Isaiah 41:10", text:"Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee; yea, I will uphold thee with the right hand of my righteousness."},
+    { ref:"Romans 8:28", text:"And we know that all things work together for good to them that love God, to them who are the called according to his purpose."},
+    { ref:"Proverbs 3:5-6", text:"Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths."},
+    { ref:"Matthew 11:28", text:"Come unto me, all ye that labour and are heavy laden, and I will give you rest."}
+  ];
+  // simple deterministic hash
+  let h = 0;
+  const s = String(dateKeyStr||"");
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return verses[h % verses.length];
+}
+
+import { getAll, put, del, exportAll, importAll } from "./db.js";
+import { uuid, dayKey, monthKey, startOfDay, addDays, clamp, formatDate, formatShort, minsToHHMM, hhmmToMins, weekStart } from "./utils.js";
+
+/* ---------- Toast notification ---------- */
+function toast(message, duration = 3000) {
+  // Remove existing toast if any
+  const existing = document.querySelector('.toast-notification');
+  if (existing) existing.remove();
+  
+  const toastEl = document.createElement('div');
+  toastEl.className = 'toast-notification';
+  toastEl.textContent = message;
+  document.body.appendChild(toastEl);
+  
+  // Trigger animation
+  requestAnimationFrame(() => {
+    toastEl.classList.add('show');
+  });
+  
+  // Auto remove
+  setTimeout(() => {
+    toastEl.classList.remove('show');
+    setTimeout(() => toastEl.remove(), 300);
+  }, duration);
+}
+
+const PILLARS = [
+  { key:"fitness", name:"Fitness" },
+  { key:"finance", name:"Finance" },
+  { key:"relationships", name:"Relationships" },
+  { key:"spiritual", name:"Spiritual" },
+];
+
+const START_MINS = 0;
+const END_MINS = 24*60;
+const PX_PER_MIN = 1;  // schedule scale
+const SNAP = 15;       // 15-min snapping
+
+/* ---------- Selected Date (for viewing past/future days) ---------- */
+let selectedDate = new Date(); // Default to today
+
+function getSelectedDate() {
+  return selectedDate;
+}
+
+function setSelectedDate(date) {
+  selectedDate = date instanceof Date ? date : new Date(date);
+  // Update the date picker in the header if it exists
+  const picker = document.getElementById("globalDatePicker");
+  if (picker) picker.value = dayKey(selectedDate);
+}
+
+function getSelectedDayKey() {
+  return dayKey(selectedDate);
+}
+
+function isSelectedDateToday() {
+  return dayKey(selectedDate) === dayKey(new Date());
+}
+
+
+const RNB_LOVE = [
+  // Mariah Carey
+  { artist:"Mariah Carey", title:"We Belong Together", ytId:"0habxsuXW4g" },
+  { artist:"Mariah Carey", title:"Touch My Body", ytId:"9b8erWuBA44" },
+  { artist:"Mariah Carey", title:"Obsessed", ytId:"H1Yt0xJKDY8" },
+  { artist:"Mariah Carey", title:"Emotions", ytId:"NrJEFrth27Q" },
+
+  // Beyoncé
+  { artist:"Beyoncé", title:"Halo", ytId:"bnVUHWCynig" },
+  { artist:"Beyoncé", title:"Love On Top", ytId:"Ob7vObnFUJc" },
+  { artist:"Beyoncé", title:"Drunk in Love", ytId:"p1JPKLa-Ofc" },
+  { artist:"Beyoncé", title:"Crazy In Love", ytId:"ViwtNLUqkMY" },
+  { artist:"Beyoncé", title:"Single Ladies", ytId:"4m1EFMoRFvY" },
+  { artist:"Beyoncé", title:"Irreplaceable", ytId:"2EwViQxSJJQ" },
+  { artist:"Beyoncé", title:"XO", ytId:"3xUfCUFPL-8" },
+
+  // Rihanna
+  { artist:"Rihanna", title:"Umbrella", ytId:"CvBfHwUxHIk" },
+  { artist:"Rihanna", title:"We Found Love", ytId:"tg00YEETFzg" },
+  { artist:"Rihanna", title:"Diamonds", ytId:"lWA2pjMjpBs" },
+  { artist:"Rihanna", title:"Stay", ytId:"JF8BRvqGCNs" },
+  { artist:"Rihanna", title:"Only Girl", ytId:"pa14VNsdSYM" },
+  { artist:"Rihanna", title:"Rude Boy", ytId:"e82VE8UtW8A" },
+  { artist:"Rihanna", title:"What's My Name", ytId:"U0CGsw6h60k" },
+
+  // Alicia Keys
+  { artist:"Alicia Keys", title:"No One", ytId:"rywUS-ohqeE" },
+  { artist:"Alicia Keys", title:"Fallin", ytId:"Urdlvw0SINE" },
+  { artist:"Alicia Keys", title:"Girl on Fire", ytId:"J91ti_MpdHA" },
+  { artist:"Alicia Keys", title:"If I Ain't Got You", ytId:"Ju8Hr50Ckwk" },
+  { artist:"Alicia Keys", title:"Empire State of Mind", ytId:"0UjsXo9l6I8" },
+
+  // Usher
+  { artist:"Usher", title:"Yeah!", ytId:"GxBSyx85Kp8" },
+  { artist:"Usher", title:"Burn", ytId:"t5XNWFw5HVw" },
+  { artist:"Usher", title:"Confessions Part II", ytId:"5Sy19X0xxrM" },
+  { artist:"Usher", title:"U Got It Bad", ytId:"pdW52ljxECU" },
+  { artist:"Usher", title:"Nice & Slow", ytId:"rjlDyifgP-w" },
+  { artist:"Usher", title:"OMG", ytId:"1RnPB76mjxI" },
+  { artist:"Usher", title:"DJ Got Us Fallin In Love", ytId:"C-dvTjK_07c" },
+
+  // Ne-Yo
+  { artist:"Ne-Yo", title:"So Sick", ytId:"IxszlJppRQI" },
+  { artist:"Ne-Yo", title:"Closer", ytId:"z_aC5xPQ2f4" },
+  { artist:"Ne-Yo", title:"Miss Independent", ytId:"k6M5C-oKw9k" },
+  { artist:"Ne-Yo", title:"Because of You", ytId:"v2vV70XH8Qg" },
+  { artist:"Ne-Yo", title:"Sexy Love", ytId:"61vJwo4IDAE" },
+
+  // John Legend
+  { artist:"John Legend", title:"All of Me", ytId:"450p7goxZqg" },
+  { artist:"John Legend", title:"Ordinary People", ytId:"PIh07c_P4hc" },
+  { artist:"John Legend", title:"Tonight", ytId:"MahTKZDHXaA" },
+  { artist:"John Legend", title:"Green Light", ytId:"K3p5CxA4daw" },
+
+  // Bruno Mars
+  { artist:"Bruno Mars", title:"Just The Way You Are", ytId:"LjhCEhWiKXk" },
+  { artist:"Bruno Mars", title:"When I Was Your Man", ytId:"ekzHIouo8Q4" },
+  { artist:"Bruno Mars", title:"Treasure", ytId:"nPvuNsRccVw" },
+  { artist:"Bruno Mars", title:"Locked Out of Heaven", ytId:"e-fA-gBCkj0" },
+  { artist:"Bruno Mars", title:"Grenade", ytId:"SR6iYWJxHqs" },
+  { artist:"Bruno Mars", title:"Uptown Funk", ytId:"OPf0YbXqDm0" },
+  { artist:"Bruno Mars", title:"24K Magic", ytId:"UqyT8IEBkvY" },
+  { artist:"Bruno Mars", title:"Versace on the Floor", ytId:"fwgZUzKl3uQ" },
+
+  // The Weeknd
+  { artist:"The Weeknd", title:"Earned It", ytId:"waU75jdUnYw" },
+  { artist:"The Weeknd", title:"Blinding Lights", ytId:"4NRXx6U8ABQ" },
+  { artist:"The Weeknd", title:"Starboy", ytId:"34Na4j8AVgA" },
+  { artist:"The Weeknd", title:"Can't Feel My Face", ytId:"KEI4qSrkPAs" },
+  { artist:"The Weeknd", title:"The Hills", ytId:"yzTuBuRdAyA" },
+  { artist:"The Weeknd", title:"Save Your Tears", ytId:"XXYlFuWEuKI" },
+
+  // Chris Brown
+  { artist:"Chris Brown", title:"Forever", ytId:"5sMKX22BHeE" },
+  { artist:"Chris Brown", title:"With You", ytId:"6Bb8PYJmcL8" },
+  { artist:"Chris Brown", title:"Run It!", ytId:"NxF84svg7vI" },
+  { artist:"Chris Brown", title:"Yeah 3x", ytId:"cGjMgCcPF8Y" },
+  { artist:"Chris Brown", title:"Don't Wake Me Up", ytId:"1e5lVKoRfik" },
+
+  // Trey Songz
+  { artist:"Trey Songz", title:"Say Aah", ytId:"eH7GddDMyzA" },
+  { artist:"Trey Songz", title:"Slow Motion", ytId:"h2mXMlvAJJk" },
+  { artist:"Trey Songz", title:"Bottoms Up", ytId:"ekAXPCphKXQ" },
+  { artist:"Trey Songz", title:"Heart Attack", ytId:"sd8hhM_mJRo" },
+
+  // Jason Derulo
+  { artist:"Jason Derulo", title:"Whatcha Say", ytId:"pBI3lc18k8Q" },
+  { artist:"Jason Derulo", title:"In My Head", ytId:"plxF_-LdZ9M" },
+  { artist:"Jason Derulo", title:"Ridin' Solo", ytId:"8ESdn0MuJWQ" },
+  { artist:"Jason Derulo", title:"Want To Want Me", ytId:"rClUOdS5Zyw" },
+  { artist:"Jason Derulo", title:"Talk Dirty", ytId:"RbtPXFlZlHg" },
+  { artist:"Jason Derulo", title:"Wiggle", ytId:"hiP14ED28CA" },
+
+  // Miguel
+  { artist:"Miguel", title:"Adorn", ytId:"8dM5QYdTo08" },
+  { artist:"Miguel", title:"Sure Thing", ytId:"q4GJVOMjCC4" },
+  { artist:"Miguel", title:"Coffee", ytId:"1bvEa0V-RKU" },
+
+  // Frank Ocean
+  { artist:"Frank Ocean", title:"Thinkin Bout You", ytId:"6JHu3b-pbh8" },
+  { artist:"Frank Ocean", title:"Swim Good", ytId:"PmN9rZW0HGo" },
+
+  // SZA
+  { artist:"SZA", title:"Love Galore", ytId:"hHXer-Qno1E" },
+  { artist:"SZA", title:"The Weekend", ytId:"PAOhagWclhY" },
+  { artist:"SZA", title:"Good Days", ytId:"2p3zZoraK9g" },
+  { artist:"SZA", title:"Kiss Me More", ytId:"0EVVKs6DQLo" },
+
+  // H.E.R.
+  { artist:"H.E.R.", title:"Best Part", ytId:"vBy7FaapGRo" },
+  { artist:"H.E.R.", title:"Focus", ytId:"lZVNrNYgmlA" },
+  { artist:"H.E.R.", title:"Damage", ytId:"E4PrJ0YxXQs" },
+
+  // Jhené Aiko
+  { artist:"Jhené Aiko", title:"The Worst", ytId:"sH6Uqq8WKOU" },
+  { artist:"Jhené Aiko", title:"While We're Young", ytId:"xQncUHFxVSw" },
+  { artist:"Jhené Aiko", title:"Sativa", ytId:"sJF6AUBlUSY" },
+
+  // Daniel Caesar
+  { artist:"Daniel Caesar", title:"Best Part", ytId:"vBy7FaapGRo" },
+  { artist:"Daniel Caesar", title:"Get You", ytId:"uQFVqltOXRg" },
+  { artist:"Daniel Caesar", title:"Peaches", ytId:"tQ0yjYUFKAE" },
+
+  // Giveon
+  { artist:"Giveon", title:"Heartbreak Anniversary", ytId:"uWRlisQu4fo" },
+  { artist:"Giveon", title:"For Tonight", ytId:"kYLcXryP2Aw" },
+
+  // Khalid
+  { artist:"Khalid", title:"Location", ytId:"by3yRdlQvzs" },
+  { artist:"Khalid", title:"Young Dumb & Broke", ytId:"IPfJnp1guPc" },
+  { artist:"Khalid", title:"Talk", ytId:"hE2Ira-Cwxo" },
+  { artist:"Khalid", title:"Better", ytId:"x3bfa3DZ8JM" },
+
+  // Ella Mai
+  { artist:"Ella Mai", title:"Boo'd Up", ytId:"6YNZlXfW6Ho" },
+  { artist:"Ella Mai", title:"Trip", ytId:"6YFdOq00l4E" },
+
+  // Summer Walker
+  { artist:"Summer Walker", title:"Girls Need Love", ytId:"h3AoMz2J1E0" },
+  { artist:"Summer Walker", title:"Playing Games", ytId:"OU-4svZ3wt0" },
+
+  // Kehlani
+  { artist:"Kehlani", title:"Gangsta", ytId:"3-oOJrvx-JQ" },
+  { artist:"Kehlani", title:"Distraction", ytId:"7MBMw8F0-Lg" },
+];
+
+function pickDailyRnB(dateKeyStr){
+  // deterministic daily pick, no internet needed
+  let h = 2166136261;
+  for (let i=0; i<dateKeyStr.length; i++){
+    h ^= dateKeyStr.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const idx = Math.abs(h) % RNB_LOVE.length;
+  return RNB_LOVE[idx];
+}
+
+
+
+const pageHost = document.getElementById("pageHost");
+const drawer = document.getElementById("drawer");
+
+const modal = {
+  backdrop: document.getElementById("modalBackdrop"),
+  title: document.getElementById("modalTitle"),
+  body: document.getElementById("modalBody"),
+  footer: document.getElementById("modalFooter"),
+  closeBtn: document.getElementById("modalClose"),
+  open({title, body, footer}){
+    this.title.textContent = title || "";
+    this.body.innerHTML = "";
+    this.body.append(body);
+    this.footer.innerHTML = "";
+    this.footer.append(footer);
+    this.backdrop.classList.remove("hidden");
+    this.backdrop.setAttribute("aria-hidden", "false");
+  },
+  close(){
+    this.backdrop.classList.add("hidden");
+    this.backdrop.setAttribute("aria-hidden", "true");
+  }
+};
+modal.closeBtn.addEventListener("click", ()=>modal.close());
+modal.backdrop.addEventListener("click", (e)=>{ if (e.target === modal.backdrop) modal.close(); });
+
+
+/* ---------- Modal helpers ---------- */
+function showModal(title, bodyNode, footerNode){
+  return new Promise((resolve)=>{
+    const footer = footerNode || el("div",{class:"row"},[
+      btn("Close",{kind:"ghost", onclick: ()=>{ modal.close(); resolve(true); }})
+    ]);
+    modal.open({ title, body: bodyNode, footer });
+
+    // Close via X/backdrop should also resolve
+    const done = (v)=>{
+      try{ resolve(v); }catch(_){}
+    };
+    const onX = ()=>done(false);
+    const onBack = (e)=>{ if(e.target === modal.backdrop) done(false); };
+    modal.closeBtn.addEventListener("click", onX, {once:true});
+    modal.backdrop.addEventListener("click", onBack, {once:true});
+  });
+}
+
+function confirmModal(title, bodyNode, confirmText="OK"){
+  return new Promise((resolve)=>{
+    const okBtn = btn(confirmText,{onclick: ()=>{ modal.close(); resolve(true); }});
+    const cancelBtn = btn("Cancel",{kind:"ghost", onclick: ()=>{ modal.close(); resolve(false); }});
+    const footer = el("div",{class:"row"},[cancelBtn, okBtn]);
+    modal.open({ title, body: bodyNode, footer });
+
+    const onX = ()=>resolve(false);
+    const onBack = (e)=>{ if(e.target === modal.backdrop) resolve(false); };
+    modal.closeBtn.addEventListener("click", onX, {once:true});
+    modal.backdrop.addEventListener("click", onBack, {once:true});
+  });
+}
+
+/* ---------- UI helpers ---------- */
+function el(tag, attrs={}, children=[]){
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (k === "style") n.style.cssText = v;
+    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  }
+  for (const c of children) n.append(c);
+  return n;
+}
+function btn(text, opts={}){
+  return el("button", { class:`btn ${opts.kind||""}`.trim(), onclick: opts.onclick }, [document.createTextNode(text)]);
+}
+function card(title, desc, body, right=null){
+  const headLeft = el("div", {}, [
+    el("div", {class:"t"}, [document.createTextNode(title)]),
+    desc ? el("div", {class:"d"}, [document.createTextNode(desc)]) : el("div", {class:"d"}, [])
+  ]);
+  return el("div", {class:"card"}, [
+    el("div", {class:"card-h"}, [headLeft, right || el("div")]),
+    el("div", {class:"card-b"}, [body])
+  ]);
+}
+
+function cardFill(title, desc, body, right=null){
+  const c = card(title, desc, body, right);
+  c.classList.add("fill");
+  return c;
+}
+function rowLabel(labelText, inputNode, errorNode=null){
+  const kids = [
+    el("label", {}, [document.createTextNode(labelText)]),
+    inputNode
+  ];
+  if(errorNode) kids.push(errorNode);
+  return el("div", {class:"field"}, kids);
+}
+
+function mkFieldError(){
+  return el("div",{class:"field-error hidden"},[]);
+}
+function setFieldError(node, msg){
+  if(!node) return;
+  node.textContent = msg || "";
+  if(msg) node.classList.remove("hidden"); else node.classList.add("hidden");
+}
+function pillarName(k){ return PILLARS.find(p=>p.key===k)?.name ?? k; }
+function badge(text, kind=""){ return el("span",{class:`badge ${kind}`.trim()},[document.createTextNode(text)]); }
+
+function openDrawer(){ drawer.classList.remove("hidden"); drawer.setAttribute("aria-hidden","false"); }
+function closeDrawer(){ drawer.classList.add("hidden"); drawer.setAttribute("aria-hidden","true"); }
+document.getElementById("btnMenu").addEventListener("click", openDrawer);
+document.getElementById("btnCloseMenu").addEventListener("click", closeDrawer);
+drawer.addEventListener("click", (e)=>{ if (e.target === drawer) closeDrawer(); });
+
+document.querySelectorAll(".navitem").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    location.hash = b.dataset.route;
+    closeDrawer();
+  });
+});
+
+function route(){ return (location.hash.replace("#","").split("?")[0].trim() || "dashboard"); }
+
+/* ---------- Export/Import ---------- */
+document.getElementById("btnExport").addEventListener("click", async ()=>{
+  const data = await exportAll();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `tee-personal-planner-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("fileImport").addEventListener("change", async (e)=>{
+  const f = e.target.files?.[0];
+  if (!f) return;
+  const txt = await f.text();
+  await importAll(JSON.parse(txt));
+  e.target.value = "";
+  await navigate(route());
+});
+
+/* ---------- Global Date Picker ---------- */
+const globalDatePicker = document.getElementById("globalDatePicker");
+globalDatePicker.value = dayKey(new Date());
+
+function stopAllAudio() {
+  document.querySelectorAll("audio").forEach(a => { 
+    try { a.pause(); a.currentTime = 0; } catch(_) {} 
+  });
+}
+
+globalDatePicker.addEventListener("change", async (e) => {
+  stopAllAudio();
+  setSelectedDate(e.target.value);
+  await navigate(route(), true);
+});
+
+document.getElementById("btnPrevDay").addEventListener("click", async () => {
+  stopAllAudio();
+  const newDate = addDays(selectedDate, -1);
+  setSelectedDate(newDate);
+  await navigate(route(), true);
+});
+
+document.getElementById("btnNextDay").addEventListener("click", async () => {
+  stopAllAudio();
+  const newDate = addDays(selectedDate, 1);
+  setSelectedDate(newDate);
+  await navigate(route(), true);
+});
+
+document.getElementById("btnToday").addEventListener("click", async () => {
+  stopAllAudio();
+  setSelectedDate(new Date());
+  await navigate(route(), true);
+});
+
+/* ---------- PWA ---------- */
+if ("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+/* ---------- Data defaults ---------- */
+async function ensureSettings(){
+  const all = await getAll("settings");
+  if (all.length) return all[0];
+  const s = {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    frogRequired: true,
+    dailyReviewPromptMins: 21*60,
+    notificationsEnabled: false,
+    overdueNotifyHour: 10,
+    weekStartsMonday: true,
+    diaryPinSalt: null,
+    diaryPinHash: null
+  };
+  await put("settings", s);
+  return s;
+}
+
+
+async function hashPin(pin, salt){
+  const enc = new TextEncoder();
+  const data = enc.encode(String(salt||"") + ":" + String(pin||""));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  const bytes = new Uint8Array(digest);
+  let s = "";
+  for(const b of bytes) s += b.toString(16).padStart(2,"0");
+  return s;
+}
+function diaryIsUnlocked(){
+  try{ return sessionStorage.getItem("diary_unlocked") === "1"; }catch(_){ return false; }
+}
+function diarySetUnlocked(v){
+  try{
+    if(v) sessionStorage.setItem("diary_unlocked","1");
+    else sessionStorage.removeItem("diary_unlocked");
+  }catch(_){}
+}
+async function diaryEnsureUnlock(settings, afterRoute){
+  // Returns {ok:true} or {ok:false, node:HTMLElement}
+  if(!settings.diaryPinHash) return { ok:true };
+  if(diaryIsUnlocked()) return { ok:true };
+
+  const pin = el("input",{class:"input", type:"password", inputmode:"numeric", placeholder:"Enter PIN"});
+  const msg = el("div",{class:"muted small"},[document.createTextNode("This page is locked.")]);
+
+  const btnUnlock = btn("Unlock",{onclick: async ()=>{
+    const entered = (pin.value||"").trim();
+    if(!entered) return toast("Enter your PIN");
+    const h = await hashPin(entered, settings.diaryPinSalt);
+    if(h === settings.diaryPinHash){
+      diarySetUnlocked(true);
+      toast("Unlocked");
+      try{ modal.close(); }catch(_){ }
+      // Force page refresh with timestamp
+      location.hash = (afterRoute || "diary") + "?t=" + Date.now();
+    } else {
+      toast("Wrong PIN");
+    }
+  }});
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"h2"},[document.createTextNode("Diary lock")]),
+    msg,
+    pin,
+    el("div",{class:"row"},[btnUnlock])
+  ]);
+
+  return { ok:false, node: card("Locked", "", body) };
+}
+async function ensureVerse(){
+  const v = await getAll("verse");
+  if (v.length) return v[0];
+  const seed = { id: uuid(), reference: "Proverbs 3:5-6", text: "Trust in the LORD with all your heart..." };
+  await put("verse", seed);
+  return seed;
+}
+
+/* ---------- Page flip navigation ---------- */
+function withWatermark(contentNode){
+  const wrap = el("div",{style:"position:relative; height:100%; min-height:0;"},[
+    el("div",{class:"watermark"}),
+    el("div",{class:"curl"}),
+    el("div",{class:"pagecontent"},[contentNode])
+  ]);
+  return wrap;
+}
+
+let currentPage = null;
+let currentRouteKey = null;
+let currentRouteFull = null;
+let isNavigating = false;
+
+// Page order for next/prev navigation
+const PAGE_ORDER = ["cover", "dashboard", "goals", "relationships", "finance", "fitness", "spiritual", "weekly", "diary", "settings"];
+
+function getPageIndex(key) {
+  return PAGE_ORDER.indexOf(key);
+}
+
+function getNextPage(currentKey) {
+  const idx = getPageIndex(currentKey);
+  if (idx === -1 || idx >= PAGE_ORDER.length - 1) return null;
+  return PAGE_ORDER[idx + 1];
+}
+
+function getPrevPage(currentKey) {
+  const idx = getPageIndex(currentKey);
+  if (idx <= 0) return null;
+  return PAGE_ORDER[idx - 1];
+}
+
+function goNextPage() {
+  if (isNavigating) return;
+  const next = getNextPage(currentRouteKey);
+  if (next) {
+    // Update hash and navigate directly for reliability
+    history.replaceState(null, "", "#" + next);
+    navigate(next, false);
+  }
+}
+
+function goPrevPage() {
+  if (isNavigating) return;
+  const prev = getPrevPage(currentRouteKey);
+  if (prev) {
+    // Update hash and navigate directly for reliability
+    history.replaceState(null, "", "#" + prev);
+    navigate(prev, false);
+  }
+}
+
+async function navigate(r, skipAnim=false){
+  const target = (r || "cover");
+  const targetKey = target.split("/")[0];
+  
+  // If same route, always allow refresh (don't block on isNavigating)
+  const isSameRoute = targetKey === currentRouteKey;
+  
+  if (isNavigating && !skipAnim && !isSameRoute) return;
+  
+  document.querySelectorAll(".navitem").forEach(b => b.classList.toggle("active", b.dataset.route === targetKey));
+
+  // First render: no flip
+  if (!currentPage){
+    currentPage = el("div", {class:"page current"});
+    currentPage.append(withWatermark(await renderRoute(target)));
+    pageHost.innerHTML = "";
+    pageHost.append(currentPage);
+    currentRouteKey = targetKey;
+    currentRouteFull = target;
+    updatePageNavButtons();
+    return;
+  }
+
+  const fromKey = currentRouteKey || "cover";
+  const doFlip = (!skipAnim) && (fromKey !== targetKey);
+
+  // Same section (or forced refresh): update in place, no page turn
+  if(!doFlip){
+    currentPage.innerHTML = "";
+    currentPage.append(withWatermark(await renderRoute(target)));
+    currentRouteKey = targetKey;
+    currentRouteFull = target;
+    updatePageNavButtons();
+    return;
+  }
+
+  // Determine direction: forward or backward
+  const fromIdx = getPageIndex(fromKey);
+  const toIdx = getPageIndex(targetKey);
+  const goingBackward = toIdx < fromIdx;
+
+  isNavigating = true;
+
+  try {
+    // Different section: flip animation
+    const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
+    incomingPage.append(withWatermark(await renderRoute(target)));
+    pageHost.append(incomingPage);
+
+    currentPage.style.pointerEvents = "none";
+    incomingPage.style.pointerEvents = "none";
+
+    // Force reflow to ensure initial state is rendered
+    void incomingPage.offsetWidth;
+    
+    // Small delay to ensure DOM is ready, then start animation
+    await new Promise(res => requestAnimationFrame(res));
+    
+    pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
+    
+    // Wait for animation to complete (matches CSS 2.4s)
+    await new Promise(res => setTimeout(res, 2450));
+    
+    pageHost.classList.remove("flipping", "flipping-back");
+    currentPage.style.pointerEvents = "";
+    incomingPage.style.pointerEvents = "";
+
+    currentPage.remove();
+    incomingPage.classList.remove("next", "prev");
+    incomingPage.classList.add("current");
+    currentPage = incomingPage;
+
+    currentRouteKey = targetKey;
+    currentRouteFull = target;
+  } finally {
+    // Always reset isNavigating even if there's an error
+    isNavigating = false;
+  }
+  updatePageNavButtons();
+}
+
+// Update prev/next button visibility
+function updatePageNavButtons() {
+  const prevBtn = document.getElementById("btnPrevPage");
+  const nextBtn = document.getElementById("btnNextPage");
+  if (prevBtn) {
+    const hasPrev = getPrevPage(currentRouteKey);
+    prevBtn.style.opacity = hasPrev ? "1" : "0.3";
+    prevBtn.style.pointerEvents = hasPrev ? "auto" : "none";
+  }
+  if (nextBtn) {
+    const hasNext = getNextPage(currentRouteKey);
+    nextBtn.style.opacity = hasNext ? "1" : "0.3";
+    nextBtn.style.pointerEvents = hasNext ? "auto" : "none";
+  }
+}
+
+window.addEventListener("hashchange", ()=>navigate(route()));
+navigate(route(), true);
+
+// Page navigation buttons - use event delegation for reliability
+document.addEventListener("click", (e) => {
+  if (e.target.id === "btnPrevPage" || e.target.closest("#btnPrevPage")) {
+    e.preventDefault();
+    goPrevPage();
+  }
+  if (e.target.id === "btnNextPage" || e.target.closest("#btnNextPage")) {
+    e.preventDefault();
+    goNextPage();
+  }
+});
+
+/* ---------- Cross-cutting: Daily review prompt & overdue notifications ---------- */
+setInterval(async ()=>{
+  const settings = await ensureSettings();
+  await maybePromptDailyReview(settings);
+  await maybeDueNotifications(settings);
+}, 30_000);
+
+async function maybePromptDailyReview(settings){
+  const today = dayKey(new Date());
+  const existing = (await getAll("dailyReviews")).find(r => r.date === today);
+  if (existing) return;
+
+  const now = new Date();
+  const mins = now.getHours()*60 + now.getMinutes();
+  if (mins < settings.dailyReviewPromptMins) return;
+
+  const key = `tpp_review_prompted_${today}`;
+  if (sessionStorage.getItem(key) === "1") return;
+  sessionStorage.setItem(key, "1");
+  openDailyReviewModal(today, null);
+}
+
+async function maybeDueNotifications(settings){
+  if (!settings.notificationsEnabled) return;
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  const now = new Date();
+  if (now.getHours() !== Number(settings.overdueNotifyHour || 10)) return;
+
+  const today = dayKey(now);
+  const key = `tpp_overdue_notified_${today}`;
+  if (localStorage.getItem(key) === "1") return;
+
+  const overdue = await computeDueContacts();
+  if (overdue.length){
+    const names = overdue.slice(0,3).map(x=>x.name).join(", ");
+    new Notification("Check-ins due", { body: overdue.length <= 3 ? names : `${names} +${overdue.length-3} more` });
+  }
+  localStorage.setItem(key, "1");
+}
+
+async function computeDueContacts(){
+  const [contacts, rules, touchpoints] = await Promise.all([
+    getAll("contacts"),
+    getAll("contactRules"),
+    getAll("touchpoints")
+  ]);
+
+  const ruleByContact = new Map(rules.map(r => [r.contactId, r]));
+  const lastTouch = new Map();
+
+  for (const t of touchpoints){
+    if (!t.contactId) continue;
+    // Use datetime field (primary) or dateKey as fallback
+    const dateVal = t.datetime || t.dateKey || t.date;
+    if (!dateVal) continue;
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) continue; // Skip invalid dates
+    const prev = lastTouch.get(t.contactId);
+    if (!prev || d > prev) lastTouch.set(t.contactId, d);
+  }
+
+  const out = [];
+  const today = startOfDay(new Date());
+  for (const c of contacts){
+    const r = ruleByContact.get(c.id);
+    const freq = Number(r?.desiredEveryDays || 0);
+    if (!freq) continue;
+
+    const last = lastTouch.get(c.id);
+    if (!last){
+      out.push({ ...c, overdueByDays: freq });
+      continue;
+    }
+    const diffDays = Math.floor((today - startOfDay(last)) / 86400000);
+    if (diffDays >= freq){
+      out.push({ ...c, overdueByDays: diffDays - freq + 1 });
+    }
+  }
+  out.sort((a,b)=>b.overdueByDays - a.overdueByDays);
+  return out;
+}
+
+/* ---------- Views ---------- */
+
+/* ---------- Spotify (optional full songs) ---------- */
+function spotifyCfg(){
+  try{
+    return JSON.parse(localStorage.getItem("spotify_cfg")||"") || { clientId:"", useFull:true };
+  }catch(_){
+    return { clientId:"", useFull:true };
+  }
+}
+function setSpotifyCfg(cfg){
+  try{ localStorage.setItem("spotify_cfg", JSON.stringify(cfg)); }catch(_){}
+}
+function spotifyTokens(){
+  try{ return JSON.parse(localStorage.getItem("spotify_tokens")||"") || null; }catch(_){ return null; }
+}
+function setSpotifyTokens(t){
+  try{ localStorage.setItem("spotify_tokens", JSON.stringify(t)); }catch(_){}
+}
+function spotifyClear(){
+  try{ localStorage.removeItem("spotify_tokens"); }catch(_){}
+  try{ localStorage.removeItem("spotify_pkce"); }catch(_){}
+  window.__sp_player = null;
+  window.__sp_device = null;
+}
+function spotifyRedirectUri(){
+  // Use the exact current page URL without query/hash (works on any port/path)
+  const u = new URL(window.location.href);
+  spotifyGetProduct().catch(()=>{});
+  u.hash = "";
+  u.search = "";
+  return u.toString();
+}
+function b64url(bytes){
+  let s=""; for(const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+async function sha256Bytes(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return new Uint8Array(buf);
+}
+function rand(len=64){
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+  const a=crypto.getRandomValues(new Uint8Array(len));
+  let out=""; for(let i=0;i<len;i++) out += chars[a[i]%chars.length];
+  return out;
+}
+async function spotifyBeginAuth(){
+  const cfg = spotifyCfg();
+  if(!cfg.clientId) throw new Error("missing_client_id");
+  const verifier = rand(64);
+  const challenge = b64url(await sha256Bytes(verifier));
+  const state = rand(16);
+  try{ localStorage.setItem("spotify_pkce", JSON.stringify({verifier, state, at:Date.now()})); }catch(_){}
+  const auth = new URL("https://accounts.spotify.com/authorize");
+  auth.searchParams.set("client_id", cfg.clientId);
+  auth.searchParams.set("response_type","code");
+  auth.searchParams.set("redirect_uri", spotifyRedirectUri());
+  auth.searchParams.set("code_challenge_method","S256");
+  auth.searchParams.set("code_challenge", challenge);
+  auth.searchParams.set("scope", "streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state");
+  auth.searchParams.set("state", state);
+  window.location.href = auth.toString();
+}
+async function spotifyHandleCallback(){
+  const u = new URL(window.location.href);
+  const code = u.searchParams.get("code");
+  const state = u.searchParams.get("state");
+  const err = u.searchParams.get("error");
+  if(!code && !err) return false;
+  if(err) { throw new Error(err); }
+  let pkce=null;
+  try{ pkce = JSON.parse(localStorage.getItem("spotify_pkce")||"null"); }catch(_){}
+  if(!pkce || pkce.state !== state) throw new Error("state_mismatch");
+
+  const cfg = spotifyCfg();
+  const body = new URLSearchParams();
+  body.set("client_id", cfg.clientId);
+  body.set("grant_type","authorization_code");
+  body.set("code", code);
+  body.set("redirect_uri", spotifyRedirectUri());
+  body.set("code_verifier", pkce.verifier);
+
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method:"POST",
+    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+    body: body.toString()
+  });
+  if(!res.ok) throw new Error("token_failed");
+  const data = await res.json();
+  setSpotifyTokens({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: Date.now() + (data.expires_in*1000) - 15000
+  });
+  // clean URL + go to dashboard
+  u.search = "";
+  if(!u.hash) u.hash = "#dashboard";
+  history.replaceState({}, "", u.toString());
+  return true;
+}
+async function spotifyEnsureAccessToken(){
+  const cfg = spotifyCfg();
+  const t = spotifyTokens();
+  if(!cfg.clientId || !t) return null;
+  if(Date.now() < (t.expires_at||0)) return t.access_token;
+
+  const body = new URLSearchParams();
+  body.set("client_id", cfg.clientId);
+  body.set("grant_type","refresh_token");
+  body.set("refresh_token", t.refresh_token);
+
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method:"POST",
+    headers:{ "Content-Type":"application/x-www-form-urlencoded" },
+    body: body.toString()
+  });
+  if(!res.ok) return t.access_token;
+  const data = await res.json();
+  setSpotifyTokens({
+    access_token: data.access_token,
+    refresh_token: t.refresh_token,
+    expires_at: Date.now() + (data.expires_in*1000) - 15000
+  });
+  return data.access_token;
+}
+
+
+async function spotifyGetProfile(){
+  const tok = await spotifyEnsureAccessToken();
+  if(!tok) return null;
+  const res = await fetch("https://api.spotify.com/v1/me", { headers:{ "Authorization":"Bearer " + tok }});
+  if(!res.ok) return null;
+  return await res.json();
+}
+
+async function spotifyGetMe(){
+  const tok = await spotifyEnsureAccessToken();
+  if(!tok) return null;
+  const res = await fetch("https://api.spotify.com/v1/me", { headers:{ "Authorization":"Bearer " + tok } });
+  if(!res.ok) return null;
+  return await res.json();
+}
+async function spotifyGetProduct(){
+  try{
+    const me = await spotifyGetMe();
+    const product = me && me.product ? me.product : null; // "premium", "free", "open"
+    if(product){
+      try{ localStorage.setItem("spotify_product", product); }catch(_){}
+    }
+    return product;
+  }catch(_){
+    return null;
+  }
+}
+function spotifyCachedProduct(){
+  try{ return localStorage.getItem("spotify_product") || ""; }catch(_){ return ""; }
+}
+
+function spotifyConnected(){
+  const t = spotifyTokens();
+  return !!(t && t.access_token);
+}
+async function spotifySearchTrack(artist, title){
+  const tok = await spotifyEnsureAccessToken();
+  if(!tok) return null;
+  const q = encodeURIComponent(`${artist} ${title}`);
+  const res = await fetch(`https://api.spotify.com/v1/search?type=track&limit=5&q=${q}`, {
+    headers:{ "Authorization":"Bearer " + tok }
+  });
+  if(!res.ok) return null;
+  const data = await res.json();
+  return data?.tracks?.items?.[0] || null;
+}
+function spotifyOpenLink(artist, title){
+  const q = encodeURIComponent(`${artist} ${title}`);
+  return `https://open.spotify.com/search/${q}`;
+}
+
+
+async function renderRoute(r){
+  const settings = await ensureSettings();
+
+  if (r === "cover") return await viewCover(settings);
+  if (r === "dashboard") return await viewDashboard(settings);
+  if (r === "goals") return await viewGoals();
+  if (r === "relationships") return await viewRelationships();
+  if (r === "finance") return await viewFinance();
+  if (r === "fitness") return await viewFitness();
+  if (r === "spiritual") return await viewSpiritual();
+  if (r === "weekly") return await viewWeekly(settings);
+if (r === "diary") return await viewDiary(settings);
+if (r.startsWith("diary/")) return await viewDiaryEntry(settings, r.split("/")[1]);
+if (r.startsWith("weekly/")) return await viewWeekly(settings, r.split("/")[1]);
+if (r.startsWith("day/")) return await viewDay(settings, r.split("/")[1]);
+  if (r === "settings") return await viewSettings(settings);
+
+  return el("div", {}, [el("div",{class:"h1"},[document.createTextNode("Not found")])]);
+}
+
+
+/* ---------- Spotify Web Playback (full song) ---------- */
+function spotifySdkInject(){
+  if(document.getElementById("spotify-web-sdk")) return;
+  const s = document.createElement("script");
+  s.id = "spotify-web-sdk";
+  s.src = "https://sdk.scdn.co/spotify-player.js";
+  s.async = true;
+  document.head.appendChild(s);
+}
+
+async function spotifyWaitForSdk(timeoutMs=8000){
+  spotifySdkInject();
+  const start = Date.now();
+  while(Date.now() - start < timeoutMs){
+    if(window.Spotify && window.Spotify.Player) return true;
+    await new Promise(r=>setTimeout(r, 80));
+  }
+  return false;
+}
+
+async function spotifyInitWebPlayer(){
+  const tok = await spotifyEnsureAccessToken();
+  if(!tok) throw new Error("no_token");
+
+  const ok = await spotifyWaitForSdk(9000);
+  if(!ok) throw new Error("sdk_timeout");
+
+  if(window.__sp_web_player && window.__sp_device) return { player: window.__sp_web_player, deviceId: window.__sp_device };
+
+  const player = new window.Spotify.Player({
+    name: "Tee's Personal Planner",
+    getOAuthToken: async (cb) => {
+      const t = await spotifyEnsureAccessToken();
+      cb(t || tok);
+    },
+    volume: 0.8
+  });
+
+  let deviceId = null;
+  const readyP = new Promise((resolve, reject)=>{
+    player.addListener("ready", ({device_id}) => { deviceId = device_id; resolve(device_id); });
+    player.addListener("initialization_error", ({message}) => reject(new Error(message)));
+    player.addListener("authentication_error", ({message}) => reject(new Error(message)));
+    player.addListener("account_error", ({message}) => reject(new Error(message)));
+    player.addListener("playback_error", ({message}) => { /* non-fatal */ });
+  });
+
+  const connected = await player.connect();
+  if(!connected) throw new Error("player_connect_failed");
+
+  deviceId = await readyP;
+
+  window.__sp_web_player = player;
+  window.__sp_device = deviceId;
+
+  // Transfer playback to this web device (required)
+  const t2 = await spotifyEnsureAccessToken();
+  await fetch("https://api.spotify.com/v1/me/player", {
+    method:"PUT",
+    headers:{ "Authorization":"Bearer " + t2, "Content-Type":"application/json" },
+    body: JSON.stringify({ device_ids:[deviceId], play:false })
+  }).catch(()=>{});
+
+  return { player, deviceId };
+}
+
+async function spotifyPlayFullTrack(artist, title){
+  // Returns {ok:boolean, reason?:string}
+  if(!spotifyConnected()) return { ok:false, reason:"not_connected" };
+  const cfg = spotifyCfg();
+  if(!cfg.useFull) return { ok:false, reason:"disabled" };
+
+  try{
+    const { deviceId } = await spotifyInitWebPlayer();
+    const tok = await spotifyEnsureAccessToken();
+    const tr = await spotifySearchTrack(artist, title);
+    if(!tr || !tr.uri) return { ok:false, reason:"no_track" };
+
+    try{
+      if(window.__sp_web_player && typeof window.__sp_web_player.activateElement === 'function'){
+        await window.__sp_web_player.activateElement();
+      }
+    }catch(_){ }
+
+    const url = deviceId
+      ? `https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`
+      : "https://api.spotify.com/v1/me/player/play";
+
+    const res = await fetch(url, {
+      method:"PUT",
+      headers:{ "Authorization":"Bearer " + tok, "Content-Type":"application/json" },
+      body: JSON.stringify({ uris:[tr.uri] })
+    });
+
+    if(!res.ok){
+      let body = "";
+      try{ body = await res.text(); }catch(_){ }
+      return { ok:false, reason:"play_failed_" + res.status, detail: body.slice(0,200) };
+    }
+    return { ok:true };
+  }catch(e){
+    return { ok:false, reason:"error" };
+  }
+}
+
+async function spotifyTogglePause(){
+  try{
+    if(!window.__sp_web_player) return false;
+    await window.__sp_web_player.togglePlay();
+    return true;
+  }catch(_){
+    return false;
+  }
+}
+
+
+/* ---------- Cover Page ---------- */
+async function viewCover(settings){
+  const today = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const dateStr = today.toLocaleDateString('en-GB', options);
+  
+  const userName = settings.userName || "Tee";
+  
+  const [tasks, goals, contacts] = await Promise.all([
+    getAll("tasks"),
+    getAll("quarterlyGoals"),
+    getAll("contacts")
+  ]);
+  
+  const todayKey = dayKey(today);
+  const todaysTasks = tasks.filter(t => t.scheduledDate === todayKey);
+  const activeGoals = goals.filter(g => !g.done).length;
+  
+  const cover = el("div", {class:"cover-page"}, [
+    el("div", {class:"cover-decoration cover-tl"}),
+    el("div", {class:"cover-decoration cover-tr"}),
+    el("div", {class:"cover-decoration cover-bl"}),
+    el("div", {class:"cover-decoration cover-br"}),
+    
+    el("div", {class:"cover-content"}, [
+      el("div", {class:"cover-header"}, [
+        el("div", {class:"cover-icon"}, [document.createTextNode("📓")]),
+        el("div", {class:"cover-title"}, [document.createTextNode(userName + "'s")]),
+        el("div", {class:"cover-subtitle"}, [document.createTextNode("Personal Planner")])
+      ]),
+      
+      el("div", {class:"cover-date"}, [document.createTextNode(dateStr)]),
+      
+      el("div", {class:"cover-stats"}, [
+        el("div", {class:"cover-stat"}, [
+          el("div", {class:"cover-stat-value"}, [document.createTextNode(String(todaysTasks.length))]),
+          el("div", {class:"cover-stat-label"}, [document.createTextNode("Tasks Today")])
+        ]),
+        el("div", {class:"cover-stat"}, [
+          el("div", {class:"cover-stat-value"}, [document.createTextNode(String(activeGoals))]),
+          el("div", {class:"cover-stat-label"}, [document.createTextNode("Active Goals")])
+        ]),
+        el("div", {class:"cover-stat"}, [
+          el("div", {class:"cover-stat-value"}, [document.createTextNode(String(contacts.length))]),
+          el("div", {class:"cover-stat-label"}, [document.createTextNode("Contacts")])
+        ])
+      ]),
+      
+      el("div", {class:"cover-action"}, [
+        btn("Open Planner →", {onclick: ()=>{ location.hash = "dashboard"; }})
+      ]),
+      
+      el("div", {class:"cover-footer"}, [
+        el("div", {class:"cover-quote"}, [document.createTextNode("\"The secret of getting ahead is getting started.\"")]),
+        el("div", {class:"cover-author"}, [document.createTextNode("- Mark Twain")])
+      ])
+    ])
+  ]);
+  
+  return cover;
+}
+
+/* ---------- Dashboard ---------- */
+async function viewDashboard(settings){
+  const selectedDay = getSelectedDayKey();
+  const isToday = isSelectedDateToday();
+
+  const [verse, tasks, qGoals, blocks, reviews, overdue] = await Promise.all([
+    ensureVerse(),
+    getAll("tasks"),
+    getAll("quarterlyGoals"),
+    getAll("timeBlocks"),
+    getAll("dailyReviews"),
+    computeDueContacts()
+  ]);
+
+  const dayTasks = tasks.filter(t => t.scheduledDate === selectedDay).sort((a,b)=> (b.isFrog?1:0) - (a.isFrog?1:0));
+  const dayBlocks = blocks.filter(b => b.date === selectedDay).sort((a,b)=>a.startMins-b.startMins);
+  const review = reviews.find(r => r.date === selectedDay) || null;
+
+  const hasFrog = dayTasks.some(t=>t.isFrog);
+  const frogRequired = !!settings.frogRequired;
+
+  const dateLabel = isToday ? "Hello ✿" : formatDate(getSelectedDate());
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode(dateLabel)]),
+    el("div",{class:"subtle"},[document.createTextNode(isToday ? formatDate(new Date()) : `Viewing ${selectedDay}`)])
+  ]);
+
+
+  const v = verseOfDay(selectedDay);
+  const versePreview = (v.text.length > 110) ? (v.text.slice(0, 110) + "…") : v.text;
+
+  const verseCard = card("Daily Verse", v.ref, el("div",{class:"stack"},[
+    el("div",{class:"prose"},[document.createTextNode(versePreview)]),
+    btn("Read",{kind:"ghost", onclick: async ()=>{
+      const full = el("div",{class:"stack"},[
+        el("div",{class:"h2"},[document.createTextNode(v.ref)]),
+        el("div",{class:"prose"},[document.createTextNode(v.text)])
+      ]);
+      await showModal("Verse", full);
+    }})
+  ]));
+
+
+  const verseBanner = el("div",{class:"banner"},[
+    el("div",{class:"t"},[document.createTextNode("My Verse")]),
+    el("div",{class:"ref"},[document.createTextNode(verse.reference || "")]),
+    verse.text ? el("div",{class:"txt"},[document.createTextNode(verse.text)]) : el("div",{class:"txt"})
+  ]);
+
+  const overdueCard = (isToday && overdue.length)
+    ? card("Check-ins due", "Based on your rules.", el("div",{class:"scroll-area overdueScroll"},[overdueList(overdue)]), btn("Open", {kind:"ghost", onclick: ()=>{ location.hash="relationships"; }}))
+    : null;
+
+  const tasksBody = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      frogRequired ? badge(hasFrog ? "Top Priority set" : "Pick your Top Priority", hasFrog ? "good":"warn") : badge("Top Priority off"),
+      btn("Add Task", { onclick: ()=>openTaskModal({ defaultDate: selectedDay }) })
+    ]),
+    el("div",{class: (dayTasks.length>2 ? "scroll-area tasksScroll" : "")},[ frogRequired && !hasFrog ? frogPicker(dayTasks) : taskList(dayTasks, qGoals) ])
+  ]);
+
+  const blocksBody = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Drag • resize • double-click")]),
+      btn("+ Add", { onclick: ()=>openTimeBlockModal(selectedDay, dayTasks, null) })
+    ]),
+    scheduler(selectedDay, dayBlocks, dayTasks)
+  ]);
+
+  const scoreBody = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      review ? badge(`${review.score}/10`, "good") : badge("Pending", "warn"),
+      btn(review ? "Edit" : "Review", { kind:"ghost", onclick: ()=>openDailyReviewModal(selectedDay, review) })
+    ]),
+    review?.notes ? el("div",{class:"muted"},[document.createTextNode(review.notes)]) : el("div",{class:"muted"},[document.createTextNode("How was your day?")])
+  ]);
+
+  // Create verse banner for mobile
+  const verseBannerMobile = el("div",{class:"banner"},[
+    el("div",{class:"t"},[document.createTextNode("My Verse")]),
+    el("div",{class:"ref"},[document.createTextNode(verse.reference || "")]),
+    verse.text ? el("div",{class:"txt"},[document.createTextNode(verse.text)]) : el("div",{class:"txt"})
+  ]);
+
+  // Create verse banner for desktop  
+  const verseBannerDesktop = el("div",{class:"banner"},[
+    el("div",{class:"t"},[document.createTextNode("My Verse")]),
+    el("div",{class:"ref"},[document.createTextNode(verse.reference || "")]),
+    verse.text ? el("div",{class:"txt"},[document.createTextNode(verse.text)]) : el("div",{class:"txt"})
+  ]);
+
+  // Mobile top section - verse and music (shown first on mobile via CSS)
+  const mobileTop = el("div",{class:"mobile-top-section stack"},[
+    verseBannerMobile,
+    rnbCard(selectedDay)
+  ]);
+
+  const left = el("div",{class:"stack dashboard-left"},[
+    card("To Do", "Your tasks for today", tasksBody),
+    card("Schedule", "Plan your time", blocksBody),
+  ]);
+  
+  const rightItems = [];
+  // Desktop shows verse banner here (hidden on mobile via CSS)
+  rightItems.push(el("div",{class:"desktop-only"}, [verseBannerDesktop]));
+  if (overdueCard) rightItems.push(overdueCard);
+  // Desktop shows music here (hidden on mobile via CSS)
+  rightItems.push(el("div",{class:"desktop-only"}, [rnbCard(selectedDay)]));
+  rightItems.push(card("Daily Check-in", "Reflect on your day", scoreBody));
+  
+  const right = el("div",{class:"stack dashboard-right"}, rightItems);
+
+  const grid = el("div",{class:"grid"},[left, right]);
+
+  const root = el("div",{class:"stack dashboard-root"},[header, mobileTop, grid]);
+  return root;
+}
+
+function overdueList(items){
+  const list = el("div",{class:"list"},[]);
+  for (const c of items.slice(0,6)){
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(c.name)]),
+          el("div",{class:"m"},[document.createTextNode(`Due ~${c.overdueByDays} day(s)`)])
+        ]),
+        el("div",{class:"actions"},[badge("Overdue","bad")])
+      ])
+    ]));
+  }
+  if (items.length > 6) list.append(el("div",{class:"muted small"},[document.createTextNode(`+${items.length-6} more`) ]));
+  return list;
+}
+
+
+
+async function fetchItunesPreview(artist, title){
+  // Uses Apple's public iTunes Search API to fetch a short preview URL (usually ~30s)
+  // This avoids embedding a large player and plays inside the app via <audio>.
+  const term = encodeURIComponent(`${artist} ${title}`);
+  const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=6`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("preview_search_failed");
+  const data = await res.json();
+  const results = (data && data.results) ? data.results : [];
+  // Try to find a close match: same artist substring + title substring
+  const norm = s => String(s||"").toLowerCase();
+  const aN = norm(artist);
+  const tN = norm(title);
+
+  let best = null;
+  for(const r of results){
+    const ra = norm(r.artistName);
+    const rt = norm(r.trackName);
+    const score =
+      (ra.includes(aN) ? 3 : 0) +
+      (aN.includes(ra) ? 2 : 0) +
+      (rt.includes(tN) ? 3 : 0) +
+      (tN.includes(rt) ? 2 : 0);
+    if(!best || score > best.score) best = { score, r };
+  }
+  const pick = best ? best.r : results[0];
+  if(!pick) throw new Error("no_preview_found");
+
+  return {
+    artistName: pick.artistName,
+    trackName: pick.trackName,
+    previewUrl: pick.previewUrl,
+    trackViewUrl: pick.trackViewUrl,
+    artwork: pick.artworkUrl100 || pick.artworkUrl60 || pick.artworkUrl30 || null,
+    collection: pick.collectionName || ""
+  };
+}
+
+function fmtTime(sec){
+  if(!isFinite(sec)) return "0:00";
+  sec = Math.max(0, Math.floor(sec));
+  const m = Math.floor(sec/60);
+  const s = String(sec%60).padStart(2,"0");
+  return `${m}:${s}`;
+}
+
+function miniAudioPlayer({artist, title, ytId, todayKey}){
+  const state = { audio:null, loaded:false, loading:false, playing:false, meta:null };
+
+  const playBtn = el("button",{class:"miniPlay btn"},[document.createTextNode("▶ Play")]);
+  const titleEl = el("div",{class:"h"},[document.createTextNode(title)]);
+  const artistEl = el("div",{class:"m"},[document.createTextNode(artist)]);
+  const timeEl = el("div",{class:"miniTime muted"},[document.createTextNode("0:00 / 0:00")]);
+  const statusEl = el("div",{class:"miniStatus muted small"},[]);
+
+  const seek = el("input",{type:"range", min:"0", max:"1000", value:"0", class:"miniSeek"});
+  
+  const ytBtn = el("button",{class:"btn ytPlayBtn small"},[document.createTextNode("▶ Play Full Video")]);
+  ytBtn.addEventListener("click", ()=>{
+    // Pause preview if playing
+    if(state.audio && state.playing){
+      try{ state.audio.pause(); }catch(_){}
+      state.playing = false;
+      playBtn.textContent = "▶ Play";
+    }
+    window.open(`https://www.youtube.com/watch?v=${ytId}`, "_blank");
+  });
+
+  const art = el("div",{class:"miniArt"});
+  // Load YouTube thumbnail immediately
+  art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
+
+  async function ensureLoaded(){
+    if(state.loaded || state.loading) return;
+    state.loading = true;
+    statusEl.textContent = "Loading preview…";
+    playBtn.textContent = "Loading…";
+    playBtn.disabled = true;
+    try{
+      const meta = await fetchItunesPreview(artist, title);
+      state.meta = meta;
+
+      if(meta.artistName && meta.trackName){
+        titleEl.textContent = meta.trackName;
+        artistEl.textContent = meta.artistName;
+      }
+      if(meta.artwork){
+        art.style.backgroundImage = `url('${meta.artwork}')`;
+      }
+
+      const audio = new Audio(meta.previewUrl);
+      audio.preload = "auto";
+      audio.addEventListener("timeupdate", ()=>{
+        if(!audio.duration) return;
+        const v = Math.floor((audio.currentTime / audio.duration) * 1000);
+        seek.value = String(v);
+        timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+      });
+      audio.addEventListener("loadedmetadata", ()=>{
+        timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+      });
+      audio.addEventListener("ended", ()=>{
+        state.playing = false;
+        playBtn.textContent = "▶ Play";
+        seek.value = "0";
+      });
+
+      state.audio = audio;
+      state.loaded = true;
+      statusEl.textContent = "Preview ready";
+    } catch(_){
+      statusEl.textContent = "Preview unavailable";
+    } finally {
+      state.loading = false;
+      playBtn.disabled = false;
+      if(!state.playing) playBtn.textContent = "▶ Play";
+    }
+  }
+
+  playBtn.addEventListener("click", async ()=>{
+    await ensureLoaded();
+    if(!state.audio) return;
+
+    if(state.playing){
+      state.audio.pause();
+      state.playing = false;
+      playBtn.textContent = "▶ Play";
+    } else {
+      document.querySelectorAll("audio[data-mini='1']").forEach(a=>{ try{ a.pause(); }catch(_){} });
+      state.audio.dataset.mini = "1";
+      await state.audio.play();
+      state.playing = true;
+      statusEl.textContent = "Playing preview…";
+      playBtn.textContent = "⏸ Pause";
+    }
+  });
+
+  seek.addEventListener("input", async ()=>{
+    await ensureLoaded();
+    if(!state.audio || !state.audio.duration) return;
+    const ratio = Number(seek.value)/1000;
+    state.audio.currentTime = ratio * state.audio.duration;
+  });
+
+  const left = el("div",{class:"miniLeft"},[art]);
+  const mid = el("div",{class:"miniMid"},[
+    titleEl,
+    artistEl,
+    el("div",{class:"miniControls"},[
+      playBtn,
+      timeEl,
+    ]),
+    seek,
+    el("div",{class:"row", style:"margin-top:10px;gap:8px;"},[ytBtn]),
+    statusEl
+  ]);
+
+  return el("div",{class:"miniPlayer"},[left, mid]);
+}
+
+function rnbCard(todayKey){
+  const pick = pickDailyRnB(todayKey);
+
+  const body = el("div",{class:"stack"},[
+    miniAudioPlayer({ artist: pick.artist, title: pick.title, ytId: pick.ytId, todayKey }),
+  ]);
+
+  return card("Song of the Day ♪", "A little soul for your soul", body);
+}
+
+
+function frogPicker(tasks){
+  const list = el("div",{class:"list"},[]);
+  if (!tasks.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No tasks yet.")]));
+    return list;
+  }
+  list.append(el("div",{class:"muted small"},[document.createTextNode("Pick 1 Top Priority to unlock the rest.")]));
+  for (const t of tasks){
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(t.title)]),
+          el("div",{class:"m"},[document.createTextNode("Set as Top Priority")])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Set Top Priority",{kind:"good", onclick: async ()=>{
+            for (const other of tasks){
+              other.isFrog = other.id === t.id;
+              await put("tasks", other);
+            }
+            await navigate(route(), true);
+          }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+function taskList(tasks, qGoals){
+  const list = el("div",{class:"list"},[]);
+  if (!tasks.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No tasks for today.")]));
+    return list;
+  }
+  for (const t of tasks){
+    const q = t.quarterlyGoalId ? qGoals.find(x=>x.id===t.quarterlyGoalId) : null;
+    const meta = [
+      t.pillar ? `Pillar: ${pillarName(t.pillar)}` : null,
+      q ? `↳ ${q.title}` : null,
+      t.isFrog ? "⭐ Top Priority" : null
+    ].filter(Boolean).join(" • ");
+
+    const isDone = t.status === "done";
+    const titleStyle = isDone ? "text-decoration:line-through; opacity:0.55;" : "";
+
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h", style:titleStyle},[document.createTextNode(t.title)]),
+          el("div",{class:"m"},[document.createTextNode(meta || "—")])
+        ]),
+        el("div",{class:"actions"},[
+          el("div",{class:`chk ${isDone?"done":""}`, onclick: async ()=>{
+            t.status = isDone ? "todo" : "done";
+            await put("tasks", t);
+            await navigate(route(), true);
+          }}),
+          btn("Edit",{kind:"ghost", onclick: ()=>openTaskModal({ editing: t })}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("tasks", t.id); await navigate(route(), true); }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+/* ---------- Time-block Scheduler ---------- */
+function scheduler(dateKeyStr, blocks, tasks){
+  const wrap = el("div",{class:"scheduler"},[]);
+  const inner = el("div",{class:"sched-inner"});
+  inner.style.height = `${(END_MINS-START_MINS)*PX_PER_MIN}px`;
+
+  for (let h=0; h<=24; h++){
+    const y = (h*60 - START_MINS)*PX_PER_MIN;
+    inner.append(el("div",{class:"hourline", style:`top:${y}px`},[
+      el("div",{class:"hourlabel"},[document.createTextNode(`${String(h).padStart(2,"0")}:00`)])
+    ]));
+  }
+
+  for (const b of blocks){
+    const top = (b.startMins - START_MINS)*PX_PER_MIN;
+    const height = Math.max(15, (b.endMins - b.startMins)*PX_PER_MIN);
+    const linked = b.taskId ? tasks.find(t=>t.id===b.taskId) : null;
+
+    const node = el("div",{class:"block", style:`top:${top}px;height:${height}px;`},[
+      el("div",{class:"bt"},[document.createTextNode(b.title || "Block")]),
+      el("div",{class:"bm"},[document.createTextNode(`${minsToHHMM(b.startMins)}–${minsToHHMM(b.endMins)}${linked ? ` • ↳ ${linked.title}` : ""}`)]),
+      el("div",{class:"resize"})
+    ]);
+
+    node.addEventListener("dblclick", ()=>openTimeBlockModal(dateKeyStr, tasks, b));
+
+    let dragging=false, resizing=false, startY=0, os=0, oe=0;
+
+    const snap = (m)=>Math.round(m/SNAP)*SNAP;
+
+    node.addEventListener("pointerdown", (e)=>{
+      if (e.target?.classList?.contains("resize")) return;
+      dragging=true; startY=e.clientY; os=b.startMins; oe=b.endMins;
+      node.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    node.querySelector(".resize").addEventListener("pointerdown", (e)=>{
+      resizing=true; startY=e.clientY; os=b.startMins; oe=b.endMins;
+      node.setPointerCapture(e.pointerId);
+      e.preventDefault(); e.stopPropagation();
+    });
+
+    node.addEventListener("pointermove", (e)=>{
+      if (!dragging && !resizing) return;
+      const dy = e.clientY - startY;
+      const dmins = snap(dy / PX_PER_MIN);
+
+      if (dragging){
+        const dur = oe - os;
+        let ns = clamp(os + dmins, START_MINS, END_MINS-15);
+        let ne = clamp(ns + dur, START_MINS+15, END_MINS);
+        b.startMins = ns;
+        b.endMins = ne;
+      } else if (resizing){
+        let ne = clamp(oe + dmins, b.startMins+15, END_MINS);
+        b.endMins = ne;
+      }
+
+      node.style.top = `${(b.startMins-START_MINS)*PX_PER_MIN}px`;
+      node.style.height = `${Math.max(15,(b.endMins-b.startMins)*PX_PER_MIN)}px`;
+      node.querySelector(".bm").textContent = `${minsToHHMM(b.startMins)}–${minsToHHMM(b.endMins)}${linked ? ` • ↳ ${linked.title}` : ""}`;
+    });
+
+    node.addEventListener("pointerup", async ()=>{
+      if (!dragging && !resizing) return;
+      dragging=false; resizing=false;
+      b.updatedAt = new Date().toISOString();
+      await put("timeBlocks", b);
+    });
+
+    inner.append(node);
+  }
+
+  wrap.append(inner);
+
+  // Auto-scroll to around 'now' (helps with 24h schedule)
+  const now = new Date();
+  const nowMins = now.getHours()*60 + now.getMinutes();
+  const target = Math.max(0, (nowMins - 120) * PX_PER_MIN);
+  setTimeout(()=>{ try { wrap.scrollTop = target; } catch(_){} }, 0);
+
+  return wrap;
+}
+
+function openTimeBlockModal(dateKeyStr, tasks, editing){
+  const isEdit = !!editing;
+  const b = isEdit ? {...editing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    date: dateKeyStr,
+    title: "",
+    startMins: (()=>{ const n=new Date(); const m=n.getHours()*60+n.getMinutes(); return Math.floor(m/15)*15; })(),
+    endMins: (()=>{ const n=new Date(); const m=n.getHours()*60+n.getMinutes(); const s=Math.floor(m/15)*15; return Math.min(s+60, 24*60); })(),
+    taskId: ""
+  };
+
+  const title = el("input",{class:"input", placeholder:"e.g., Deep Work, Meeting...", value:b.title});
+  const errTitle = mkFieldError();
+  const start = el("input",{class:"input", type:"time", value: minsToHHMM(b.startMins)});
+  const errStart = mkFieldError();
+  const end = el("input",{class:"input", type:"time", value: minsToHHMM(b.endMins)});
+  const errEnd = mkFieldError();
+
+  const taskSel = el("select",{class:"input"},[
+    el("option",{value:""},[document.createTextNode("No linked task")]),
+    ...tasks.map(t=>el("option",{value:t.id},[document.createTextNode(t.title)]))
+  ]);
+  taskSel.value = b.taskId || "";
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode(`Date: ${dateKeyStr}`)]),
+    rowLabel("Title", title, errTitle),
+    el("div",{class:"form2"},[
+      rowLabel("Start", start, errStart),
+      rowLabel("End", end, errEnd)
+    ]),
+    rowLabel("Link to Task (optional)", taskSel),
+    el("div",{class:"muted small"},[document.createTextNode("Save, then drag/resize in the schedule.")])
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("timeBlocks", editing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn(isEdit ? "Save" : "Create",{onclick: async ()=>{
+      // Reset errors
+      setFieldError(errTitle, "");
+      setFieldError(errStart, "");
+      setFieldError(errEnd, "");
+      
+      // Validate
+      let hasError = false;
+      if (!title.value.trim()) {
+        setFieldError(errTitle, "Title is required");
+        hasError = true;
+      }
+      if (!start.value) {
+        setFieldError(errStart, "Start time is required");
+        hasError = true;
+      }
+      if (!end.value) {
+        setFieldError(errEnd, "End time is required");
+        hasError = true;
+      }
+      
+      const s = hhmmToMins(start.value);
+      const e = hhmmToMins(end.value);
+      
+      if (start.value && end.value && e <= s) {
+        setFieldError(errEnd, "End time must be after start time");
+        hasError = true;
+      }
+      
+      if (hasError) return;
+      
+      const obj = isEdit ? editing : b;
+      obj.title = title.value.trim();
+      obj.startMins = clamp(s, START_MINS, END_MINS-15);
+      obj.endMins = clamp(e, obj.startMins+15, END_MINS);
+      obj.taskId = taskSel.value || "";
+      obj.updatedAt = new Date().toISOString();
+      await put("timeBlocks", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Time Block" : "New Time Block", body, footer });
+}
+
+/* ---------- Goals + Quarterly Retrospective ---------- */
+async function viewGoals(){
+  const [yearly, quarterly, monthly, retros] = await Promise.all([
+    getAll("yearlyGoals"),
+    getAll("quarterlyGoals"),
+    getAll("monthlyGoals"),
+    getAll("quarterlyRetros")
+  ]);
+
+  yearly.sort((a,b)=> (a.targetDate||"").localeCompare(b.targetDate||""));
+  quarterly.sort((a,b)=> (b.startDate||"").localeCompare(a.startDate||""));
+  monthly.sort((a,b)=> (b.monthKey||"").localeCompare(a.monthKey||""));
+
+  const retroByQ = new Map(retros.map(r => [r.quarterlyGoalId, r]));
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("My Goals ✿")]),
+    el("div",{class:"subtle"},[document.createTextNode("Dream big, start small")])
+  ]);
+
+  
+  const mBody = el("div",{class:"fillCol"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("This month's focus")]),
+      btn("+ New",{onclick: ()=>openMonthlyModal(null)})
+    ]),
+    el("div",{class:"scroll-area goalsScroll flexFill"},[monthlyList(monthly)])
+  ]);
+const yBody = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Big outcomes tied to pillars.")]),
+      btn("Add Yearly",{onclick: ()=>openYearlyModal(null)})
+    ]),
+    (yearly.length > 2 ? el("div",{class:"scroll-area goalsScroll yearlyClamp"},[goalList(yearly)]) : goalList(yearly))
+  ]);
+
+  const qBody = el("div",{class:"fillCol"},[
+el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Each quarter can have a Stop/Start/Continue retrospective.")]),
+      btn("Add Quarterly",{onclick: ()=>openQuarterlyModal(yearly, null)})
+    ]),
+    el("div",{class:"scroll-area goalsScroll flexFill"},[quarterlyList(quarterly, yearly, retroByQ)])
+  ]);
+
+  
+  const yearCard = card("Yearly", "Your big goals.", yBody);
+  yearCard.classList.add("yearlyCard");
+  const quarterCard = card("Quarterly", "Your quarter plan.", qBody);
+  quarterCard.classList.add("quarterlyCard");
+return el("div",{class:"fillPage"},[
+    header,
+    el("div",{class:"fillMain"},[
+      el("div",{class:"grid fillGrid goalsGrid"},[
+        cardFill("Monthly", "Your monthly focus.", mBody),
+        el("div",{class:"goalsRightStack"},[yearCard, quarterCard])
+      ])
+    ])
+  ]);
+}
+
+function goalList(items){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No yearly goals yet.")]));
+    return list;
+  }
+  for (const g of items){
+    const meta = [
+      g.pillar ? `Pillar: ${pillarName(g.pillar)}` : null,
+      g.targetDate ? `Target: ${formatShort(new Date(g.targetDate))}` : null
+    ].filter(Boolean).join(" • ");
+
+    const chk = el("input",{type:"checkbox"});
+    chk.checked = !!g.isComplete;
+    chk.onchange = ()=>setGoalComplete("yearlyGoals", g, chk.checked);
+
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"leftRow"},[
+            chk,
+            el("div",{class:"h" + (g.isComplete ? " doneTitle" : "")},[document.createTextNode(g.title)])
+          ]),
+          el("div",{class:"m"},[document.createTextNode(meta || "—")]),
+          (g.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openYearlyModal(g)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("yearlyGoals", g.id); await navigate(route(), true); }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+
+
+function monthlyList(items){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No monthly goals yet.")]));
+    return list;
+  }
+  for (const m of items){
+    const meta = [
+      m.pillar ? `Pillar: ${pillarName(m.pillar)}` : null,
+      m.monthKey ? `Month: ${formatMonthKey(m.monthKey)}` : null
+    ].filter(Boolean).join(" • ");
+
+    const chk = el("input",{type:"checkbox"});
+    chk.checked = !!m.isComplete;
+    chk.onchange = ()=>setGoalComplete("monthlyGoals", m, chk.checked);
+
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"leftRow"},[
+            chk,
+            el("div",{class:"h" + (m.isComplete ? " doneTitle" : "")},[document.createTextNode(m.title)])
+          ]),
+          el("div",{class:"m"},[document.createTextNode(meta || "—")]),
+          (m.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openMonthlyModal(m)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("monthlyGoals", m.id); await navigate(route(), true); }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+
+function formatMonthKey(monthKey){
+  // monthKey: YYYY-MM
+  try{
+    const [y,mo] = String(monthKey).split("-").map(x=>Number(x));
+    if(!y || !mo) return String(monthKey);
+    const dt = new Date(Date.UTC(y, mo-1, 1));
+    return new Intl.DateTimeFormat("en-GB",{month:"long", year:"numeric"}).format(dt);
+  }catch(e){
+    return String(monthKey);
+  }
+}
+
+function openMonthlyModal(editing){
+  const isEdit = !!editing;
+  const g = isEdit ? {...editing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    title: "",
+    pillar: "fitness",
+    details: "",
+    successCriteria: "",
+    monthKey: monthKey(new Date())
+  };
+
+  const pillar = el("select",{class:"input"}, PILLARS.map(p=>el("option",{value:p.key},[document.createTextNode(p.name)])));
+  pillar.value = g.pillar || "fitness";
+  
+  const title = el("input",{class:"input", value:(g.title||""), placeholder:"e.g., Save £200"});
+  const errTitle = mkFieldError();
+
+  const month = el("input",{class:"input", type:"month", value:(g.monthKey||monthKey(new Date()))});
+  const errMonth = mkFieldError();
+
+  const details = el("textarea",{class:"input", placeholder:"What does this goal involve?"}); 
+  details.value = g.details || "";
+  
+  const success = el("textarea",{class:"input", placeholder:"How will you know you achieved it?"}); 
+  success.value = g.successCriteria || "";
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"form2"},[
+      rowLabel("Pillar", pillar),
+      rowLabel("Month", month, errMonth)
+    ]),
+    rowLabel("Title", title, errTitle),
+    rowLabel("Details", details),
+    rowLabel("Success Criteria", success)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("monthlyGoals", g.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn(isEdit ? "Save" : "Add",{onclick: async ()=>{
+      setFieldError(errTitle,"");
+      setFieldError(errMonth,"");
+
+      const ttl = title.value.trim();
+      if(!ttl){ setFieldError(errTitle,"Title is required"); return; }
+
+      const mk = (month.value||"").trim();
+      if(!mk){ setFieldError(errMonth,"Month is required"); return; }
+
+      g.updatedAt = new Date().toISOString();
+      g.title = ttl;
+      g.pillar = pillar.value || "";
+      g.monthKey = mk;
+      g.details = details.value.trim();
+      g.successCriteria = success.value.trim();
+
+      await put("monthlyGoals", g);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({title: isEdit ? "Edit Monthly Goal" : "Add Monthly Goal", body, footer});
+}
+
+function quarterlyList(items, yearly, retroByQ){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No quarterly goals yet.")]));
+    return list;
+  }
+  for (const q of items){
+    const y = q.yearlyGoalId ? yearly.find(x=>x.id===q.yearlyGoalId) : null;
+    const meta = [
+      q.pillar ? `Pillar: ${pillarName(q.pillar)}` : null,
+      q.startDate && q.endDate ? `Dates: ${prettyDateRange(q.startDate, q.endDate)}` : null,
+      y ? `↳ ${y.title}` : null
+    ].filter(Boolean).join(" • ");
+
+    const hasRetro = retroByQ.has(q.id);
+
+    const chk = el("input",{type:"checkbox"});
+    chk.checked = !!q.isComplete;
+    chk.onchange = ()=>setGoalComplete("quarterlyGoals", q, chk.checked);
+
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"leftRow"},[
+            chk,
+            el("div",{class:"h" + (q.isComplete ? " doneTitle" : "")},[document.createTextNode(q.title)])
+          ]),
+          el("div",{class:"m"},[document.createTextNode(meta || "—")]),
+          (q.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
+        ]),
+        el("div",{class:"qRight"},[
+          badge(hasRetro ? "Retro done" : "Retro missing", hasRetro ? "good" : "warn"),
+          el("div",{class:"actions"},[
+            btn("Retro",{kind:"ghost", onclick: ()=>openRetroModal(q, retroByQ.get(q.id)||null)}),
+            btn("Edit",{kind:"ghost", onclick: ()=>openQuarterlyModal(yearly, q)}),
+            btn("Delete",{kind:"danger", onclick: async ()=>{ await del("quarterlyGoals", q.id); await navigate(route(), true); }})
+          ])
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+
+function openYearlyModal(editing){
+  const isEdit = !!editing;
+  const g = isEdit ? {...editing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    pillar: "fitness",
+    title: "",
+    details: "",
+    successCriteria: "",
+    targetDate: new Date(new Date().getFullYear(), 11, 31).toISOString()
+  };
+
+  const pillar = el("select",{class:"input"}, PILLARS.map(p=>el("option",{value:p.key},[document.createTextNode(p.name)])));
+  pillar.value = g.pillar;
+  const title = el("input",{class:"input", value:g.title, placeholder:"e.g., Get lean & strong"});
+  const errTitle = mkFieldError();
+  const details = el("textarea",{class:"input"}); details.value = g.details || "";
+  const success = el("textarea",{class:"input"}); success.value = g.successCriteria || "";
+  const target = el("input",{class:"input", type:"date", value:(g.targetDate||new Date().toISOString()).slice(0,10)});
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"form2"},[
+      rowLabel("Pillar", pillar),
+      rowLabel("Target Date", target)
+    ]),
+    rowLabel("Title", title, errTitle),
+    rowLabel("Details", details),
+    rowLabel("Success Criteria", success)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("yearlyGoals", editing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn(isEdit ? "Save":"Create",{onclick: async ()=>{
+      const obj = isEdit ? editing : g;
+      obj.pillar = pillar.value;
+      obj.title = title.value.trim();
+      obj.details = details.value.trim();
+      obj.successCriteria = success.value.trim();
+      obj.targetDate = new Date(target.value+"T00:00:00").toISOString();
+      obj.updatedAt = new Date().toISOString();
+      setFieldError(errTitle,"");
+      if (!obj.title){ setFieldError(errTitle,"Title is required"); return; }
+      await put("yearlyGoals", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Yearly Goal" : "New Yearly Goal", body, footer });
+}
+
+function openQuarterlyModal(yearlyGoals, editing){
+  const isEdit = !!editing;
+  const q = isEdit ? {...editing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    pillar: "fitness",
+    title: "",
+    details: "",
+    startDate: dayKey(new Date()),
+    endDate: dayKey(addDays(new Date(), 90)),
+    yearlyGoalId: ""
+  };
+
+  const pillar = el("select",{class:"input"}, PILLARS.map(p=>el("option",{value:p.key},[document.createTextNode(p.name)])));
+  pillar.value = q.pillar;
+
+  const title = el("input",{class:"input", value:q.title, placeholder:"e.g., 90-day sprint"});
+  const errTitle = mkFieldError();
+  const details = el("textarea",{class:"input"}); details.value = q.details || "";
+  const start = el("input",{class:"input", type:"date", value:q.startDate});
+  const end = el("input",{class:"input", type:"date", value:q.endDate});
+
+  const y = el("select",{class:"input"},[
+    el("option",{value:""},[document.createTextNode("No yearly link")]),
+    ...yearlyGoals.map(g=>el("option",{value:g.id},[document.createTextNode(`${pillarName(g.pillar)}: ${g.title}`)]))
+  ]);
+  y.value = q.yearlyGoalId || "";
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"form2"},[
+      rowLabel("Pillar", pillar),
+      rowLabel("Link Yearly (optional)", y)
+    ]),
+    rowLabel("Title", title, errTitle),
+    rowLabel("Details", details),
+    el("div",{class:"form2"},[
+      rowLabel("Start", start),
+      rowLabel("End", end)
+    ])
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("quarterlyGoals", editing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn(isEdit ? "Save":"Create",{onclick: async ()=>{
+      const obj = isEdit ? editing : q;
+      obj.pillar = pillar.value;
+      obj.title = title.value.trim();
+      obj.details = details.value.trim();
+      obj.startDate = start.value;
+      obj.endDate = end.value;
+      obj.yearlyGoalId = y.value || "";
+      obj.updatedAt = new Date().toISOString();
+      setFieldError(errTitle,"");
+      if (!obj.title){ setFieldError(errTitle,"Title is required"); return; }
+      await put("quarterlyGoals", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Quarterly Goal" : "New Quarterly Goal", body, footer });
+}
+
+function openRetroModal(quarter, existing){
+  const isEdit = !!existing;
+  const r = isEdit ? {...existing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    quarterlyGoalId: quarter.id,
+    stop: "",
+    start: "",
+    cont: "",
+    notes: ""
+  };
+
+  const stop = el("textarea",{class:"input"}); stop.value = r.stop || "";
+  const start = el("textarea",{class:"input"}); start.value = r.start || "";
+  const cont = el("textarea",{class:"input"}); cont.value = r.cont || "";
+  const notes = el("textarea",{class:"input"}); notes.value = r.notes || "";
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode(`Quarter: ${quarter.title}`)]),
+    rowLabel("Stop", stop),
+    rowLabel("Start", start),
+    rowLabel("Continue", cont),
+    rowLabel("Notes", notes)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("quarterlyRetros", existing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn("Save",{onclick: async ()=>{
+      const obj = isEdit ? existing : r;
+      obj.stop = stop.value.trim();
+      obj.start = start.value.trim();
+      obj.cont = cont.value.trim();
+      obj.notes = notes.value.trim();
+      obj.updatedAt = new Date().toISOString();
+      await put("quarterlyRetros", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title:"Quarterly Retrospective", body, footer });
+}
+
+/* ---------- Relationships: frequency rules + overdue ---------- */
+async function viewRelationships(){
+  const [contacts, rules, touchpoints] = await Promise.all([
+    getAll("contacts"),
+    getAll("contactRules"),
+    getAll("touchpoints")
+  ]);
+
+  contacts.sort((a,b)=>a.name.localeCompare(b.name));
+  touchpoints.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+  const ruleByContact = new Map(rules.map(r=>[r.contactId, r]));
+  const overdue = await computeDueContacts();
+  const overdueSet = new Set(overdue.map(x=>x.id));
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("People I Love ❀")]),
+    el("div",{class:"subtle"},[document.createTextNode("Nurture your connections")])
+  ]);
+
+  const leftBody = el("div",{class:"fillCol"},[
+el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("My circle")]),
+      btn("+ Add",{onclick: ()=>openContactModal()})
+    ]),
+    el("div",{class:"scroll-area relScroll flexFill"},[contactsList(contacts, ruleByContact, overdueSet)])
+  ]);
+
+  const rightBody = el("div",{class:"fillCol"},[
+el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Recent moments")]),
+      btn("+ Log",{onclick: ()=>openTouchpointModal(contacts)})
+    ]),
+    el("div",{class:"scroll-area relScroll flexFill"},[touchpointsList(touchpoints, contacts)])
+  ]);
+
+  const top = overdue.length ? card("Overdue", "Based on your rules.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
+
+  return el("div",{class:"fillPage"},[
+    el("div",{class:"stack"},[header, top]),
+    el("div",{class:"fillMain"},[
+      el("div",{class:"grid fillGrid"},[cardFill("Contacts", "Rule = every N days.", leftBody),
+      cardFill("Check-ins", "Calls, texts, meets.", rightBody)])
+    ])
+  ]);
+}
+
+function contactsList(contacts, ruleByContact, overdueSet){
+  const list = el("div",{class:"list"},[]);
+  if (!contacts.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No contacts yet.")]));
+    return list;
+  }
+
+  for (const c of contacts){
+    const r = ruleByContact.get(c.id);
+    const days = Number(r?.desiredEveryDays || 0);
+    const status = overdueSet.has(c.id) ? badge("Overdue","bad") : badge("OK","good");
+
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(c.name)]),
+          el("div",{class:"m"},[document.createTextNode(days ? `Every ${days} day(s)` : "No frequency rule")])
+        ]),
+        el("div",{class:"actions"},[
+          status,
+          btn("Edit",{kind:"ghost", onclick: ()=>openContactModal(c)}),
+          btn("Rule",{kind:"ghost", onclick: ()=>openRuleModal(c, r || null)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{
+            if (r) await del("contactRules", r.id);
+            await del("contacts", c.id);
+            await navigate(route(), true);
+          }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+function touchpointsList(items, contacts){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No touchpoints yet.")]));
+    return list;
+  }
+  for (const t of items.slice(0, 60)){
+    const c = contacts.find(x=>x.id===t.contactId);
+    const dateStr = t.datetime ? formatDate(new Date(t.datetime)) : (t.dateKey || "No date");
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(c?.name || "Unknown")]),
+          el("div",{class:"m"},[document.createTextNode(`${t.type || "check-in"} • ${dateStr}`)])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openTouchpointModal(contacts, t)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
+        ])
+      ]),
+      (t.notes || t.note) ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(t.notes || t.note)]) : el("div")
+    ]));
+  }
+  return list;
+}
+
+function openContactModal(existing=null){
+  const isEdit = !!existing;
+  const name = el("input",{class:"input", placeholder:"Name", value: existing?.name || ""});
+  const errName = mkFieldError();
+  const tags = el("input",{class:"input", placeholder:"Comma separated (optional)", value: (existing?.tags || []).join(", ")});
+  const notes = el("textarea",{class:"input"}); notes.value = existing?.notes || "";
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Name", name, errName),
+    rowLabel("Tags", tags),
+    rowLabel("Notes", notes)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      setFieldError(errName,"");
+      if (!name.value.trim()){ setFieldError(errName,"Name is required"); return; }
+      await put("contacts", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        name: name.value.trim(),
+        tags: tags.value.split(",").map(s=>s.trim()).filter(Boolean),
+        notes: notes.value.trim()
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Contact" : "New Contact", body, footer });
+}
+
+function openRuleModal(contact, existing){
+  const isEdit = !!existing;
+  const r = isEdit ? {...existing} : { id: uuid(), createdAt: new Date().toISOString(), contactId: contact.id, desiredEveryDays: 7 };
+
+  const days = el("input",{class:"input", type:"number", min:"1", max:"365", value: Number(r.desiredEveryDays || 7)});
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode(`Contact: ${contact.name}`)]),
+    rowLabel("Desired frequency (every N days)", days),
+    el("div",{class:"muted small"},[document.createTextNode("Due triggers when the last touchpoint is older than N days.")])
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("contactRules", existing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn("Save",{onclick: async ()=>{
+      const obj = isEdit ? existing : r;
+      obj.desiredEveryDays = clamp(Number(days.value || 7), 1, 365);
+      await put("contactRules", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title:"Reminder rule", body, footer });
+}
+
+function openTouchpointModal(contacts, existing=null){
+  const isEdit = !!existing;
+  const who = el("select",{class:"input"},[
+    ...contacts.map(c=>el("option",{value:c.id, selected: (existing?.contactId===c.id)},[document.createTextNode(c.name)]))
+  ]);
+  const dt = el("input",{class:"input", type:"datetime-local"});
+  const errWho = mkFieldError();
+  const errDt = mkFieldError();
+  const now = new Date();
+  const base = existing?.datetime ? new Date(existing.datetime) : new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
+
+  const note = el("textarea",{class:"input"});
+  note.value = existing?.note || "";
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Contact", who, errWho),
+    rowLabel("When", dt, errDt),
+    rowLabel("Notes", note)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      setFieldError(errWho,"");
+      setFieldError(errDt,"");
+      if (!who.value){ setFieldError(errWho,"Contact is required"); return; }
+      if (!dt.value){ setFieldError(errDt,"Date and time is required"); return; }
+      await put("touchpoints", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        contactId: who.value,
+        datetime: new Date(dt.value).toISOString(),
+        dateKey: new Date(dt.value).toISOString().slice(0,10),
+        note: note.value.trim()
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Check-in" : "Log Check-in", body, footer });
+}
+
+/* ---------- Finance: budgets vs actual ---------- */
+async function viewFinance(){
+  const [tx, budgets] = await Promise.all([getAll("transactions"), getAll("budgets")]);
+  tx.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+  const mk = monthKey(new Date());
+  const monthTx = tx.filter(t => (t.date || "").slice(0,7) === mk);
+  const spent = monthTx.filter(t=>t.direction==="expense").reduce((s,t)=>s+Number(t.amount||0),0);
+
+  const budget = budgets.find(b => b.monthKey === mk) || null;
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("My Money ✿")]),
+    el("div",{class:"subtle"},[document.createTextNode(`${mk} • £${spent.toFixed(2)} spent`)])
+  ]);
+
+  const budgetBody = el("div",{class:"fillCol"},[
+el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Budget overview")]),
+      el("div",{class:"row"},[
+        btn("Budget",{kind:"ghost", onclick: ()=>openBudgetModal(mk, budget)}),
+        btn("+ Expense",{onclick: ()=>openTxModal()})
+      ])
+    ]),
+    el("div",{class:"scroll-area finScroll flexFill"},[budgetVsActual(budget, monthTx)])
+  ]);
+
+  const txBody = el("div",{class:"fillCol"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Transactions")]),
+      btn("+ Add",{onclick: ()=>openTxModal()})
+    ]),
+    el("div",{class:"scroll-area finScroll flexFill"},[txList(tx)])
+  ]);
+
+  return el("div",{class:"fillPage"},[
+    header,
+    el("div",{class:"fillMain"},[
+      el("div",{class:"grid fillGrid"},[cardFill("Budget vs Actual", "Category breakdown + progress.", budgetBody),
+      cardFill("Spending", "Manual entries (offline).", txBody)])
+    ])
+  ]);
+}
+
+function budgetVsActual(budget, monthTx){
+  const totalBudget = Number(budget?.totalBudget || 0);
+  const totalTx = monthTx.filter(t=>t.direction==="expense").reduce((s,t)=>s+Number(t.amount||0),0);
+  const rem = totalBudget ? (totalBudget-totalTx) : null;
+
+  const wrap = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      badge(totalBudget ? `Budget £${totalBudget.toFixed(2)}` : "No total budget", totalBudget ? "" : "warn"),
+      badge(`Actual £${totalTx.toFixed(2)}`, "")
+    ])
+  ]);
+
+  if (totalBudget){
+    const p = el("div",{class:"progress"},[el("div")]);
+    p.firstChild.style.width = `${clamp((totalTx/totalBudget)*100, 0, 200)}%`;
+    wrap.append(p);
+    wrap.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: £${rem.toFixed(2)}`)]));
+  }
+
+  const catTx = {};
+  for (const t of monthTx){
+    if (t.direction !== "expense") continue;
+    const c = (t.category || "General").trim() || "General";
+    catTx[c] = (catTx[c] || 0) + Number(t.amount||0);
+  }
+  const catBudget = budget?.categoryBudgets || {};
+  const cats = Object.keys({ ...catBudget, ...catTx }).sort((a,b)=>a.localeCompare(b));
+
+  if (!cats.length){
+    wrap.append(el("div",{class:"muted"},[document.createTextNode("No expenses yet.")]));
+    return wrap;
+  }
+
+  wrap.append(el("div",{class:"hr"}));
+  wrap.append(el("div",{class:"muted small"},[document.createTextNode("Category Budget vs Actual")]));
+
+  for (const c of cats){
+    const b = Number(catBudget[c] || 0);
+    const a = Number(catTx[c] || 0);
+    const state = b 
+      ? (a <= b ? badge("On track","good") : badge("Over","bad")) 
+      : btn("Add budget", {kind:"ghost", style:"font-size:11px; padding:4px 8px;", onclick: ()=>openCategoryBudgetModal(c, budget, a)});
+
+    wrap.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(c)]),
+          el("div",{class:"m"},[document.createTextNode(`Budget: ${b?`£${b.toFixed(2)}`:"—"} • Actual: £${a.toFixed(2)}`)])
+        ]),
+        el("div",{class:"actions"},[state])
+      ])
+    ]));
+  }
+
+  return wrap;
+}
+
+function txList(items){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No transactions yet.")]));
+    return list;
+  }
+  for (const t of items.slice(0, 60)){
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(`${t.direction==="income"?"+":"-"}£${Number(t.amount||0).toFixed(2)}`)]),
+          el("div",{class:"m"},[document.createTextNode(`${t.category || "General"} • ${formatDate(new Date(t.date))}`)])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openTxModal(t)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
+        ])
+      ]),
+      t.merchant ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(t.merchant)]) : el("div")
+    ]));
+  }
+  return list;
+}
+
+function openTxModal(existing=null){
+  const isEdit = !!existing;
+  const dt = el("input",{class:"input", type:"datetime-local"});
+  const errDt = mkFieldError();
+  const base = existing?.date ? new Date(existing.date) : new Date();
+  dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
+
+  const direction = el("select",{class:"input"},[
+    el("option",{value:"expense"},[document.createTextNode("Spend")]),
+    el("option",{value:"income"},[document.createTextNode("Income")])
+  ]);
+  // Set direction value after element creation for reliability
+  direction.value = existing?.direction || "expense";
+
+  const amount = el("input",{class:"input", type:"number", step:"0.01", value: existing ? Number(existing.amount||0) : ""});
+  const errAmount = mkFieldError();
+  const category = el("input",{class:"input", placeholder:"e.g., Food", value: existing?.category || ""});
+  const merchant = el("input",{class:"input", placeholder:"e.g., Tesco", value: existing?.merchant || ""});
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Date/Time", dt, errDt),
+    rowLabel("Type", direction),
+    rowLabel("Amount", amount, errAmount),
+    rowLabel("Category", category),
+    rowLabel("Merchant", merchant)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      setFieldError(errDt,"");
+      setFieldError(errAmount,"");
+      if(!dt.value){ setFieldError(errDt,"Date/Time is required"); return; }
+      const amt = Number(amount.value||0);
+      if(!amt || amt<=0){ setFieldError(errAmount,"Amount is required"); return; }
+      await put("transactions", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        date: new Date(dt.value).toISOString(),
+        direction: direction.value,
+        amount: Number(amount.value || 0),
+        category: category.value.trim() || "General",
+        merchant: merchant.value.trim()
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Transaction" : "New Transaction", body, footer });
+}
+
+function openBudgetModal(mk, existing){
+  const isEdit = !!existing;
+  const b = isEdit ? {...existing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    monthKey: mk,
+    totalBudget: 0,
+    categoryBudgets: {}
+  };
+
+  const total = el("input",{class:"input", type:"number", step:"0.01", value: Number(b.totalBudget || 0)});
+  const cats = el("textarea",{class:"input"});
+  cats.value = Object.entries(b.categoryBudgets || {}).map(([k,v])=>`${k}=${v}`).join("\n");
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode(`Month: ${mk}`)]),
+    rowLabel("Total Budget", total),
+    rowLabel("Category Budgets (one per line: Category=Amount)", cats)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("budgets", existing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+    btn("Save",{onclick: async ()=>{
+      const obj = isEdit ? existing : b;
+      obj.monthKey = mk;
+      obj.totalBudget = Number(total.value || 0);
+
+      const map = {};
+      for (const line of cats.value.split("\n")){
+        const s = line.trim();
+        if (!s) continue;
+        const parts = s.split("=");
+        if (parts.length < 2) continue;
+        const k = parts[0].trim();
+        const v = Number(parts.slice(1).join("=").trim());
+        if (!k) continue;
+        map[k] = isFinite(v) ? v : 0;
+      }
+      obj.categoryBudgets = map;
+
+      await put("budgets", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title:"Monthly Budget", body, footer });
+}
+
+async function openCategoryBudgetModal(categoryName, existingBudget, currentSpend){
+  const today = new Date();
+  const mk = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}`;
+  
+  // Suggest a budget based on current spend (rounded up to nearest 50)
+  const suggested = Math.ceil((currentSpend * 1.2) / 50) * 50 || 100;
+  
+  const budgetInput = el("input",{class:"input", type:"number", step:"0.01", placeholder:`e.g., ${suggested}`});
+  budgetInput.value = suggested;
+  
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode(`Set budget for "${categoryName}" (${mk})`)]),
+    el("div",{class:"muted small"},[document.createTextNode(`Current spend: £${currentSpend.toFixed(2)}`)]),
+    rowLabel("Budget Amount (£)", budgetInput)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      const amt = Number(budgetInput.value || 0);
+      if (amt <= 0) { alert("Please enter a valid budget amount"); return; }
+      
+      // Get or create budget for this month
+      const budgets = await getAll("budgets");
+      let budget = budgets.find(b => b.monthKey === mk);
+      
+      if (!budget) {
+        budget = {
+          id: uuid(),
+          createdAt: new Date().toISOString(),
+          monthKey: mk,
+          totalBudget: 0,
+          categoryBudgets: {}
+        };
+      }
+      
+      budget.categoryBudgets = budget.categoryBudgets || {};
+      budget.categoryBudgets[categoryName] = amt;
+      budget.updatedAt = new Date().toISOString();
+      
+      await put("budgets", budget);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: `Set ${categoryName} Budget`, body, footer });
+}
+
+/* ---------- Fitness: workouts + sets/reps ---------- */
+async function viewFitness(){
+  const [workouts, sets, bio] = await Promise.all([
+    getAll("workouts"),
+    getAll("workoutSets"),
+    getAll("biometrics")
+  ]);
+
+  workouts.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  bio.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+  const setsByWorkout = new Map();
+  for (const s of sets){
+    const arr = setsByWorkout.get(s.workoutId) || [];
+    arr.push(s);
+    setsByWorkout.set(s.workoutId, arr);
+  }
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("Wellness ❀")]),
+    el("div",{class:"subtle"},[document.createTextNode("Move your body, track progress")])
+  ]);
+
+  const wBody = el("div",{class:"fillCol"},[
+el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Workouts")]),
+      btn("+ Log",{onclick: ()=>openWorkoutModal()})
+    ]),
+    el("div",{class:"scroll-area fitScroll flexFill"},[workoutsList(workouts, setsByWorkout)])
+  ]);
+
+  const bBody = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Body stats")]),
+      btn("+ Add",{kind:"ghost", onclick: ()=>openBioModal()})
+    ]),
+    el("div",{class:"scroll-area fitScroll flexFill"},[bioList(bio)])
+  ]);
+
+  return el("div",{class:"fillPage"},[
+    header,
+    el("div",{class:"fillMain"},[
+      el("div",{class:"grid fillGrid"},[cardFill("Workouts", "Open a workout to add sets.", wBody),
+      cardFill("Biometrics", "Weight, BF%, sleep, energy.", bBody)])
+    ])
+  ]);
+}
+
+function workoutsList(workouts, setsByWorkout){
+  const list = el("div",{class:"list"},[]);
+  if (!workouts.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No workouts yet.")]));
+    return list;
+  }
+  for (const w of workouts.slice(0, 40)){
+    const ws = (setsByWorkout.get(w.id) || []).sort((a,b)=> (a.createdAt||"").localeCompare(b.createdAt||""));
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(w.title || "Workout")]),
+          el("div",{class:"m"},[document.createTextNode(`${formatDate(new Date(w.date))} • Sets: ${ws.length}`)])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openWorkoutModal(w)}),
+          btn("Open",{kind:"ghost", onclick: ()=>openWorkoutDetailModal(w, ws)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{
+            for (const s of ws) await del("workoutSets", s.id);
+            await del("workouts", w.id);
+            await navigate(route(), true);
+          }})
+        ])
+      ]),
+      w.notes ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(w.notes)]) : el("div")
+    ]));
+  }
+  return list;
+}
+
+function openWorkoutModal(existing=null){
+  const isEdit = !!existing;
+  const dt = el("input",{class:"input", type:"datetime-local"});
+  const errDt = mkFieldError();
+  const base = existing?.date ? new Date(existing.date) : new Date();
+  dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
+
+  const title = el("input",{class:"input", placeholder:"e.g., Push Day", value: existing?.title || ""});
+  const errTitle = mkFieldError();
+  const notes = el("textarea",{class:"input"}); notes.value = existing?.notes || "";
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Date/Time", dt, errDt),
+    rowLabel("Title", title, errTitle),
+    rowLabel("Notes", notes)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      setFieldError(errDt,"");
+      setFieldError(errTitle,"");
+      if(!dt.value){ setFieldError(errDt,"Date/Time is required"); return; }
+      if(!title.value.trim()){ setFieldError(errTitle,"Title is required"); return; }
+      await put("workouts", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        date: new Date(dt.value).toISOString(),
+        title: title.value.trim() || "Workout",
+        notes: notes.value.trim()
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Workout" : "New Workout", body, footer });
+}
+
+function openWorkoutDetailModal(workout, workoutSets){
+  const body = el("div",{class:"stack"},[]);
+  body.append(el("div",{class:"muted small"},[document.createTextNode(`${workout.title} • ${formatDate(new Date(workout.date))}`)]));
+
+  // Group sets by exercise name
+  const groups = new Map();
+  for (const s of (workoutSets||[])){
+    const key = String(s.exercise||"").trim() || "Exercise";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+
+  // Keep a stable order: by exercise name, then by createdAt/updatedAt
+  const exerciseNames = Array.from(groups.keys()).sort((a,b)=>a.localeCompare(b));
+  for (const k of exerciseNames){
+    groups.get(k).sort((a,b)=> String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+  }
+
+  body.append(btn("Add Set",{onclick: ()=>openSetModal(workout)}));
+
+  const wrap = el("div",{class:"list"},[]);
+  if (!workoutSets || !workoutSets.length){
+    wrap.append(el("div",{class:"muted"},[document.createTextNode("No sets yet. Add your first set.")]));
+  } else {
+    for (const ex of exerciseNames){
+      const sets = groups.get(ex) || [];
+
+      const section = el("div",{class:"exerciseGroup"},[
+        el("div",{class:"exerciseHeader"},[
+          el("div",{class:"h"},[document.createTextNode(ex)]),
+          el("div",{class:"m"},[document.createTextNode(`${sets.length} set${sets.length===1?"":"s"}`)])
+        ])
+      ]);
+
+      const list = el("div",{class:"exerciseList"},[]);
+      for (let i=0;i<sets.length;i++){
+        const s = sets[i];
+        const setNo = i+1;
+        const w = (s.weight === null || s.weight === undefined || s.weight === "" || Number(s.weight) === 0) ? null : Number(s.weight);
+        const line = `${s.reps} reps${w ? ` @ ${w}kg` : ""}`;
+
+        list.append(el("div",{class:"item compact"},[
+          el("div",{class:"top"},[
+            el("div",{},[
+              el("div",{class:"h"},[document.createTextNode(line)]),
+              el("div",{class:"m"},[document.createTextNode(`Set ${setNo}`)])
+            ]),
+            el("div",{class:"actions"},[
+              btn("Edit",{kind:"ghost", onclick: ()=>openSetModal(workout, s)}),
+              btn("Delete",{kind:"danger", onclick: async ()=>{
+                await del("workoutSets", s.id);
+                modal.close();
+                await navigate(route(), true);
+              }})
+            ])
+          ])
+        ]));
+      }
+
+      section.append(list);
+      wrap.append(section);
+    }
+  }
+
+  body.append(wrap);
+
+  const footer = el("div",{},[
+    btn("Close",{kind:"ghost", onclick: ()=>modal.close()})
+  ]);
+
+  modal.open({ title:"Workout Details", body, footer });
+}
+
+async function openSetModal(workout, existing=null){
+  const isEdit = !!existing;
+
+  // Suggest existing exercises in this workout (keeps names consistent for grouping)
+  let exerciseOptions = [];
+  try{
+    const allSets = await getAll("workoutSets");
+    exerciseOptions = allSets
+      .filter(x=>x.workoutId===workout.id)
+      .map(x=>String(x.exercise||"").trim())
+      .filter(Boolean);
+    exerciseOptions = Array.from(new Set(exerciseOptions)).sort((a,b)=>a.localeCompare(b));
+  }catch(e){ exerciseOptions = []; }
+
+  const dlId = `exerciseSuggestions-${workout.id}`;
+  const dl = el("datalist",{id: dlId}, exerciseOptions.map(v=>el("option",{value:v},[])));
+
+  const exercise = el("input",{class:"input", list: dlId, placeholder:"Exercise", value: existing?.exercise || ""});
+  const errExercise = mkFieldError();
+
+  const reps = el("input",{class:"input", type:"number", step:"1", value: existing ? String(existing.reps ?? "") : ""});
+  const errReps = mkFieldError();
+
+  const weight = el("input",{class:"input", type:"number", step:"0.5", value: (existing && existing.weight!=null && Number(existing.weight)!==0) ? String(existing.weight) : ""});
+
+  const body = el("div",{class:"stack"},[
+    dl,
+    el("div",{class:"muted small"},[document.createTextNode(isEdit ? "Edit Set" : "Add Set")]),
+    rowLabel("Exercise", exercise),
+    errExercise,
+    rowLabel("Reps", reps),
+    errReps,
+    rowLabel("Weight (kg, optional)", weight)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn(isEdit ? "Save" : "Add",{onclick: async ()=>{
+      const ex = String(exercise.value||"").trim();
+      const repsVal = String(reps.value||"").trim();
+
+      setFieldError(errExercise, "");
+      setFieldError(errReps, "");
+
+      let ok = true;
+      if(!ex){ setFieldError(errExercise, "Exercise is required"); ok = false; }
+      if(!repsVal || Number(repsVal) <= 0){ setFieldError(errReps, "Reps must be greater than 0"); ok = false; }
+      if(!ok) return;
+
+      const obj = existing ? {...existing} : { id: uuid(), workoutId: workout.id, createdAt: new Date().toISOString() };
+      obj.exercise = ex;
+      obj.reps = Number(repsVal);
+      obj.weight = (String(weight.value).trim()==="" ? null : Number(weight.value));
+      obj.updatedAt = new Date().toISOString();
+
+      await put("workoutSets", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Set" : "Add Set", body, footer });
+}
+
+function openBioModal(existing=null){
+  const isEdit = !!existing;
+  const dt = el("input",{class:"input", type:"date"});
+  dt.value = existing?.date ? String(existing.date).slice(0,10) : dayKey(new Date());
+
+  const weight = el("input",{class:"input", type:"number", step:"0.1", value: existing ? Number(existing.weight||0) : ""});
+  const bf = el("input",{class:"input", type:"number", step:"0.1", value: existing ? Number(existing.bodyFat||0) : ""});
+  const sleep = el("input",{class:"input", type:"number", step:"0.1", value: existing ? Number(existing.sleepHours||0) : ""});
+  const energy = el("input",{class:"input", type:"number", step:"1", value: existing ? Number(existing.energy||0) : ""});
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Date", dt),
+    rowLabel("Weight (kg)", weight),
+    rowLabel("Body Fat (%)", bf),
+    rowLabel("Sleep (hours)", sleep),
+    rowLabel("Energy (1-10)", energy)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      if(!dt.value) return toast("Date is required");
+      const w = Number(weight.value||0), b = Number(bf.value||0), s = Number(sleep.value||0), e = Number(energy.value||0);
+      if(!w && !b && !s && !e) return toast("Enter at least one value");
+      await put("biometrics", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        date: dt.value,
+        weight: Number(weight.value || 0),
+        bodyFat: Number(bf.value || 0),
+        sleepHours: Number(sleep.value || 0),
+        energy: Number(energy.value || 0)
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Biometrics" : "New Biometrics", body, footer });
+}
+
+function bioList(items){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No biometrics yet.")]));
+    return list;
+  }
+  for (const b of items.slice(0, 30)){
+    const meta = [
+      b.weightKg!=null ? `${b.weightKg}kg` : null,
+      b.bodyFatPct!=null ? `${b.bodyFatPct}% BF` : null,
+      b.sleepHours!=null ? `${b.sleepHours}h sleep` : null,
+      b.energyLevel!=null ? `Energy ${b.energyLevel}/10` : null
+    ].filter(Boolean).join(" • ");
+
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(b.date)]),
+          el("div",{class:"m"},[document.createTextNode(meta || "—")])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openBioModal(b)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+/* ---------- Spiritual (small base) ---------- */
+async function viewSpiritual(){
+  const [verse, prayers, sermons] = await Promise.all([
+    ensureVerse(),
+    getAll("prayers"),
+    getAll("sermons")
+  ]);
+
+  prayers.sort((a,b)=> (b.dateRequested||"").localeCompare(a.dateRequested||""));
+  sermons.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("Faith & Spirit ✿")]),
+    el("div",{class:"subtle"},[document.createTextNode("Nourish your soul")])
+  ]);
+
+  const verseBody = el("div",{class:"stack"},[
+    el("div",{class:"banner"},[
+      el("div",{class:"t"},[document.createTextNode("My Verse")]),
+      el("div",{class:"ref"},[document.createTextNode(verse.reference || "")]),
+      verse.text ? el("div",{class:"txt"},[document.createTextNode(verse.text)]) : el("div",{class:"txt"})
+    ]),
+    btn("Edit",{kind:"ghost", onclick: ()=>openVerseModal(verse)})
+  ]);
+
+  const prayersBody = el("div",{class:"fillCol"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Prayers")]),
+      btn("+ Add",{onclick: ()=>openPrayerModal()})
+    ]),
+    el("div",{class:"scroll-area spiScroll flexFill", style:"overflow-y:auto;"},[prayerList(prayers)])
+  ]);
+
+  const sermonsBody = el("div",{class:"fillCol"},[
+    el("div",{class:"row spread"},[
+      el("div",{class:"muted small"},[document.createTextNode("Notes")]),
+      btn("+ Add",{onclick: ()=>openSermonModal()})
+    ]),
+    el("div",{class:"scroll-area spiScroll flexFill", style:"overflow-y:auto;"},[sermonList(sermons)])
+  ]);
+
+  return el("div",{class:"fillPage"},[
+    header,
+    el("div",{class:"fillMain"},[
+      el("div",{class:"grid fillGrid"},[card("Verse", "Shows on dashboard.", verseBody),
+      el("div",{class:"stack", style:"gap:14px;"},[
+        cardFill("Prayer Journal", "Track requested → answered.", prayersBody),
+        cardFill("Sermon Notes", "Notes + application.", sermonsBody)
+      ])])
+    ])
+  ]);
+}
+
+function openVerseModal(existing){
+  const ref = el("input",{class:"input", value: existing?.reference || ""});
+  const txt = el("textarea",{class:"input"}); txt.value = existing?.text || "";
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Reference", ref),
+    rowLabel("Text", txt)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      await put("verse", { id: existing?.id || uuid(), reference: ref.value.trim(), text: txt.value.trim() });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title:"Edit Verse", body, footer });
+}
+
+function openPrayerModal(existing=null){
+  const isEdit = !!existing;
+  const requested = el("input",{class:"input", type:"date"});
+  const errReq = mkFieldError();
+  requested.value = existing?.dateRequested || dayKey(new Date());
+
+  const answered = el("input",{class:"input", type:"date"});
+  answered.value = existing?.dateAnswered || "";
+
+  const details = el("textarea",{class:"input"});
+  const errDetails = mkFieldError();
+  details.value = existing?.requestDetails || "";
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Date Requested", requested, errReq),
+    rowLabel("Request Details", details, errDetails),
+    rowLabel("Date Answered (optional)", answered)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      setFieldError(errReq,"");
+      setFieldError(errDetails,"");
+      if(!requested.value){ setFieldError(errReq,"Date Requested is required"); return; }
+      if(!details.value.trim()){ setFieldError(errDetails,"Request Details is required"); return; }
+      await put("prayers", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        dateRequested: requested.value,
+        requestDetails: details.value.trim(),
+        dateAnswered: answered.value || ""
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Prayer" : "New Prayer", body, footer });
+}
+
+function prayerList(items){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No prayers yet.")]));
+    return list;
+  }
+  for (const p of items.slice(0, 40)){
+    const meta = `Requested: ${p.dateRequested} • ${p.dateAnswered ? "Answered: "+p.dateAnswered : "Unanswered"}`;
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(p.requestDetails || "(empty)")]),
+          el("div",{class:"m"},[document.createTextNode(meta)])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Open",{kind:"ghost", onclick: ()=>openPrayerModal(p)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("prayers", p.id); await navigate(route(), true); }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+function openSermonModal(existing=null){
+  const isEdit = !!existing;
+  const d = el("input",{class:"input", type:"date"});
+  const errDate = mkFieldError();
+  d.value = existing?.date || dayKey(new Date());
+
+  const title = el("input",{class:"input", placeholder:"Title", value: existing?.title || ""});
+  const errTitle = mkFieldError();
+  const notes = el("textarea",{class:"input"}); notes.value = existing?.mainNotes || "";
+  const appField = el("textarea",{class:"input"}); appField.value = existing?.application || "";
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Date", d, errDate),
+    rowLabel("Title", title, errTitle),
+    rowLabel("Notes", notes),
+    rowLabel("Application", appField)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn("Save",{onclick: async ()=>{
+      setFieldError(errDate,"");
+      setFieldError(errTitle,"");
+      if(!d.value){ setFieldError(errDate,"Date is required"); return; }
+      if(!title.value.trim()){ setFieldError(errTitle,"Title is required"); return; }
+      await put("sermons", {
+        id: existing?.id || uuid(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        date: d.value,
+        title: title.value.trim(),
+        mainNotes: notes.value.trim(),
+        application: appField.value.trim()
+      });
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title: isEdit ? "Edit Sermon Note" : "Sermon Note", body, footer });
+}
+
+function sermonList(items){
+  const list = el("div",{class:"list"},[]);
+  if (!items.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("No sermon notes yet.")]));
+    return list;
+  }
+  for (const s of items.slice(0, 40)){
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(s.title)]),
+          el("div",{class:"m"},[document.createTextNode(`${s.date} • ${s.application ? "Has application" : "No application"}`)])
+        ]),
+        el("div",{class:"actions"},[
+          btn("Edit",{kind:"ghost", onclick: ()=>openSermonModal(s)}),
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("sermons", s.id); await navigate(route(), true); }})
+        ])
+      ])
+    ]));
+  }
+  return list;
+}
+
+/* ---------- Weekly Review ---------- */
+async function viewWeekly(settings, baseKey){
+  const base = baseKey ? new Date(baseKey+"T00:00:00") : new Date();
+  const ws = weekStart(base, !!settings.weekStartsMonday);
+  const we = addDays(ws, 7);
+
+  const [touch, tx, prayers, sermons] = await Promise.all([
+    getAll("touchpoints"),
+    getAll("transactions"),
+    getAll("prayers"),
+    getAll("sermons")
+  ]);
+
+  const inWeek = (isoOrKey)=>{
+    const d = isoOrKey.length===10 ? new Date(isoOrKey+"T00:00:00") : new Date(isoOrKey);
+    return d >= ws && d < we;
+  };
+
+  const moneySpent = tx.filter(t=>t.direction==="expense" && inWeek(t.date)).reduce((s,t)=>s+Number(t.amount||0),0);
+  const touchCount = touch.filter(t=>inWeek(t.dateKey || t.datetime || t.date || "")).length;
+  const spiritualCount = prayers.filter(p=>inWeek(p.dateRequested || p.createdAt || "")).length + sermons.filter(s=>inWeek(s.date || s.createdAt || "")).length;
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("Weekly Review")]),
+    el("div",{class:"subtle"},[document.createTextNode(`${formatShort(ws)} → ${formatShort(addDays(we,-1))}`)])
+  ]);
+
+  const body = el("div",{class:"stack"},[
+    card("Money Spent", "Expenses this week.", el("div",{class:"h1", style:"font-size:28px"},[document.createTextNode(`£${moneySpent.toFixed(2)}`)])),
+    card("Relationship Touchpoints", "Calls/texts/meets logged.", el("div",{class:"h1", style:"font-size:28px"},[document.createTextNode(String(touchCount))])),
+    card("Spiritual Actions", "Prayers + sermons created.", el("div",{class:"h1", style:"font-size:28px"},[document.createTextNode(String(spiritualCount))]))
+  ]);
+
+  return el("div",{class:"stack"},[header, body]);
+}
+
+/* ---------- Settings ---------- */
+
+/* ---------- Day view (history) ---------- */
+async function viewDay(settings, key){
+  const date = new Date(key + "T00:00:00");
+  const [tasks, blocks, reviews, tx, touch, workouts, prayers, bio] = await Promise.all([
+    getAll("tasks"),
+    getAll("timeBlocks"),
+    getAll("dailyReviews"),
+    getAll("transactions"),
+    getAll("touchpoints"),
+    getAll("workouts"),
+    getAll("prayers"),
+    getAll("biometrics")
+  ]);
+
+  const dayTasks = tasks.filter(t=>(t.scheduledDate||t.date||"" )===key);
+  const dayBlocks = blocks.filter(b=>b.date===key).sort((a,b)=>(a.startMins??a.startMin)-(b.startMins??b.startMin));
+  const dayTx = tx.filter(t=>String(t.date||"").slice(0,10)===key);
+  const spend = dayTx.filter(t=>t.direction==="expense").reduce((s,t)=>s+Number(t.amount||0),0);
+  const income = dayTx.filter(t=>t.direction==="income").reduce((s,t)=>s+Number(t.amount||0),0);
+  const dayTouch = touch.filter(t=>String(t.dateKey||t.datetime||"").slice(0,10)===key);
+  const dayWorkouts = workouts.filter(w=>String(w.date||"").slice(0,10)===key);
+  const dayPrayers = prayers.filter(p=>String(p.dateRequested||p.createdAt||"").slice(0,10)===key);
+  const review = reviews.find(r=>r.date===key);
+  const bioDay = bio.filter(b=>(b.date||"").slice(0,10)===key).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")))[0];
+
+  const header = el("div",{class:"row", style:"justify-content:space-between; align-items:center;"},[
+    btn("← Back",{kind:"ghost", onclick:()=>{ location.hash = "weekly/" + key; }}),
+    el("div",{},[
+      el("div",{class:"h1"},[document.createTextNode(date.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric", year:"numeric"}))]),
+      el("div",{class:"muted"},[document.createTextNode(key)])
+    ]),
+    el("div",{})
+  ]);
+
+  const scoreCard = card("Daily Score", "", el("div",{class:"stack"},[
+    el("div",{class:"row", style:"gap:10px; flex-wrap:wrap;"},[
+      badge(review ? ("Score " + (review.score||0)) : "No score"),
+      badge(dayTasks.filter(t=>t.status==="done").length + "/" + dayTasks.length + " tasks done"),
+      badge("£" + spend.toFixed(2) + " spent"),
+      badge(dayTouch.length + " check-ins")
+    ]),
+    review ? el("div",{class:"muted"},[document.createTextNode(review.notes || "")]) : el("div",{class:"muted"},[document.createTextNode("No review saved for this day.")])
+  ]));
+
+  const tasksCard = card("Tasks", "", el("div",{class:"stack"}, dayTasks.length ? dayTasks.map(t=>el("div",{class:"row", style:"justify-content:space-between;"},[
+    el("div",{},[document.createTextNode((t.status==="done" ? "✓ " : "• ") + t.title)]),
+    t.pillar ? badge(t.pillar) : el("span",{})
+  ])) : [el("div",{class:"muted"},[document.createTextNode("No tasks saved for this day.")])]));
+
+  const blocksCard = card("Time Blocks", "", el("div",{class:"stack"}, dayBlocks.length ? dayBlocks.map(b=>{
+    const s = minutesToLabel(b.startMins??b.startMin);
+    const e = minutesToLabel(b.endMins??b.endMin);
+    return el("div",{class:"row", style:"justify-content:space-between;"},[
+      el("div",{},[document.createTextNode(`${s}–${e} • ${b.title || "Block"}`)]),
+      b.taskId ? badge("Linked") : el("span",{})
+    ]);
+  }) : [el("div",{class:"muted"},[document.createTextNode("No time blocks saved for this day.")])]));
+
+  const moneyCard = card("Money", "", el("div",{class:"stack"},[
+    el("div",{class:"row", style:"gap:10px; flex-wrap:wrap;"},[
+      badge("Spent £" + spend.toFixed(2)),
+      badge("In £" + income.toFixed(2))
+    ]),
+    ...(dayTx.length ? dayTx.map(t=>el("div",{class:"row", style:"justify-content:space-between;"},[
+      el("div",{},[document.createTextNode(`${t.direction==="expense" ? "Spent" : "In"} • £${Number(t.amount||0).toFixed(2)} • ${t.category || "Other"}`)]),
+      el("div",{class:"muted small"},[document.createTextNode((t.note||"").slice(0,50))])
+    ])) : [el("div",{class:"muted"},[document.createTextNode("No spending saved for this day.")])])
+  ]));
+
+  const relCard = card("Relationships", "", el("div",{class:"stack"}, dayTouch.length ? dayTouch.map(x=>el("div",{class:"row", style:"justify-content:space-between;"},[
+    el("div",{},[document.createTextNode(`${x.contactName || x.name || "Contact"} • Check-in`)]),
+    el("div",{class:"muted small"},[document.createTextNode(x.note || "")])
+  ])) : [el("div",{class:"muted"},[document.createTextNode("No check-ins saved for this day.")])]));
+
+  const fitCard = card("Fitness", "", el("div",{class:"stack"},[
+    ...(bioDay ? [el("div",{class:"row", style:"gap:10px; flex-wrap:wrap;"},[
+      bioDay.weight ? badge("Weight " + bioDay.weight) : el("span",{}),
+      bioDay.bodyFat ? badge("BF% " + bioDay.bodyFat) : el("span",{})
+    ])] : [el("div",{class:"muted"},[document.createTextNode("No body stats saved for this day.")])]),
+    ...(dayWorkouts.length ? dayWorkouts.map(w=>el("div",{class:"row", style:"justify-content:space-between;"},[
+      el("div",{},[document.createTextNode(w.title || "Workout")]),
+      el("div",{class:"muted small"},[document.createTextNode((w.notes||"").slice(0,60))])
+    ])) : [el("div",{class:"muted"},[document.createTextNode("No workouts saved for this day.")])])
+  ]));
+
+  const spiritCard = card("Spiritual", "", el("div",{class:"stack"}, dayPrayers.length ? dayPrayers.map(p=>el("div",{class:"stack"},[
+    el("div",{class:"row", style:"justify-content:space-between;"},[
+      el("div",{},[document.createTextNode("Prayer")]),
+      p.dateAnswered ? badge("Answered","good") : badge("Open")
+    ]),
+    el("div",{class:"muted small"},[document.createTextNode((p.requestDetails||"").slice(0,120))])
+  ])) : [el("div",{class:"muted"},[document.createTextNode("No prayers saved for this day.")])]));
+
+  return el("div",{class:"stack"},[
+    header,
+    scoreCard,
+    el("div",{class:"grid2"},[tasksCard, blocksCard]),
+    el("div",{class:"grid2"},[moneyCard, relCard]),
+    el("div",{class:"grid2"},[fitCard, spiritCard])
+  ]);
+}
+
+
+async function viewDiary(settings){
+  const hasPin = !!settings.diaryPinHash;
+  const unlocked = hasPin && diaryIsUnlocked();
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("My Diary ❀")]),
+    el("div",{class:"subtle"},[document.createTextNode("Your private thoughts")])
+  ]);
+
+  // No PIN set - only show option to set PIN
+  if (!hasPin) {
+    const btnSetPin = btn("Set PIN",{onclick: async ()=>{
+      const a = el("input",{class:"input", type:"password", inputmode:"numeric", placeholder:"Set a PIN (4+ digits)"});
+      const b = el("input",{class:"input", type:"password", inputmode:"numeric", placeholder:"Confirm PIN"});
+      const body = el("div",{class:"stack"},[
+        el("div",{class:"muted small"},[document.createTextNode("This locks your Diary on this device.")]),
+        a,b
+      ]);
+      const ok = await confirmModal("Set Diary PIN", body, "Set PIN");
+      if(!ok) return;
+      const p1 = (a.value||"").trim();
+      const p2 = (b.value||"").trim();
+      if(!p1 || p1.length < 4) return toast("Use at least 4 digits");
+      if(p1 !== p2) return toast("PINs do not match");
+
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(x=>x.toString(16).padStart(2,"0")).join("");
+      settings.diaryPinSalt = salt;
+      settings.diaryPinHash = await hashPin(p1, salt);
+      await put("settings", settings);
+      diarySetUnlocked(true); // unlock after setting PIN so user can add entries
+      toast("PIN set - diary unlocked");
+      location.hash = "diary?t=" + Date.now();
+    }});
+
+    return el("div",{class:"stack"},[
+      header,
+      card("Set Up Your Diary", "", el("div",{class:"stack"},[
+        el("div",{class:"muted"},[document.createTextNode("Your diary is private. Set a PIN to protect your entries.")]),
+        el("div",{class:"row"},[btnSetPin])
+      ]))
+    ]);
+  }
+
+  // PIN set but locked - show unlock option only
+  if (!unlocked) {
+    const btnUnlock = btn("Unlock",{onclick: async ()=>{
+      const u = await diaryEnsureUnlock(settings, "diary");
+      if(!u.ok){ await showModal("Unlock Diary", u.node); }
+    }});
+
+    return el("div",{class:"stack"},[
+      header,
+      card("Diary Locked", "", el("div",{class:"stack"},[
+        el("div",{class:"muted"},[document.createTextNode("🔒 Your diary is locked. Enter your PIN to unlock.")]),
+        el("div",{class:"row"},[btnUnlock])
+      ]))
+    ]);
+  }
+
+  // PIN set and unlocked - show full diary
+  const entries = await getAll("diaryEntries");
+  entries.sort((a,b)=> (b.dateKey||"").localeCompare(a.dateKey||"") || (b.updatedAt||"").localeCompare(a.updatedAt||""));
+
+  const btnNew = btn("New entry",{onclick: async ()=>{
+    const id = uuid();
+    const today = dayKey(new Date());
+    const e = { id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), dateKey: today, title:"", content:"" };
+    await put("diaryEntries", e);
+    location.hash = "diary/" + id;
+  }});
+
+  const btnLock = btn("Lock",{kind:"ghost", onclick: async ()=>{
+    diarySetUnlocked(false);
+    toast("Locked");
+    // Force re-render by updating hash with timestamp then back to diary
+    location.hash = "diary?t=" + Date.now();
+  }});
+
+  const btnChangePin = btn("Change PIN",{kind:"ghost", onclick: async ()=>{
+    const curr = el("input",{class:"input", type:"password", inputmode:"numeric", placeholder:"Current PIN"});
+    const a = el("input",{class:"input", type:"password", inputmode:"numeric", placeholder:"New PIN (4+ digits)"});
+    const b = el("input",{class:"input", type:"password", inputmode:"numeric", placeholder:"Confirm New PIN"});
+    const body = el("div",{class:"stack"},[curr, a, b]);
+    const ok = await confirmModal("Change Diary PIN", body, "Change PIN");
+    if(!ok) return;
+    
+    // Verify current PIN
+    const currHash = await hashPin((curr.value||"").trim(), settings.diaryPinSalt);
+    if(currHash !== settings.diaryPinHash) return toast("Current PIN is incorrect");
+    
+    const p1 = (a.value||"").trim();
+    const p2 = (b.value||"").trim();
+    if(!p1 || p1.length < 4) return toast("Use at least 4 digits");
+    if(p1 !== p2) return toast("PINs do not match");
+
+    const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(x=>x.toString(16).padStart(2,"0")).join("");
+    settings.diaryPinSalt = salt;
+    settings.diaryPinHash = await hashPin(p1, salt);
+    await put("settings", settings);
+    toast("PIN changed");
+  }});
+
+  const topRow = el("div",{class:"row spread"},[
+    el("div",{class:"muted small"},[document.createTextNode("🔓 Unlocked")]),
+    el("div",{class:"row"},[btnNew, btnLock, btnChangePin])
+  ]);
+
+  const list = entries.length
+    ? el("div",{class:"diaryList"}, entries.map(e=>{
+        const title = (e.title||"").trim() || "(untitled)";
+        const date = e.dateKey || "";
+        const preview = (e.content||"").trim().slice(0,140);
+        return el("button",{class:"listitem", onclick: ()=>{ location.hash = "diary/" + e.id; }},[
+          el("div",{class:"li-top"},[
+            el("div",{class:"li-title"},[document.createTextNode(title)]),
+            el("div",{class:"li-meta"},[document.createTextNode(date)]),
+          ]),
+          el("div",{class:"li-sub"},[document.createTextNode(preview)])
+        ]);
+      }))
+    : el("div",{class:"muted"},[document.createTextNode("No entries yet. Click 'New entry' to start writing.")]);
+
+  return el("div",{class:"diaryPage"},[
+    header,
+    topRow,
+    el("div",{class:"diaryListWrap"},[list])
+  ]);
+}
+
+async function viewDiaryEntry(settings, id){
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("Diary entry")]),
+    el("div",{class:"subtle"},[document.createTextNode("Write freely. It saves locally.")])
+  ]);
+  
+  // Check if locked
+  if(settings.diaryPinHash && !diaryIsUnlocked()){
+    const body = el("div",{class:"stack"},[
+      el("div",{class:"muted"},[document.createTextNode("Diary is locked. Unlock it from the Diary page.")]),
+      btn("Back to Diary",{kind:"ghost", onclick: ()=>{ location.hash = "diary"; }})
+    ]);
+    return el("div",{class:"stack"},[header, card("Locked", "", body)]);
+  }
+  
+  const all = await getAll("diaryEntries");
+  const entry = all.find(x=>x.id === id);
+  
+  if(!entry){
+    return el("div",{class:"stack"},[
+      header, 
+      card("Not Found", "", el("div",{class:"stack"},[
+        el("div",{class:"muted"},[document.createTextNode("Entry not found. It may have been deleted.")]),
+        btn("Back to Diary",{kind:"ghost", onclick: ()=>{ location.hash = "diary"; }})
+      ]))
+    ]);
+  }
+
+  const date = el("input",{class:"input", type:"date", value: entry.dateKey || dayKey(new Date())});
+  const title = el("input",{class:"input", placeholder:"Title (optional)", value: entry.title || ""});
+  const content = el("textarea",{class:"textarea", placeholder:"Write your poem or reflection...", rows:"14"});
+  content.value = entry.content || "";
+
+  const btnBack = btn("Back",{kind:"ghost", onclick: ()=>{ location.hash = "diary"; }});
+  const btnSave = btn("Save",{onclick: async ()=>{
+    entry.dateKey = date.value || entry.dateKey;
+    entry.title = title.value || "";
+    entry.content = content.value || "";
+    entry.updatedAt = new Date().toISOString();
+    await put("diaryEntries", entry);
+    toast("Saved");
+  }});
+  const btnDelete = btn("Delete",{kind:"danger", onclick: async ()=>{
+    const ok = await confirmModal("Delete entry?", el("div",{},[document.createTextNode("This cannot be undone.")]), "Delete");
+    if(!ok) return;
+    await del("diaryEntries", entry.id);
+    toast("Deleted");
+    location.hash = "diary?t=" + Date.now();
+  }});
+
+  const actionRow = el("div",{class:"row"},[btnBack, btnSave, btnDelete]);
+
+  const fields = el("div",{class:"stack"},[
+    rowLabel("Date", date),
+    rowLabel("Title", title),
+    el("div",{class:"stack"},[
+      el("div",{class:"label"},[document.createTextNode("Writing")]),
+      content
+    ])
+  ]);
+
+  const body = el("div",{class:"stack"},[
+    actionRow,
+    fields
+  ]);
+
+  return el("div",{class:"stack"},[
+    header,
+    card("Write", "", body)
+  ]);
+}
+
+
+
+
+async function viewSettings(settings){
+  const frog = el("input",{type:"checkbox"});
+  frog.checked = !!settings.frogRequired;
+
+  const time = el("input",{class:"input", type:"time", value: minsToHHMM(settings.dailyReviewPromptMins || 21*60)});
+
+  const notif = el("input",{type:"checkbox"});
+  notif.checked = !!settings.notificationsEnabled;
+
+  const hour = el("input",{class:"input", type:"number", min:"0", max:"23", value: Number(settings.overdueNotifyHour || 10)});
+
+  const monday = el("input",{type:"checkbox"});
+  monday.checked = !!settings.weekStartsMonday;
+
+  const perm = ("Notification" in window) ? Notification.permission : "unsupported";
+
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode("Settings ✿")]),
+    el("div",{class:"subtle"},[document.createTextNode("Customize your experience")])
+  ]);
+
+  const prefs = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      el("div",{},[
+        el("div",{style:"font-weight:800"},[document.createTextNode("Daily focus task")]),
+        el("div",{class:"muted small"},[document.createTextNode("Pick one priority each day")])
+      ]),
+      frog
+    ]),
+    rowLabel("Evening review time", time),
+    el("div",{class:"row spread"},[
+      el("div",{},[
+        el("div",{style:"font-weight:800"},[document.createTextNode("Week starts Monday")]),
+        el("div",{class:"muted small"},[document.createTextNode("For weekly summaries")])
+      ]),
+      monday
+    ]),
+    el("hr"),
+    el("div",{class:"row spread"},[
+      el("div",{},[
+        el("div",{style:"font-weight:950"},[document.createTextNode("Due notifications")]),
+        el("div",{class:"muted small"},[document.createTextNode("Browser notifications while the app is open.")])
+      ]),
+      notif
+    ]),
+    rowLabel("Notify hour (0-23)", hour),
+    el("div",{class:"muted small"},[document.createTextNode("Notification permission: " + perm)]),
+    el("div",{class:"row"},[
+      btn("Request Permission",{kind:"ghost", onclick: async ()=>{
+        try{
+          if(!("Notification" in window)) return toast("Notifications not supported here.");
+          await Notification.requestPermission();
+          await navigate(route(), true);
+        }catch(_){
+          toast("Couldn't request permission.");
+        }
+      }}),
+      btn("Save",{onclick: async ()=>{
+        settings.frogRequired = frog.checked;
+        settings.dailyReviewPromptMins = hhmmToMins(time.value);
+        settings.notificationsEnabled = notif.checked;
+        settings.overdueNotifyHour = clamp(Number(hour.value || 10), 0, 23);
+        settings.weekStartsMonday = monday.checked;
+        await put("settings", settings);
+        await navigate(route(), true);
+      }})
+    ])
+  ]);
+
+  // Spotify card (optional)
+  let spCard = null;
+  try{
+    if(typeof spotifyCfg === "function"){
+      const sp = spotifyCfg();
+      const spId = el("input",{class:"input", placeholder:"Spotify Client ID", value: sp.clientId || ""});
+      const spFull = el("input",{type:"checkbox"});
+      spFull.checked = (sp.useFull !== false);
+
+      const accLine = el("div",{class:"muted small"},[document.createTextNode("Account: checking…")]);
+      (async ()=>{
+        try{
+          if(typeof spotifyGetProfile !== "function") { accLine.textContent = "Account: not connected"; return; }
+          const p = await spotifyGetProfile();
+          if(!p){ accLine.textContent = "Account: not connected"; return; }
+          const prod = (p.product || "unknown").toLowerCase();
+          accLine.textContent = "Account: " + prod;
+        }catch(_){
+          accLine.textContent = "Account: not connected";
+        }
+      })();
+
+      const redirectLine = el("div",{class:"muted small"},[
+        document.createTextNode("Redirect URL to add in Spotify: " + (typeof spotifyRedirectUri === "function" ? spotifyRedirectUri() : ""))
+      ]);
+
+      spCard = card("Spotify (Optional)", "Connect for enhanced features.", el("div",{class:"stack"},[
+        accLine,
+        redirectLine,
+        el("label",{class:"label"},[document.createTextNode("Client ID")]),
+        spId,
+        el("label",{class:"row", style:"gap:10px; align-items:center;"},[
+          spFull,
+          el("div",{},[document.createTextNode("Use Spotify for full songs (Premium required)")])
+        ]),
+        el("div",{class:"row"},[
+          btn((typeof spotifyConnected==="function" && spotifyConnected()) ? "Reconnect" : "Connect",{onclick: async ()=>{
+            const cfg = spotifyCfg();
+            cfg.clientId = (spId.value||"").trim();
+            cfg.useFull = !!spFull.checked;
+            setSpotifyCfg(cfg);
+            if(!cfg.clientId) return toast("Paste your Spotify Client ID first.");
+            await spotifyBeginAuth();
+          }}),
+          btn("Disconnect",{kind:"ghost", onclick: async ()=>{
+            if(typeof spotifyClear==="function") spotifyClear();
+            toast("Spotify disconnected");
+            await navigate(route(), true);
+          }})
+        ])
+      ]));
+    }
+  }catch(_){
+    spCard = null;
+  }
+
+  // Music info card
+  const musicCard = card("Music Player", "Daily R&B Love Song", el("div",{class:"stack"},[
+    el("div",{class:"muted"},[document.createTextNode("Preview plays a 30-second clip in-app via iTunes.")]),
+    el("div",{class:"muted small"},[document.createTextNode("Click 'Play Full Video' to open the full song on YouTube.")])
+  ]));
+
+  return el("div",{class:"stack"},[
+    header,
+    card("Preferences", "", prefs),
+    spCard ? spCard : el("div"),
+    musicCard
+  ]);
+}
+
+
+/* ---------- Task + Daily review modals ---------- */
+function openTaskModal({ defaultDate, editing }){
+  const isEdit = !!editing;
+  const t = isEdit ? {...editing} : {
+    id: uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    title: "",
+    notes: "",
+    status: "todo",
+    scheduledDate: defaultDate || dayKey(new Date()),
+    isFrog: false,
+    pillar: "",
+    quarterlyGoalId: ""
+  };
+
+  Promise.all([getAll("quarterlyGoals")]).then(([qGoals])=>{
+    qGoals.sort((a,b)=> (b.startDate||"").localeCompare(a.startDate||""));
+
+    const title = el("input",{class:"input", value:(t.title||""), placeholder:"Task"});
+    const errTitle = mkFieldError();
+    const notes = el("textarea",{class:"input"}); notes.value = t.notes || "";
+    const date = el("input",{class:"input", type:"date", value:(t.scheduledDate||dayKey(new Date()))});
+    const errDate = mkFieldError();
+
+    const pillar = el("select",{class:"input"},[
+      el("option",{value:""},[document.createTextNode("No pillar")]),
+      ...PILLARS.map(p=>el("option",{value:p.key},[document.createTextNode(p.name)]))
+    ]);
+    pillar.value = t.pillar || "";
+
+    const q = el("select",{class:"input"},[
+      el("option",{value:""},[document.createTextNode("No quarterly link")]),
+      ...qGoals.map(g=>el("option",{value:g.id},[document.createTextNode(`${pillarName(g.pillar)}: ${g.title}`)]))
+    ]);
+    q.value = t.quarterlyGoalId || "";
+
+    const frog = el("input",{type:"checkbox"});
+    frog.checked = !!t.isFrog;
+
+    const body = el("div",{class:"stack"},[
+      rowLabel("Title", title, errTitle),
+      rowLabel("Notes", notes),
+      el("div",{class:"form3"},[
+        rowLabel("Date", date, errDate),
+        rowLabel("Pillar", pillar),
+        rowLabel("Quarterly link", q)
+      ]),
+      el("div",{class:"row"},[frog, el("div",{class:"muted small"},[document.createTextNode("Mark as Top Priority")])])
+    ]);
+
+    const footer = el("div",{},[
+      btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+      isEdit ? btn("Delete",{kind:"danger", onclick: async ()=>{ await del("tasks", editing.id); modal.close(); await navigate(route(), true); }}) : el("span"),
+      btn(isEdit ? "Save":"Create",{onclick: async ()=>{
+        const obj = isEdit ? editing : t;
+        setFieldError(errTitle, "");
+        setFieldError(errDate, "");
+        obj.title = title.value.trim();
+        if (!obj.title){ setFieldError(errTitle, "Title is required"); return; }
+        if (!date.value){ setFieldError(errDate, "Date is required"); return; }
+        obj.notes = notes.value.trim();
+        obj.scheduledDate = date.value;
+        obj.pillar = pillar.value || "";
+        obj.quarterlyGoalId = q.value || "";
+        obj.isFrog = frog.checked;
+        obj.updatedAt = new Date().toISOString();
+        await put("tasks", obj);
+        modal.close();
+        await navigate(route(), true);
+      }})
+    ]);
+
+    modal.open({ title: isEdit ? "Edit Task" : "New Task", body, footer });
+  });
+}
+
+function openDailyReviewModal(dateKeyStr, existing){
+  const score = el("input",{class:"input", type:"number", min:"1", max:"10", value: existing?.score ?? 7});
+  const errScore = el("div",{class:"field-error hidden"},[document.createTextNode("")]);
+  const notes = el("textarea",{class:"input"}); notes.value = existing?.notes ?? "";
+
+  const body = el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode(`Date: ${dateKeyStr}`)]),
+    rowLabel("Score (1-10)", score),
+    errScore,
+    rowLabel("Notes", notes)
+  ]);
+
+  const footer = el("div",{},[
+    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    btn(existing ? "Update":"Save",{onclick: async ()=>{
+      errScore.textContent = "";
+      errScore.classList.add("hidden");
+      const raw = Number(score.value);
+      if(!raw || raw < 1 || raw > 10){
+        errScore.textContent = "Score must be between 1 and 10";
+        errScore.classList.remove("hidden");
+        return;
+      }
+      const obj = existing ? {...existing} : { id: uuid(), createdAt: new Date().toISOString(), date: dateKeyStr };
+      obj.score = clamp(Number(score.value || 7), 1, 10);
+      obj.notes = notes.value.trim();
+      await put("dailyReviews", obj);
+      modal.close();
+      await navigate(route(), true);
+    }})
+  ]);
+
+  modal.open({ title:"Daily Scorecard", body, footer });
+}
+
+const appErrors = [];
+function logAppError(kind, message, detail){
+  const item = { kind, message: String(message||""), detail: detail ? String(detail).slice(0,800) : "", at: new Date().toISOString() };
+  appErrors.unshift(item);
+  if(appErrors.length > 50) appErrors.length = 50;
+}
+window.addEventListener("error", (e)=>{
+  try{
+    logAppError("error", e.message || "Error", (e.filename||"") + ":" + (e.lineno||"") + ":" + (e.colno||""));
+  }catch(_){}
+});
+window.addEventListener("unhandledrejection", (e)=>{
+  try{
+    const r = e.reason;
+    logAppError("promise", r?.message || "Unhandled rejection", r?.stack || String(r||""));
+  }catch(_){}
+});async function setGoalComplete(storeName, item, checked){
+  const obj = {...item};
+  obj.updatedAt = new Date().toISOString();
+  obj.isComplete = !!checked;
+  obj.completedAt = checked ? (obj.completedAt || new Date().toISOString()) : null;
+  await put(storeName, obj);
+  await navigate(route(), true);
+}
+
+function sortByCompleteThenUpdated(a,b){
+  const ac = a.isComplete ? 1 : 0;
+  const bc = b.isComplete ? 1 : 0;
+  if(ac !== bc) return ac - bc; // incomplete first
+  return String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||""));
+}
+
+function prettyDate(d){
+  if(!d) return "";
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return String(d);
+  return new Intl.DateTimeFormat("en-GB",{day:"numeric", month:"short", year:"numeric"}).format(dt);
+}
+function prettyDateRange(start, end){
+  if(!start || !end) return "";
+  const s = new Date(start), e = new Date(end);
+  if(Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return `${start} → ${end}`;
+  const sFmt = new Intl.DateTimeFormat("en-GB",{day:"numeric", month:"short"}).format(s);
+  const eFmt = new Intl.DateTimeFormat("en-GB",{day:"numeric", month:"short"}).format(e);
+  const sY = s.getFullYear(), eY = e.getFullYear();
+  if(sY === eY) return `${sFmt} – ${eFmt} ${sY}`;
+  return `${sFmt} ${sY} – ${eFmt} ${eY}`;
+}
+
+

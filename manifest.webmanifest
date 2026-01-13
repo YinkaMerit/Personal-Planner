@@ -1,0 +1,9 @@
+{
+  "name": "Tee's Personal Planner",
+  "short_name": "Tee Planner",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#7cb7ff",
+  "icons": []
+}

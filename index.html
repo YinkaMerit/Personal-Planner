@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head> <meta charset="utf-8" /> <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" /> <title>Tee's Planner</title> <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M18%2022h28v4H18zM18%2030h22v4H18zM18%2038h28v4H18z%22%20fill%3D%22white%22/%3E%3C/svg%3E"> <meta name="theme-color" content="#4a90d9"> 
+  <!-- iOS PWA meta tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tee Planner">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2236%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M45%2060h90v12H45zM45%2084h70v12H45zM45%20108h90v12H45z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+  <link rel="manifest" href="./manifest.webmanifest"> <link rel="stylesheet" href="./styles.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <button class="iconbtn" id="btnMenu" aria-label="Open menu">☰</button>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <div class="brand-title">Tee's Planner</div>
+        <div class="brand-sub">Bloom where you're planted ✿</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="date-selector">
+        <button class="btn ghost small" id="btnPrevDay" title="Previous day">◀</button>
+        <input type="date" id="globalDatePicker" class="date-input" />
+        <button class="btn ghost small" id="btnNextDay" title="Next day">▶</button>
+        <button class="btn ghost small" id="btnToday" title="Go to today">Today</button>
+      </div>
+      <button class="btn ghost" id="btnExport">Export</button>
+      <label class="btn ghost filebtn"> Import <input type="file" id="fileImport" accept="application/json" /> </label>
+    </div>
+  </header>
+
+  <aside class="drawer hidden" id="drawer" aria-hidden="true">
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <div class="drawer-title">✿ Menu</div>
+        <button class="iconbtn" id="btnCloseMenu" aria-label="Close menu">✕</button>
+      </div>
+      <nav class="nav">
+        <button class="navitem" data-route="cover">❀ Cover</button>
+        <button class="navitem" data-route="dashboard">✦ Today</button>
+        <button class="navitem" data-route="goals">✿ Goals</button>
+        <button class="navitem" data-route="relationships">❀ People</button>
+        <button class="navitem" data-route="finance">✿ Money</button>
+        <button class="navitem" data-route="fitness">❀ Wellness</button>
+        <button class="navitem" data-route="spiritual">✿ Faith</button>
+        <button class="navitem" data-route="weekly">❀ History</button>
+        <button class="navitem" data-route="diary">✿ Diary</button>
+        <button class="navitem" data-route="settings">❀ Settings</button>
+      </nav>
+      <div class="drawer-foot">
+        <div class="drawer-tip">✿ Add to home screen for the best experience</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="book">
+      <div class="spine"></div>
+      <button class="page-nav-btn prev" id="btnPrevPage" aria-label="Previous page">&#8249;</button>
+      <div class="pagehost" id="pageHost"></div>
+      <button class="page-nav-btn next" id="btnNextPage" aria-label="Next page">&#8250;</button>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="iconbtn" id="modalClose" aria-label="Close modal">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
