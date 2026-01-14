@@ -2,132 +2,154 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>iTunes Preview Test</title>
   <style>
     body { font-family: system-ui; padding: 20px; max-width: 500px; margin: 0 auto; }
-    button { padding: 15px 30px; font-size: 18px; margin: 10px 0; cursor: pointer; }
+    button { padding: 20px 40px; font-size: 20px; margin: 10px 0; cursor: pointer; display: block; width: 100%; }
     button:disabled { opacity: 0.5; }
-    #status { padding: 10px; background: #f0f0f0; margin: 10px 0; border-radius: 8px; white-space: pre-wrap; }
-    #artwork { width: 100px; height: 100px; background-size: cover; background-color: #ddd; border-radius: 8px; margin: 10px 0; }
+    #status { padding: 15px; background: #f0f0f0; margin: 10px 0; border-radius: 8px; white-space: pre-wrap; font-size: 14px; }
+    #artwork { width: 150px; height: 150px; background-size: cover; background-color: #ddd; border-radius: 12px; margin: 15px auto; }
+    h1 { text-align: center; }
+    p { text-align: center; color: #666; }
   </style>
 </head>
 <body>
-  <h1>iTunes Preview Test</h1>
-  <p>Testing: Beyoncé - Halo</p>
+  <h1>🎵 Audio Test</h1>
+  <p>Beyoncé - Halo</p>
   <div id="artwork"></div>
-  <div id="status">Loading preview URL...</div>
-  <button id="playBtn" disabled>Loading...</button>
+  <div id="status">Tap "Unlock Audio" first, then "Play"</div>
+  <button id="unlockBtn">🔓 Step 1: Unlock Audio</button>
+  <button id="playBtn" disabled>▶ Step 2: Play Preview</button>
   
   <script>
     const status = document.getElementById('status');
     const artwork = document.getElementById('artwork');
     const playBtn = document.getElementById('playBtn');
+    const unlockBtn = document.getElementById('unlockBtn');
     
-    let audio = null;
-    let playing = false;
+    let audioContext = null;
+    let audioBuffer = null;
+    let sourceNode = null;
+    let isPlaying = false;
+    let isUnlocked = false;
     
-    // Preload on page load
-    async function preload() {
-      const artist = "Beyoncé";
-      const title = "Halo";
+    // Step 1: Unlock audio context with user gesture
+    unlockBtn.addEventListener('click', function() {
+      status.textContent = "Creating AudioContext...";
       
       try {
-        const term = encodeURIComponent(`${artist} ${title}`);
-        const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
+        // Create audio context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
         
-        status.textContent = "Fetching preview URL...";
-        const res = await fetch(url);
+        status.textContent = "AudioContext state: " + audioContext.state;
         
-        if (!res.ok) {
-          status.textContent = "Fetch failed: " + res.status;
-          return;
+        // Resume if suspended
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().then(function() {
+            status.textContent = "AudioContext resumed!\nState: " + audioContext.state;
+            isUnlocked = true;
+            unlockBtn.textContent = "✓ Audio Unlocked!";
+            unlockBtn.disabled = true;
+            
+            // Now fetch the preview
+            fetchPreview();
+          });
+        } else {
+          isUnlocked = true;
+          unlockBtn.textContent = "✓ Audio Unlocked!";
+          unlockBtn.disabled = true;
+          status.textContent = "AudioContext ready!\nState: " + audioContext.state;
+          
+          // Now fetch the preview
+          fetchPreview();
         }
-        
+      } catch(e) {
+        status.textContent = "AudioContext error: " + e.message;
+      }
+    });
+    
+    async function fetchPreview() {
+      status.textContent += "\n\nFetching iTunes preview...";
+      
+      try {
+        const term = encodeURIComponent("Beyoncé Halo");
+        const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
+        const res = await fetch(url);
         const data = await res.json();
         
         if (data.results && data.results.length > 0) {
           const track = data.results[0];
           
           if (track.artworkUrl100) {
-            artwork.style.backgroundImage = `url('${track.artworkUrl100}')`;
+            artwork.style.backgroundImage = `url('${track.artworkUrl100.replace('100x100', '300x300')}')`;
           }
           
           if (track.previewUrl) {
-            status.textContent = `Found: ${track.trackName}\nby ${track.artistName}\n\nCreating audio element...`;
+            status.textContent += "\n✓ Found preview URL";
+            status.textContent += "\n\nDownloading audio data...";
             
-            // Create and preload audio
-            audio = new Audio();
-            audio.setAttribute('playsinline', '');
-            audio.setAttribute('webkit-playsinline', '');
-            audio.preload = 'auto';
-            audio.src = track.previewUrl;
+            // Fetch audio as ArrayBuffer
+            const audioRes = await fetch(track.previewUrl);
+            const arrayBuffer = await audioRes.arrayBuffer();
             
-            audio.addEventListener('canplaythrough', () => {
-              status.textContent += "\n✓ Audio ready!";
-            });
+            status.textContent += "\n✓ Downloaded " + Math.round(arrayBuffer.byteLength / 1024) + "KB";
+            status.textContent += "\n\nDecoding audio...";
             
-            audio.addEventListener('playing', () => {
-              status.textContent = "Playing!";
-              playBtn.textContent = "⏸ Pause";
-              playing = true;
-            });
+            // Decode audio data
+            audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
             
-            audio.addEventListener('pause', () => {
-              playBtn.textContent = "▶ Play";
-              playing = false;
-            });
+            status.textContent += "\n✓ Audio decoded!";
+            status.textContent += "\nDuration: " + Math.round(audioBuffer.duration) + "s";
+            status.textContent += "\n\n✅ Ready to play!";
             
-            audio.addEventListener('ended', () => {
-              status.textContent = "Playback ended";
-              playBtn.textContent = "▶ Play Again";
-              playing = false;
-            });
-            
-            audio.addEventListener('error', (e) => {
-              status.textContent = "Audio error: " + (audio.error?.message || 'unknown');
-            });
-            
-            // Enable button
-            playBtn.textContent = "▶ Play Preview";
             playBtn.disabled = false;
-            status.textContent += "\n\nReady! Tap play.";
-          } else {
-            status.textContent = "No preview URL in response";
+            playBtn.textContent = "▶ Play Preview";
           }
-        } else {
-          status.textContent = "No results found";
         }
-      } catch (e) {
-        status.textContent = "Error: " + e.message;
+      } catch(e) {
+        status.textContent += "\n\n❌ Error: " + e.message;
       }
     }
     
-    // Simple click handler - NO async/await
-    playBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      if (!audio) {
-        status.textContent = "No audio loaded";
+    // Step 2: Play using Web Audio API
+    playBtn.addEventListener('click', function() {
+      if (!audioContext || !audioBuffer) {
+        status.textContent = "Audio not ready";
         return;
       }
       
-      if (playing) {
-        audio.pause();
-        status.textContent = "Paused";
-      } else {
-        status.textContent = "Starting playback...";
-        // Use .then() instead of await
-        audio.play().then(function() {
-          status.textContent = "Playing!";
-        }).catch(function(err) {
-          status.textContent = "Play error: " + err.message + "\n\nThis usually means iOS blocked it. Try tapping again.";
-        });
+      if (isPlaying) {
+        // Stop
+        if (sourceNode) {
+          sourceNode.stop();
+          sourceNode = null;
+        }
+        isPlaying = false;
+        playBtn.textContent = "▶ Play Preview";
+        status.textContent = "Stopped";
+        return;
       }
+      
+      // Create new source node (required each time)
+      sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.connect(audioContext.destination);
+      
+      sourceNode.onended = function() {
+        isPlaying = false;
+        playBtn.textContent = "▶ Play Again";
+        status.textContent = "Playback ended";
+      };
+      
+      // Play!
+      sourceNode.start(0);
+      isPlaying = true;
+      playBtn.textContent = "⏹ Stop";
+      status.textContent = "🎵 Playing...";
     });
-    
-    // Start preloading
-    preload();
   </script>
 </body>
 </html>
