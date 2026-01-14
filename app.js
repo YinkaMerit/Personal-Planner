@@ -1328,15 +1328,24 @@ function miniAudioPlayer({artist, title, ytId, todayKey}){
 
   const seek = el("input",{type:"range", min:"0", max:"1000", value:"0", class:"miniSeek"});
   
-  const ytBtn = el("button",{class:"btn ytPlayBtn small"},[document.createTextNode("▶ Play Full Video")]);
-  ytBtn.addEventListener("click", ()=>{
+  // YouTube button - use location.href for PWA compatibility
+  const ytBtn = el("button",{class:"btn ytPlayBtn small"},[document.createTextNode("▶ Watch on YouTube")]);
+  ytBtn.addEventListener("click", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
     // Pause preview if playing
     if(state.audio && state.playing){
       try{ state.audio.pause(); }catch(_){}
       state.playing = false;
       playBtn.textContent = "▶ Play";
     }
-    window.open(`https://www.youtube.com/watch?v=${ytId}`, "_blank");
+    // Use location.href for better iOS PWA support
+    const ytUrl = `https://www.youtube.com/watch?v=${ytId}`;
+    // Try window.open first, fall back to location
+    const newWin = window.open(ytUrl, "_blank");
+    if(!newWin || newWin.closed || typeof newWin.closed === 'undefined'){
+      window.location.href = ytUrl;
+    }
   });
 
   const art = el("div",{class:"miniArt"});
@@ -1361,8 +1370,13 @@ function miniAudioPlayer({artist, title, ytId, todayKey}){
         art.style.backgroundImage = `url('${meta.artwork}')`;
       }
 
-      const audio = new Audio(meta.previewUrl);
+      const audio = new Audio();
       audio.preload = "auto";
+      audio.crossOrigin = "anonymous";
+      
+      // iOS requires setting src after creating Audio object
+      audio.src = meta.previewUrl;
+      
       audio.addEventListener("timeupdate", ()=>{
         if(!audio.duration) return;
         const v = Math.floor((audio.currentTime / audio.duration) * 1000);
@@ -1377,12 +1391,20 @@ function miniAudioPlayer({artist, title, ytId, todayKey}){
         playBtn.textContent = "▶ Play";
         seek.value = "0";
       });
+      audio.addEventListener("error", (e)=>{
+        console.log("Audio error:", e);
+        statusEl.textContent = "Preview unavailable";
+      });
 
+      // Load the audio
+      audio.load();
+      
       state.audio = audio;
       state.loaded = true;
       statusEl.textContent = "Preview ready";
-    } catch(_){
-      statusEl.textContent = "Preview unavailable";
+    } catch(err){
+      console.log("Preview load error:", err);
+      statusEl.textContent = "Preview unavailable - tap YouTube";
     } finally {
       state.loading = false;
       playBtn.disabled = false;
@@ -1390,25 +1412,52 @@ function miniAudioPlayer({artist, title, ytId, todayKey}){
     }
   }
 
-  playBtn.addEventListener("click", async ()=>{
+  playBtn.addEventListener("click", async (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    
     await ensureLoaded();
-    if(!state.audio) return;
+    if(!state.audio){
+      // If no audio, open YouTube instead
+      const ytUrl = `https://www.youtube.com/watch?v=${ytId}`;
+      const newWin = window.open(ytUrl, "_blank");
+      if(!newWin || newWin.closed || typeof newWin.closed === 'undefined'){
+        window.location.href = ytUrl;
+      }
+      return;
+    }
 
     if(state.playing){
       state.audio.pause();
       state.playing = false;
       playBtn.textContent = "▶ Play";
     } else {
+      // Stop any other playing audio
       document.querySelectorAll("audio[data-mini='1']").forEach(a=>{ try{ a.pause(); }catch(_){} });
       state.audio.dataset.mini = "1";
-      await state.audio.play();
-      state.playing = true;
-      statusEl.textContent = "Playing preview…";
-      playBtn.textContent = "⏸ Pause";
+      
+      try {
+        // iOS requires play() to be called directly in response to user gesture
+        const playPromise = state.audio.play();
+        if(playPromise !== undefined){
+          playPromise.then(()=>{
+            state.playing = true;
+            statusEl.textContent = "Playing preview…";
+            playBtn.textContent = "⏸ Pause";
+          }).catch((err)=>{
+            console.log("Play error:", err);
+            statusEl.textContent = "Tap YouTube to listen";
+          });
+        }
+      } catch(err) {
+        console.log("Play exception:", err);
+        statusEl.textContent = "Tap YouTube to listen";
+      }
     }
   });
 
-  seek.addEventListener("input", async ()=>{
+  seek.addEventListener("input", async (e)=>{
+    e.preventDefault();
     await ensureLoaded();
     if(!state.audio || !state.audio.duration) return;
     const ratio = Number(seek.value)/1000;

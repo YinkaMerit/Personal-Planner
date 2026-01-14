@@ -151,6 +151,10 @@ a{color: var(--accent)}
   letter-spacing: 0.3px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(74,144,217,.1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(74,144,217,.2);
+  user-select: none;
+  -webkit-user-select: none;
 }
 .btn:hover{
   background: linear-gradient(to bottom, #fff, rgba(168,212,255,.4));
@@ -1645,12 +1649,23 @@ body::before{
     display: none !important;
   }
   
-  /* Page scrolling on mobile */
+  /* Page scrolling on mobile - critical for iOS PWA */
   .page {
-    overflow-y: auto;
-    overflow-x: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
-    padding: 12px 12px 100px 20px;
+    overscroll-behavior-y: contain;
+    padding: 12px 12px 120px 20px;
+  }
+  
+  /* Ensure touch events work */
+  .page * {
+    touch-action: pan-y pan-x;
   }
   
   .spine {
@@ -1900,18 +1915,31 @@ body::before{
   }
 }
 
-/* iOS PWA: reduce zoom/pan and rubber-band scrolling */
-html, body{
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  touch-action: manipulation; /* blocks pinch-zoom in many browsers */
-  -webkit-text-size-adjust: 100%;
+/* iOS PWA: reduce zoom/pan and rubber-band scrolling - DESKTOP ONLY */
+@media (min-width: 431px) {
+  html, body{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body{
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
-body{
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+/* Mobile: allow body scroll as fallback */
+@media (max-width: 430px) {
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* page handles scroll */
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
 }
 
 /* Ensure dedicated scroll regions still scroll */
