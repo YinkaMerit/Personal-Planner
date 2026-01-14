@@ -1318,20 +1318,27 @@ function fmtTime(sec){
 }
 
 function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
-  const state = { audio: null, playing: false, loaded: false, previewUrl: null };
+  const state = { 
+    audioContext: null, 
+    audioBuffer: null, 
+    sourceNode: null,
+    gainNode: null,
+    playing: false, 
+    loaded: false,
+    unlocked: false
+  };
 
   const titleEl = el("div",{class:"songTitle"},[document.createTextNode(title)]);
   const artistEl = el("div",{class:"songArtist"},[document.createTextNode(artist)]);
-  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Loading preview...")]);
-  const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("0:00 / 0:30")]);
+  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play")]);
+  const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("")]);
   
   // Album art from YouTube thumbnail
   const art = el("div",{class:"songArt"});
   art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
   
   // Play button
-  const playBtn = el("button",{class:"playBtn"},[document.createTextNode("...")]);
-  playBtn.disabled = true;
+  const playBtn = el("button",{class:"playBtn"},[document.createTextNode("▶")]);
   
   // Progress bar
   const progressWrap = el("div",{class:"progressWrap"});
@@ -1346,117 +1353,152 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
     rel:"noopener"
   },[document.createTextNode("▶ Full Video on YouTube")]);
 
-  function fmtTime(sec){
-    if(!isFinite(sec)) return "0:00";
-    sec = Math.max(0, Math.floor(sec));
-    const m = Math.floor(sec/60);
-    const s = String(sec%60).padStart(2,"0");
-    return `${m}:${s}`;
-  }
-
-  // Preload preview URL immediately when component loads
-  (async function preloadPreview(){
-    try {
-      const term = encodeURIComponent(`${artist} ${title}`);
-      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
-      const res = await fetch(url);
+  async function loadAndPlay() {
+    // Step 1: Create/unlock AudioContext
+    if (!state.audioContext) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      state.audioContext = new AudioContext();
+      state.gainNode = state.audioContext.createGain();
+      state.gainNode.gain.value = 1.0;
+      state.gainNode.connect(state.audioContext.destination);
+    }
+    
+    // Resume if suspended
+    if (state.audioContext.state === 'suspended') {
+      await state.audioContext.resume();
+    }
+    
+    // Step 2: Load audio if not loaded
+    if (!state.loaded) {
+      statusEl.textContent = "Loading...";
+      playBtn.textContent = "...";
       
-      if(res.ok){
+      try {
+        // Fetch from iTunes
+        const term = encodeURIComponent(`${artist} ${title}`);
+        const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
+        const res = await fetch(url);
         const data = await res.json();
-        if(data.results && data.results.length > 0){
+        
+        if (data.results && data.results.length > 0) {
           // Find best match
           const norm = s => String(s||"").toLowerCase();
           const aN = norm(artist);
           const tN = norm(title);
           let best = null;
-          for(const r of data.results){
-            if(!r.previewUrl) continue;
+          for (const r of data.results) {
+            if (!r.previewUrl) continue;
             const ra = norm(r.artistName);
             const rt = norm(r.trackName);
             const score = (ra.includes(aN)?3:0) + (aN.includes(ra)?2:0) + (rt.includes(tN)?3:0) + (tN.includes(rt)?2:0);
-            if(!best || score > best.score) best = { score, r };
+            if (!best || score > best.score) best = { score, r };
           }
-          if(best && best.r.previewUrl){
-            state.previewUrl = best.r.previewUrl;
+          
+          if (best && best.r.previewUrl) {
             // Update artwork
-            if(best.r.artworkUrl100){
+            if (best.r.artworkUrl100) {
               art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
             }
-            // Update UI
-            playBtn.textContent = "▶";
-            playBtn.disabled = false;
-            statusEl.textContent = "Tap to play preview";
             
-            // Pre-create audio element
-            const audio = new Audio();
-            audio.setAttribute('playsinline', '');
-            audio.setAttribute('webkit-playsinline', '');
-            audio.preload = 'auto';
-            audio.src = state.previewUrl;
+            statusEl.textContent = "Downloading...";
             
-            audio.addEventListener('timeupdate', () => {
-              if(!audio.duration) return;
-              const pct = (audio.currentTime / audio.duration) * 100;
-              progressBar.style.width = pct + '%';
-              timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
-            });
+            // Download audio data
+            const audioRes = await fetch(best.r.previewUrl);
+            const arrayBuffer = await audioRes.arrayBuffer();
             
-            audio.addEventListener('ended', () => {
-              state.playing = false;
-              playBtn.textContent = '▶';
-              playBtn.classList.remove('playing');
-              progressBar.style.width = '0%';
-              statusEl.textContent = 'Preview ended - tap to replay';
-            });
+            statusEl.textContent = "Decoding...";
             
-            audio.addEventListener('error', (e) => {
-              console.log('Audio error:', e);
-              statusEl.textContent = 'Error - try YouTube';
-            });
-            
-            state.audio = audio;
+            // Decode audio
+            state.audioBuffer = await state.audioContext.decodeAudioData(arrayBuffer);
             state.loaded = true;
+            
+            statusEl.textContent = "Ready";
+          } else {
+            statusEl.textContent = "No preview";
+            playBtn.textContent = "▶";
             return;
           }
         }
+      } catch (e) {
+        console.log("Load error:", e);
+        statusEl.textContent = "Error - try YouTube";
+        playBtn.textContent = "▶";
+        return;
       }
-      // No preview found
-      playBtn.textContent = "✕";
-      statusEl.textContent = "No preview - use YouTube";
-    } catch(e) {
-      console.log("Preload error:", e);
-      playBtn.textContent = "✕";
-      statusEl.textContent = "No preview - use YouTube";
     }
-  })();
+    
+    // Step 3: Play
+    if (state.audioBuffer) {
+      // Stop any existing playback
+      if (state.sourceNode) {
+        try { state.sourceNode.stop(); } catch(e) {}
+      }
+      
+      // Create new source
+      state.sourceNode = state.audioContext.createBufferSource();
+      state.sourceNode.buffer = state.audioBuffer;
+      state.sourceNode.connect(state.gainNode);
+      
+      state.sourceNode.onended = function() {
+        state.playing = false;
+        playBtn.textContent = "▶";
+        playBtn.classList.remove("playing");
+        progressBar.style.width = "0%";
+        statusEl.textContent = "Ended";
+      };
+      
+      // Start playback
+      const startTime = state.audioContext.currentTime;
+      state.sourceNode.start(0);
+      state.playing = true;
+      playBtn.textContent = "⏸";
+      playBtn.classList.add("playing");
+      statusEl.textContent = "Playing...";
+      
+      // Update progress
+      const duration = state.audioBuffer.duration;
+      function updateProgress() {
+        if (!state.playing) return;
+        const elapsed = state.audioContext.currentTime - startTime;
+        const pct = Math.min(100, (elapsed / duration) * 100);
+        progressBar.style.width = pct + "%";
+        timeEl.textContent = formatTime(elapsed) + " / " + formatTime(duration);
+        if (elapsed < duration) {
+          requestAnimationFrame(updateProgress);
+        }
+      }
+      updateProgress();
+    }
+  }
+  
+  function formatTime(sec) {
+    if (!isFinite(sec)) return "0:00";
+    sec = Math.max(0, Math.floor(sec));
+    const m = Math.floor(sec / 60);
+    const s = String(sec % 60).padStart(2, "0");
+    return `${m}:${s}`;
+  }
+  
+  function stopPlayback() {
+    if (state.sourceNode) {
+      try { state.sourceNode.stop(); } catch(e) {}
+      state.sourceNode = null;
+    }
+    state.playing = false;
+    playBtn.textContent = "▶";
+    playBtn.classList.remove("playing");
+    statusEl.textContent = "Stopped";
+  }
 
-  // Simple click handler - no async operations
-  playBtn.addEventListener('click', (e) => {
+  // Play button click
+  playBtn.addEventListener('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    if(!state.audio || !state.loaded) return;
-    
-    if(state.playing){
-      state.audio.pause();
-      state.playing = false;
-      playBtn.textContent = '▶';
-      playBtn.classList.remove('playing');
-      statusEl.textContent = 'Paused';
+    if (state.playing) {
+      stopPlayback();
     } else {
-      // Direct play - no await, no async
-      const playPromise = state.audio.play();
-      if(playPromise){
-        playPromise.then(() => {
-          state.playing = true;
-          playBtn.textContent = '⏸';
-          playBtn.classList.add('playing');
-          statusEl.textContent = 'Playing...';
-        }).catch(err => {
-          console.log('Play error:', err);
-          statusEl.textContent = 'Tap again or use YouTube';
-        });
-      }
+      loadAndPlay();
     }
   });
 

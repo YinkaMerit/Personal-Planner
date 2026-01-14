@@ -13,27 +13,62 @@
     #artwork { width: 150px; height: 150px; background-size: cover; background-color: #ddd; border-radius: 12px; margin: 15px auto; }
     h1 { text-align: center; }
     p { text-align: center; color: #666; }
+    .volume-note { background: #fff3cd; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 14px; }
   </style>
 </head>
 <body>
   <h1>🎵 Audio Test</h1>
   <p>Beyoncé - Halo</p>
+  <div class="volume-note">⚠️ Make sure your iPhone is not on Silent Mode (flip the switch on the side) and volume is up!</div>
   <div id="artwork"></div>
   <div id="status">Tap "Unlock Audio" first, then "Play"</div>
   <button id="unlockBtn">🔓 Step 1: Unlock Audio</button>
   <button id="playBtn" disabled>▶ Step 2: Play Preview</button>
+  <button id="testTone">🔊 Test: Play Beep Sound</button>
   
   <script>
     const status = document.getElementById('status');
     const artwork = document.getElementById('artwork');
     const playBtn = document.getElementById('playBtn');
     const unlockBtn = document.getElementById('unlockBtn');
+    const testTone = document.getElementById('testTone');
     
     let audioContext = null;
     let audioBuffer = null;
     let sourceNode = null;
+    let gainNode = null;
     let isPlaying = false;
     let isUnlocked = false;
+    
+    // Test tone button - plays a simple beep to verify audio works
+    testTone.addEventListener('click', function() {
+      if (!audioContext) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContext();
+      }
+      
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
+      // Create oscillator for beep
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 440; // A4 note
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+      
+      status.textContent = "🔊 Beep! Did you hear it?\n\nIf not:\n- Check Silent Mode switch\n- Turn up volume\n- Check if connected to Bluetooth";
+    });
     
     // Step 1: Unlock audio context with user gesture
     unlockBtn.addEventListener('click', function() {
@@ -44,7 +79,13 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
         
+        // Create gain node for volume control
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = 1.0; // Full volume
+        gainNode.connect(audioContext.destination);
+        
         status.textContent = "AudioContext state: " + audioContext.state;
+        status.textContent += "\nSample rate: " + audioContext.sampleRate;
         
         // Resume if suspended
         if (audioContext.state === 'suspended') {
@@ -103,6 +144,8 @@
             
             status.textContent += "\n✓ Audio decoded!";
             status.textContent += "\nDuration: " + Math.round(audioBuffer.duration) + "s";
+            status.textContent += "\nChannels: " + audioBuffer.numberOfChannels;
+            status.textContent += "\nSample rate: " + audioBuffer.sampleRate;
             status.textContent += "\n\n✅ Ready to play!";
             
             playBtn.disabled = false;
@@ -121,22 +164,31 @@
         return;
       }
       
+      // Make sure context is running
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
       if (isPlaying) {
         // Stop
         if (sourceNode) {
-          sourceNode.stop();
+          try {
+            sourceNode.stop();
+          } catch(e) {}
           sourceNode = null;
         }
         isPlaying = false;
         playBtn.textContent = "▶ Play Preview";
-        status.textContent = "Stopped";
+        status.textContent = "Stopped\n\nAudioContext state: " + audioContext.state;
         return;
       }
       
       // Create new source node (required each time)
       sourceNode = audioContext.createBufferSource();
       sourceNode.buffer = audioBuffer;
-      sourceNode.connect(audioContext.destination);
+      
+      // Connect through gain node
+      sourceNode.connect(gainNode);
       
       sourceNode.onended = function() {
         isPlaying = false;
@@ -148,7 +200,8 @@
       sourceNode.start(0);
       isPlaying = true;
       playBtn.textContent = "⏹ Stop";
-      status.textContent = "🎵 Playing...";
+      status.textContent = "🎵 Playing...\n\nAudioContext state: " + audioContext.state;
+      status.textContent += "\nIf no sound, check:\n- Silent mode switch\n- Volume buttons\n- Bluetooth connection";
     });
   </script>
 </body>
