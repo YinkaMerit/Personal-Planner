@@ -7,7 +7,8 @@
   <style>
     body { font-family: system-ui; padding: 20px; max-width: 500px; margin: 0 auto; }
     button { padding: 15px 30px; font-size: 18px; margin: 10px 0; cursor: pointer; }
-    #status { padding: 10px; background: #f0f0f0; margin: 10px 0; border-radius: 8px; }
+    button:disabled { opacity: 0.5; }
+    #status { padding: 10px; background: #f0f0f0; margin: 10px 0; border-radius: 8px; white-space: pre-wrap; }
     #artwork { width: 100px; height: 100px; background-size: cover; background-color: #ddd; border-radius: 8px; margin: 10px 0; }
   </style>
 </head>
@@ -15,118 +16,118 @@
   <h1>iTunes Preview Test</h1>
   <p>Testing: Beyoncé - Halo</p>
   <div id="artwork"></div>
-  <div id="status">Click button to test</div>
-  <button id="playBtn">▶ Play Preview</button>
-  <button id="stopBtn">⏹ Stop</button>
+  <div id="status">Loading preview URL...</div>
+  <button id="playBtn" disabled>Loading...</button>
   
   <script>
-    let audio = null;
     const status = document.getElementById('status');
     const artwork = document.getElementById('artwork');
+    const playBtn = document.getElementById('playBtn');
     
-    async function getPreview() {
+    let audio = null;
+    let playing = false;
+    
+    // Preload on page load
+    async function preload() {
       const artist = "Beyoncé";
       const title = "Halo";
-      
-      status.textContent = "Fetching from iTunes...";
       
       try {
         const term = encodeURIComponent(`${artist} ${title}`);
         const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
         
-        status.textContent = "Fetching: " + url;
-        
+        status.textContent = "Fetching preview URL...";
         const res = await fetch(url);
-        status.textContent = "Response status: " + res.status;
         
         if (!res.ok) {
           status.textContent = "Fetch failed: " + res.status;
-          return null;
+          return;
         }
         
         const data = await res.json();
-        status.textContent = "Results: " + data.results.length;
         
         if (data.results && data.results.length > 0) {
           const track = data.results[0];
-          status.textContent = `Found: ${track.trackName} by ${track.artistName}`;
           
           if (track.artworkUrl100) {
             artwork.style.backgroundImage = `url('${track.artworkUrl100}')`;
           }
           
           if (track.previewUrl) {
-            status.textContent += `\nPreview URL: ${track.previewUrl.substring(0, 50)}...`;
-            return track.previewUrl;
+            status.textContent = `Found: ${track.trackName}\nby ${track.artistName}\n\nCreating audio element...`;
+            
+            // Create and preload audio
+            audio = new Audio();
+            audio.setAttribute('playsinline', '');
+            audio.setAttribute('webkit-playsinline', '');
+            audio.preload = 'auto';
+            audio.src = track.previewUrl;
+            
+            audio.addEventListener('canplaythrough', () => {
+              status.textContent += "\n✓ Audio ready!";
+            });
+            
+            audio.addEventListener('playing', () => {
+              status.textContent = "Playing!";
+              playBtn.textContent = "⏸ Pause";
+              playing = true;
+            });
+            
+            audio.addEventListener('pause', () => {
+              playBtn.textContent = "▶ Play";
+              playing = false;
+            });
+            
+            audio.addEventListener('ended', () => {
+              status.textContent = "Playback ended";
+              playBtn.textContent = "▶ Play Again";
+              playing = false;
+            });
+            
+            audio.addEventListener('error', (e) => {
+              status.textContent = "Audio error: " + (audio.error?.message || 'unknown');
+            });
+            
+            // Enable button
+            playBtn.textContent = "▶ Play Preview";
+            playBtn.disabled = false;
+            status.textContent += "\n\nReady! Tap play.";
           } else {
-            status.textContent += "\nNo preview URL!";
+            status.textContent = "No preview URL in response";
           }
+        } else {
+          status.textContent = "No results found";
         }
-        return null;
       } catch (e) {
         status.textContent = "Error: " + e.message;
-        console.error(e);
-        return null;
       }
     }
     
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      if (audio && !audio.paused) {
-        audio.pause();
-        status.textContent = "Paused";
+    // Simple click handler - NO async/await
+    playBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      if (!audio) {
+        status.textContent = "No audio loaded";
         return;
       }
       
-      if (!audio) {
-        const previewUrl = await getPreview();
-        if (!previewUrl) {
-          status.textContent = "No preview URL found";
-          return;
-        }
-        
-        status.textContent = "Creating audio element...";
-        audio = new Audio();
-        audio.setAttribute('playsinline', '');
-        audio.setAttribute('webkit-playsinline', '');
-        audio.preload = 'auto';
-        
-        audio.addEventListener('canplay', () => {
-          status.textContent = "Audio ready to play";
-        });
-        
-        audio.addEventListener('playing', () => {
+      if (playing) {
+        audio.pause();
+        status.textContent = "Paused";
+      } else {
+        status.textContent = "Starting playback...";
+        // Use .then() instead of await
+        audio.play().then(function() {
           status.textContent = "Playing!";
+        }).catch(function(err) {
+          status.textContent = "Play error: " + err.message + "\n\nThis usually means iOS blocked it. Try tapping again.";
         });
-        
-        audio.addEventListener('error', (e) => {
-          status.textContent = "Audio error: " + (e.message || audio.error?.message || 'unknown');
-          console.error('Audio error:', e, audio.error);
-        });
-        
-        audio.addEventListener('ended', () => {
-          status.textContent = "Playback ended";
-        });
-        
-        audio.src = previewUrl;
-      }
-      
-      try {
-        status.textContent = "Attempting to play...";
-        await audio.play();
-        status.textContent = "Playing!";
-      } catch (e) {
-        status.textContent = "Play error: " + e.message;
-        console.error('Play error:', e);
       }
     });
     
-    document.getElementById('stopBtn').addEventListener('click', () => {
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        status.textContent = "Stopped";
-      }
-    });
+    // Start preloading
+    preload();
   </script>
 </body>
 </html>

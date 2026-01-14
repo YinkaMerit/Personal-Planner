@@ -1318,11 +1318,11 @@ function fmtTime(sec){
 }
 
 function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
-  const state = { audio: null, playing: false, loaded: false };
+  const state = { audio: null, playing: false, loaded: false, previewUrl: null };
 
   const titleEl = el("div",{class:"songTitle"},[document.createTextNode(title)]);
   const artistEl = el("div",{class:"songArtist"},[document.createTextNode(artist)]);
-  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play for 30s preview")]);
+  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Loading preview...")]);
   const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("0:00 / 0:30")]);
   
   // Album art from YouTube thumbnail
@@ -1330,7 +1330,8 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
   art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
   
   // Play button
-  const playBtn = el("button",{class:"playBtn"},[document.createTextNode("▶")]);
+  const playBtn = el("button",{class:"playBtn"},[document.createTextNode("...")]);
+  playBtn.disabled = true;
   
   // Progress bar
   const progressWrap = el("div",{class:"progressWrap"});
@@ -1353,12 +1354,13 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
     return `${m}:${s}`;
   }
 
-  async function getPreviewUrl(){
-    // Try iTunes first
+  // Preload preview URL immediately when component loads
+  (async function preloadPreview(){
     try {
       const term = encodeURIComponent(`${artist} ${title}`);
       const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
       const res = await fetch(url);
+      
       if(res.ok){
         const data = await res.json();
         if(data.results && data.results.length > 0){
@@ -1375,97 +1377,86 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
             if(!best || score > best.score) best = { score, r };
           }
           if(best && best.r.previewUrl){
-            // Update artwork if available
+            state.previewUrl = best.r.previewUrl;
+            // Update artwork
             if(best.r.artworkUrl100){
               art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
             }
-            return { url: best.r.previewUrl, source: 'iTunes' };
+            // Update UI
+            playBtn.textContent = "▶";
+            playBtn.disabled = false;
+            statusEl.textContent = "Tap to play preview";
+            
+            // Pre-create audio element
+            const audio = new Audio();
+            audio.setAttribute('playsinline', '');
+            audio.setAttribute('webkit-playsinline', '');
+            audio.preload = 'auto';
+            audio.src = state.previewUrl;
+            
+            audio.addEventListener('timeupdate', () => {
+              if(!audio.duration) return;
+              const pct = (audio.currentTime / audio.duration) * 100;
+              progressBar.style.width = pct + '%';
+              timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+            });
+            
+            audio.addEventListener('ended', () => {
+              state.playing = false;
+              playBtn.textContent = '▶';
+              playBtn.classList.remove('playing');
+              progressBar.style.width = '0%';
+              statusEl.textContent = 'Preview ended - tap to replay';
+            });
+            
+            audio.addEventListener('error', (e) => {
+              console.log('Audio error:', e);
+              statusEl.textContent = 'Error - try YouTube';
+            });
+            
+            state.audio = audio;
+            state.loaded = true;
+            return;
           }
         }
       }
-    } catch(e){
-      console.log("iTunes fetch failed:", e);
+      // No preview found
+      playBtn.textContent = "✕";
+      statusEl.textContent = "No preview - use YouTube";
+    } catch(e) {
+      console.log("Preload error:", e);
+      playBtn.textContent = "✕";
+      statusEl.textContent = "No preview - use YouTube";
     }
-    
-    // iTunes failed, return null (Spotify requires auth so we can't use it)
-    return null;
-  }
+  })();
 
-  function setupAudio(url){
-    const audio = new Audio();
-    audio.setAttribute('playsinline', '');
-    audio.setAttribute('webkit-playsinline', '');
-    audio.crossOrigin = 'anonymous';
-    audio.preload = 'auto';
-    
-    audio.addEventListener('timeupdate', () => {
-      if(!audio.duration) return;
-      const pct = (audio.currentTime / audio.duration) * 100;
-      progressBar.style.width = pct + '%';
-      timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
-    });
-    
-    audio.addEventListener('ended', () => {
-      state.playing = false;
-      playBtn.textContent = '▶';
-      playBtn.classList.remove('playing');
-      progressBar.style.width = '0%';
-      statusEl.textContent = 'Preview ended - tap to replay';
-    });
-    
-    audio.addEventListener('error', (e) => {
-      console.log('Audio error:', e);
-      statusEl.textContent = 'Preview unavailable';
-      state.loaded = false;
-    });
-    
-    audio.src = url;
-    return audio;
-  }
-
-  playBtn.addEventListener('click', async (e) => {
+  // Simple click handler - no async operations
+  playBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // If playing, pause
-    if(state.playing && state.audio){
+    if(!state.audio || !state.loaded) return;
+    
+    if(state.playing){
       state.audio.pause();
       state.playing = false;
       playBtn.textContent = '▶';
       playBtn.classList.remove('playing');
       statusEl.textContent = 'Paused';
-      return;
-    }
-    
-    // If not loaded yet, fetch preview URL
-    if(!state.loaded){
-      playBtn.textContent = '...';
-      statusEl.textContent = 'Loading preview...';
-      
-      const preview = await getPreviewUrl();
-      
-      if(!preview){
-        statusEl.textContent = 'No preview available - try YouTube';
-        playBtn.textContent = '▶';
-        return;
+    } else {
+      // Direct play - no await, no async
+      const playPromise = state.audio.play();
+      if(playPromise){
+        playPromise.then(() => {
+          state.playing = true;
+          playBtn.textContent = '⏸';
+          playBtn.classList.add('playing');
+          statusEl.textContent = 'Playing...';
+        }).catch(err => {
+          console.log('Play error:', err);
+          statusEl.textContent = 'Tap again or use YouTube';
+        });
       }
-      
-      state.audio = setupAudio(preview.url);
-      state.loaded = true;
-      statusEl.textContent = `Preview from ${preview.source}`;
-    }
-    
-    // Play
-    try {
-      await state.audio.play();
-      state.playing = true;
-      playBtn.textContent = '⏸';
-      playBtn.classList.add('playing');
-      statusEl.textContent = 'Playing preview...';
-    } catch(err) {
-      console.log('Play error:', err);
-      statusEl.textContent = 'Tap again to play';
-      playBtn.textContent = '▶';
     }
   });
 
