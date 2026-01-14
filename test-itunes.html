@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iTunes Preview Test</title>
+  <style>
+    body { font-family: system-ui; padding: 20px; max-width: 500px; margin: 0 auto; }
+    button { padding: 15px 30px; font-size: 18px; margin: 10px 0; cursor: pointer; }
+    #status { padding: 10px; background: #f0f0f0; margin: 10px 0; border-radius: 8px; }
+    #artwork { width: 100px; height: 100px; background-size: cover; background-color: #ddd; border-radius: 8px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>iTunes Preview Test</h1>
+  <p>Testing: Beyoncé - Halo</p>
+  <div id="artwork"></div>
+  <div id="status">Click button to test</div>
+  <button id="playBtn">▶ Play Preview</button>
+  <button id="stopBtn">⏹ Stop</button>
+  
+  <script>
+    let audio = null;
+    const status = document.getElementById('status');
+    const artwork = document.getElementById('artwork');
+    
+    async function getPreview() {
+      const artist = "Beyoncé";
+      const title = "Halo";
+      
+      status.textContent = "Fetching from iTunes...";
+      
+      try {
+        const term = encodeURIComponent(`${artist} ${title}`);
+        const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
+        
+        status.textContent = "Fetching: " + url;
+        
+        const res = await fetch(url);
+        status.textContent = "Response status: " + res.status;
+        
+        if (!res.ok) {
+          status.textContent = "Fetch failed: " + res.status;
+          return null;
+        }
+        
+        const data = await res.json();
+        status.textContent = "Results: " + data.results.length;
+        
+        if (data.results && data.results.length > 0) {
+          const track = data.results[0];
+          status.textContent = `Found: ${track.trackName} by ${track.artistName}`;
+          
+          if (track.artworkUrl100) {
+            artwork.style.backgroundImage = `url('${track.artworkUrl100}')`;
+          }
+          
+          if (track.previewUrl) {
+            status.textContent += `\nPreview URL: ${track.previewUrl.substring(0, 50)}...`;
+            return track.previewUrl;
+          } else {
+            status.textContent += "\nNo preview URL!";
+          }
+        }
+        return null;
+      } catch (e) {
+        status.textContent = "Error: " + e.message;
+        console.error(e);
+        return null;
+      }
+    }
+    
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (audio && !audio.paused) {
+        audio.pause();
+        status.textContent = "Paused";
+        return;
+      }
+      
+      if (!audio) {
+        const previewUrl = await getPreview();
+        if (!previewUrl) {
+          status.textContent = "No preview URL found";
+          return;
+        }
+        
+        status.textContent = "Creating audio element...";
+        audio = new Audio();
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        audio.preload = 'auto';
+        
+        audio.addEventListener('canplay', () => {
+          status.textContent = "Audio ready to play";
+        });
+        
+        audio.addEventListener('playing', () => {
+          status.textContent = "Playing!";
+        });
+        
+        audio.addEventListener('error', (e) => {
+          status.textContent = "Audio error: " + (e.message || audio.error?.message || 'unknown');
+          console.error('Audio error:', e, audio.error);
+        });
+        
+        audio.addEventListener('ended', () => {
+          status.textContent = "Playback ended";
+        });
+        
+        audio.src = previewUrl;
+      }
+      
+      try {
+        status.textContent = "Attempting to play...";
+        await audio.play();
+        status.textContent = "Playing!";
+      } catch (e) {
+        status.textContent = "Play error: " + e.message;
+        console.error('Play error:', e);
+      }
+    });
+    
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        status.textContent = "Stopped";
+      }
+    });
+  </script>
+</body>
+</html>

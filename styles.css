@@ -1597,15 +1597,45 @@ body::before{
   gap: 12px;
   align-items: flex-start;
 }
+.songLeft {
+  position: relative;
+  flex-shrink: 0;
+}
 .songArt {
   width: 70px;
   height: 70px;
-  min-width: 70px;
   border-radius: 10px;
   background-size: cover;
   background-position: center;
   background-color: #e8f4ff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.playBtn {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(74,144,217,0.4);
+  transition: all 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.playBtn:hover, .playBtn:active {
+  transform: scale(1.1);
+  background: #3a7bc8;
+}
+.playBtn.playing {
+  background: #e57373;
 }
 .songInfo {
   flex: 1;
@@ -1628,44 +1658,45 @@ body::before{
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.musicBtns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.progressWrap {
+  height: 4px;
+  background: rgba(74,144,217,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
 }
-.musicBtn {
-  display: inline-flex;
+.progressBar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+.songMeta {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+.songTime {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.songStatus {
+  font-size: 10px;
+  text-align: right;
+}
+.ytBtn {
+  display: inline-block;
+  padding: 6px 12px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
-}
-.musicIcon {
-  font-size: 12px;
-}
-.spotifyBtn {
-  background: #1DB954;
-  color: white;
-}
-.spotifyBtn:hover, .spotifyBtn:active {
-  background: #1ed760;
-}
-.appleBtn {
-  background: linear-gradient(135deg, #FC3C44, #8E8E93);
-  color: white;
-}
-.appleBtn:hover, .appleBtn:active {
-  opacity: 0.9;
-}
-.ytBtn {
   background: #FF0000;
   color: white;
+  transition: all 0.2s;
+  touch-action: manipulation;
 }
 .ytBtn:hover, .ytBtn:active {
   background: #CC0000;
@@ -1678,7 +1709,13 @@ body::before{
   .songArt {
     width: 60px;
     height: 60px;
-    min-width: 60px;
+  }
+  .playBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    bottom: -6px;
+    right: -6px;
   }
   .songTitle {
     font-size: 13px;
@@ -1687,13 +1724,9 @@ body::before{
     font-size: 11px;
     margin-bottom: 6px;
   }
-  .musicBtns {
-    gap: 4px;
-  }
-  .musicBtn {
-    padding: 5px 8px;
+  .ytBtn {
+    padding: 5px 10px;
     font-size: 10px;
-    border-radius: 6px;
   }
 }
 
