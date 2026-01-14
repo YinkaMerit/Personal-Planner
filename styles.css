@@ -1629,6 +1629,13 @@ body::before{
   display: block;
 }
 
+@media (max-width: 980px) {
+  /* Mobile/tablet: show verse + song at top of Today (Dashboard) */
+  .mobile-top-section { display: flex; }
+  .desktop-only { display: none !important; }
+}
+
+
 @media (max-width: 430px) {
   /* Show mobile top section, hide desktop duplicates */
   .mobile-top-section {
