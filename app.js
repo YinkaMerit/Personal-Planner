@@ -80,148 +80,148 @@ function isSelectedDateToday() {
 
 const RNB_LOVE = [
   // Mariah Carey
-  { artist:"Mariah Carey", title:"We Belong Together", ytId:"0habxsuXW4g" },
-  { artist:"Mariah Carey", title:"Touch My Body", ytId:"9b8erWuBA44" },
-  { artist:"Mariah Carey", title:"Obsessed", ytId:"H1Yt0xJKDY8" },
-  { artist:"Mariah Carey", title:"Emotions", ytId:"NrJEFrth27Q" },
+  { artist:"Mariah Carey", title:"We Belong Together", ytId:"0habxsuXW4g", spotifyId:"73bJT5ryqTBXxwzvVgSgYC" },
+  { artist:"Mariah Carey", title:"Touch My Body", ytId:"9b8erWuBA44", spotifyId:"5JYtOOTmLwkfkKXgPl9MGg" },
+  { artist:"Mariah Carey", title:"Obsessed", ytId:"H1Yt0xJKDY8", spotifyId:"6XsRpgbC8gFCBPaMxBPOyh" },
+  { artist:"Mariah Carey", title:"Emotions", ytId:"NrJEFrth27Q", spotifyId:"3EWWQ7P9zLDKkTxVB7bSPD" },
 
   // Beyoncé
-  { artist:"Beyoncé", title:"Halo", ytId:"bnVUHWCynig" },
-  { artist:"Beyoncé", title:"Love On Top", ytId:"Ob7vObnFUJc" },
-  { artist:"Beyoncé", title:"Drunk in Love", ytId:"p1JPKLa-Ofc" },
-  { artist:"Beyoncé", title:"Crazy In Love", ytId:"ViwtNLUqkMY" },
-  { artist:"Beyoncé", title:"Single Ladies", ytId:"4m1EFMoRFvY" },
-  { artist:"Beyoncé", title:"Irreplaceable", ytId:"2EwViQxSJJQ" },
-  { artist:"Beyoncé", title:"XO", ytId:"3xUfCUFPL-8" },
+  { artist:"Beyoncé", title:"Halo", ytId:"bnVUHWCynig", spotifyId:"4JehYebiI9JE8sR8MisGVb" },
+  { artist:"Beyoncé", title:"Love On Top", ytId:"Ob7vObnFUJc", spotifyId:"1z6WtY7X4HQJvzxC4UgkSf" },
+  { artist:"Beyoncé", title:"Drunk in Love", ytId:"p1JPKLa-Ofc", spotifyId:"6jG2YzhxptolDzLHTGLt7S" },
+  { artist:"Beyoncé", title:"Crazy In Love", ytId:"ViwtNLUqkMY", spotifyId:"5IVuqXILoxVWvWEPm82Jxr" },
+  { artist:"Beyoncé", title:"Single Ladies", ytId:"4m1EFMoRFvY", spotifyId:"5R3hrLKx0F7wT0GNGyCbwb" },
+  { artist:"Beyoncé", title:"Irreplaceable", ytId:"2EwViQxSJJQ", spotifyId:"2o4h4S6Z1rJiJ99HyoWoPN" },
+  { artist:"Beyoncé", title:"XO", ytId:"3xUfCUFPL-8", spotifyId:"3PXaLsD8ikDgLJKFDYLd5E" },
 
   // Rihanna
-  { artist:"Rihanna", title:"Umbrella", ytId:"CvBfHwUxHIk" },
-  { artist:"Rihanna", title:"We Found Love", ytId:"tg00YEETFzg" },
-  { artist:"Rihanna", title:"Diamonds", ytId:"lWA2pjMjpBs" },
-  { artist:"Rihanna", title:"Stay", ytId:"JF8BRvqGCNs" },
-  { artist:"Rihanna", title:"Only Girl", ytId:"pa14VNsdSYM" },
-  { artist:"Rihanna", title:"Rude Boy", ytId:"e82VE8UtW8A" },
-  { artist:"Rihanna", title:"What's My Name", ytId:"U0CGsw6h60k" },
+  { artist:"Rihanna", title:"Umbrella", ytId:"CvBfHwUxHIk", spotifyId:"2izr1LUImjgYSOygvlYvFJ" },
+  { artist:"Rihanna", title:"We Found Love", ytId:"tg00YEETFzg", spotifyId:"6qn9YLKt13AGvpq9jfO8py" },
+  { artist:"Rihanna", title:"Diamonds", ytId:"lWA2pjMjpBs", spotifyId:"0Ij3GrTd86ukpTpNp7UNzo" },
+  { artist:"Rihanna", title:"Stay", ytId:"JF8BRvqGCNs", spotifyId:"6qRJ2sdUsiYwFrVb8F7Bm0" },
+  { artist:"Rihanna", title:"Only Girl", ytId:"pa14VNsdSYM", spotifyId:"3Kzv6W4fAcHV6wuNf6TuUL" },
+  { artist:"Rihanna", title:"Rude Boy", ytId:"e82VE8UtW8A", spotifyId:"3Kkjo3cT83cw09VJyrLNwX" },
+  { artist:"Rihanna", title:"What's My Name", ytId:"U0CGsw6h60k", spotifyId:"64GgsjKQDJOZgZL1MSPWnr" },
 
   // Alicia Keys
-  { artist:"Alicia Keys", title:"No One", ytId:"rywUS-ohqeE" },
-  { artist:"Alicia Keys", title:"Fallin", ytId:"Urdlvw0SINE" },
-  { artist:"Alicia Keys", title:"Girl on Fire", ytId:"J91ti_MpdHA" },
-  { artist:"Alicia Keys", title:"If I Ain't Got You", ytId:"Ju8Hr50Ckwk" },
-  { artist:"Alicia Keys", title:"Empire State of Mind", ytId:"0UjsXo9l6I8" },
+  { artist:"Alicia Keys", title:"No One", ytId:"rywUS-ohqeE", spotifyId:"5HWpn9fVS3hjlnPuBV2XpM" },
+  { artist:"Alicia Keys", title:"Fallin", ytId:"Urdlvw0SINE", spotifyId:"5WQrlXvKNQ6vhJzJPPLF6p" },
+  { artist:"Alicia Keys", title:"Girl on Fire", ytId:"J91ti_MpdHA", spotifyId:"3m8WTjeSQzMiQfobwey0tM" },
+  { artist:"Alicia Keys", title:"If I Ain't Got You", ytId:"Ju8Hr50Ckwk", spotifyId:"5JVGRbUhhkCFBgwuypsv9s" },
+  { artist:"Alicia Keys", title:"Empire State of Mind", ytId:"0UjsXo9l6I8", spotifyId:"2igwFfvr1OAGX9SKDCPBwO" },
 
   // Usher
-  { artist:"Usher", title:"Yeah!", ytId:"GxBSyx85Kp8" },
-  { artist:"Usher", title:"Burn", ytId:"t5XNWFw5HVw" },
-  { artist:"Usher", title:"Confessions Part II", ytId:"5Sy19X0xxrM" },
-  { artist:"Usher", title:"U Got It Bad", ytId:"pdW52ljxECU" },
-  { artist:"Usher", title:"Nice & Slow", ytId:"rjlDyifgP-w" },
-  { artist:"Usher", title:"OMG", ytId:"1RnPB76mjxI" },
-  { artist:"Usher", title:"DJ Got Us Fallin In Love", ytId:"C-dvTjK_07c" },
+  { artist:"Usher", title:"Yeah!", ytId:"GxBSyx85Kp8", spotifyId:"3Bl8WBSKGtfBa2RBg2C0IK" },
+  { artist:"Usher", title:"Burn", ytId:"t5XNWFw5HVw", spotifyId:"7lhSp9bRvGhbh9mjNMc6fF" },
+  { artist:"Usher", title:"Confessions Part II", ytId:"5Sy19X0xxrM", spotifyId:"1wVfBJsB4pSFoAzb5xUL4d" },
+  { artist:"Usher", title:"U Got It Bad", ytId:"pdW52ljxECU", spotifyId:"5aVkuuT8YTqpVLYJqldP2t" },
+  { artist:"Usher", title:"Nice & Slow", ytId:"rjlDyifgP-w", spotifyId:"1yV5mhYYLvXfBaLvQG3d0Q" },
+  { artist:"Usher", title:"OMG", ytId:"1RnPB76mjxI", spotifyId:"0Wi3pHv7KDQN0bLMlY3tbw" },
+  { artist:"Usher", title:"DJ Got Us Fallin In Love", ytId:"C-dvTjK_07c", spotifyId:"21MPGNicpPeISv65dZi4B1" },
 
   // Ne-Yo
-  { artist:"Ne-Yo", title:"So Sick", ytId:"IxszlJppRQI" },
-  { artist:"Ne-Yo", title:"Closer", ytId:"z_aC5xPQ2f4" },
-  { artist:"Ne-Yo", title:"Miss Independent", ytId:"k6M5C-oKw9k" },
-  { artist:"Ne-Yo", title:"Because of You", ytId:"v2vV70XH8Qg" },
-  { artist:"Ne-Yo", title:"Sexy Love", ytId:"61vJwo4IDAE" },
+  { artist:"Ne-Yo", title:"So Sick", ytId:"IxszlJppRQI", spotifyId:"3c1dEXBBqQPCVb7vQybqbD" },
+  { artist:"Ne-Yo", title:"Closer", ytId:"z_aC5xPQ2f4", spotifyId:"21YKihZDKrzPSwkUIzuI6J" },
+  { artist:"Ne-Yo", title:"Miss Independent", ytId:"k6M5C-oKw9k", spotifyId:"19ZsVQ77gqO8m5t4PXUP7C" },
+  { artist:"Ne-Yo", title:"Because of You", ytId:"v2vV70XH8Qg", spotifyId:"3FJwWCXhJEXvo01SnLkNVv" },
+  { artist:"Ne-Yo", title:"Sexy Love", ytId:"61vJwo4IDAE", spotifyId:"5dCRzYzLKz7Ej4WPTLqNYe" },
 
   // John Legend
-  { artist:"John Legend", title:"All of Me", ytId:"450p7goxZqg" },
-  { artist:"John Legend", title:"Ordinary People", ytId:"PIh07c_P4hc" },
-  { artist:"John Legend", title:"Tonight", ytId:"MahTKZDHXaA" },
-  { artist:"John Legend", title:"Green Light", ytId:"K3p5CxA4daw" },
+  { artist:"John Legend", title:"All of Me", ytId:"450p7goxZqg", spotifyId:"3U4isOIWM3VvDubwSI3y7a" },
+  { artist:"John Legend", title:"Ordinary People", ytId:"PIh07c_P4hc", spotifyId:"5xGCH9RJMOR3rMPKyiSPYM" },
+  { artist:"John Legend", title:"Tonight", ytId:"MahTKZDHXaA", spotifyId:"0xvHZQ74SuRWwLDlF3R9DV" },
+  { artist:"John Legend", title:"Green Light", ytId:"K3p5CxA4daw", spotifyId:"1d3BETbCkcTVLBN1sU7r0M" },
 
   // Bruno Mars
-  { artist:"Bruno Mars", title:"Just The Way You Are", ytId:"LjhCEhWiKXk" },
-  { artist:"Bruno Mars", title:"When I Was Your Man", ytId:"ekzHIouo8Q4" },
-  { artist:"Bruno Mars", title:"Treasure", ytId:"nPvuNsRccVw" },
-  { artist:"Bruno Mars", title:"Locked Out of Heaven", ytId:"e-fA-gBCkj0" },
-  { artist:"Bruno Mars", title:"Grenade", ytId:"SR6iYWJxHqs" },
-  { artist:"Bruno Mars", title:"Uptown Funk", ytId:"OPf0YbXqDm0" },
-  { artist:"Bruno Mars", title:"24K Magic", ytId:"UqyT8IEBkvY" },
-  { artist:"Bruno Mars", title:"Versace on the Floor", ytId:"fwgZUzKl3uQ" },
+  { artist:"Bruno Mars", title:"Just The Way You Are", ytId:"LjhCEhWiKXk", spotifyId:"7BqBn9nzAq8spo5e7cZ0dJ" },
+  { artist:"Bruno Mars", title:"When I Was Your Man", ytId:"ekzHIouo8Q4", spotifyId:"0nJW01T7XtvILxQgC5J7Wh" },
+  { artist:"Bruno Mars", title:"Treasure", ytId:"nPvuNsRccVw", spotifyId:"55h7vJchibLdUkxdlX3fK7" },
+  { artist:"Bruno Mars", title:"Locked Out of Heaven", ytId:"e-fA-gBCkj0", spotifyId:"3w3y8KPTfNeOKPiqUTakBh" },
+  { artist:"Bruno Mars", title:"Grenade", ytId:"SR6iYWJxHqs", spotifyId:"4qj7J8P4JKXdxQMbhnrCaR" },
+  { artist:"Bruno Mars", title:"Uptown Funk", ytId:"OPf0YbXqDm0", spotifyId:"32OlwWuMpZ6b0aN2RZOeMS" },
+  { artist:"Bruno Mars", title:"24K Magic", ytId:"UqyT8IEBkvY", spotifyId:"6b8Be6ljOzmkOmFslEb23P" },
+  { artist:"Bruno Mars", title:"Versace on the Floor", ytId:"fwgZUzKl3uQ", spotifyId:"0rKaGBLDyC7og8WheDqx1k" },
 
   // The Weeknd
-  { artist:"The Weeknd", title:"Earned It", ytId:"waU75jdUnYw" },
-  { artist:"The Weeknd", title:"Blinding Lights", ytId:"4NRXx6U8ABQ" },
-  { artist:"The Weeknd", title:"Starboy", ytId:"34Na4j8AVgA" },
-  { artist:"The Weeknd", title:"Can't Feel My Face", ytId:"KEI4qSrkPAs" },
-  { artist:"The Weeknd", title:"The Hills", ytId:"yzTuBuRdAyA" },
-  { artist:"The Weeknd", title:"Save Your Tears", ytId:"XXYlFuWEuKI" },
+  { artist:"The Weeknd", title:"Earned It", ytId:"waU75jdUnYw", spotifyId:"2PIvq1pGrUjY007X5y1UpM" },
+  { artist:"The Weeknd", title:"Blinding Lights", ytId:"4NRXx6U8ABQ", spotifyId:"0VjIjW4GlUZAMYd2vXMi3b" },
+  { artist:"The Weeknd", title:"Starboy", ytId:"34Na4j8AVgA", spotifyId:"7MXVkk9YMctZqd1Srtv4MB" },
+  { artist:"The Weeknd", title:"Can't Feel My Face", ytId:"KEI4qSrkPAs", spotifyId:"22VdIZQfgXJea34mQxLt81" },
+  { artist:"The Weeknd", title:"The Hills", ytId:"yzTuBuRdAyA", spotifyId:"7fBv7CLKzipRk6EC6TBER6" },
+  { artist:"The Weeknd", title:"Save Your Tears", ytId:"XXYlFuWEuKI", spotifyId:"5QO79kh1waicV47BqGRL3g" },
 
   // Chris Brown
-  { artist:"Chris Brown", title:"Forever", ytId:"5sMKX22BHeE" },
-  { artist:"Chris Brown", title:"With You", ytId:"6Bb8PYJmcL8" },
-  { artist:"Chris Brown", title:"Run It!", ytId:"NxF84svg7vI" },
-  { artist:"Chris Brown", title:"Yeah 3x", ytId:"cGjMgCcPF8Y" },
-  { artist:"Chris Brown", title:"Don't Wake Me Up", ytId:"1e5lVKoRfik" },
+  { artist:"Chris Brown", title:"Forever", ytId:"5sMKX22BHeE", spotifyId:"4i0GV9sdaQrbQxGMW57S4K" },
+  { artist:"Chris Brown", title:"With You", ytId:"6Bb8PYJmcL8", spotifyId:"59S2jA5J5GUDsJBQLBMhlj" },
+  { artist:"Chris Brown", title:"Run It!", ytId:"NxF84svg7vI", spotifyId:"7vLYENGH5MxTtqwlG3NLgf" },
+  { artist:"Chris Brown", title:"Yeah 3x", ytId:"cGjMgCcPF8Y", spotifyId:"4v0dwLszNsrUySPJyySGGn" },
+  { artist:"Chris Brown", title:"Don't Wake Me Up", ytId:"1e5lVKoRfik", spotifyId:"61irQHuI1YRnoAD1V6OASJ" },
 
   // Trey Songz
-  { artist:"Trey Songz", title:"Say Aah", ytId:"eH7GddDMyzA" },
-  { artist:"Trey Songz", title:"Slow Motion", ytId:"h2mXMlvAJJk" },
-  { artist:"Trey Songz", title:"Bottoms Up", ytId:"ekAXPCphKXQ" },
-  { artist:"Trey Songz", title:"Heart Attack", ytId:"sd8hhM_mJRo" },
+  { artist:"Trey Songz", title:"Say Aah", ytId:"eH7GddDMyzA", spotifyId:"36mJdiVrYWnVxrW53JIMu0" },
+  { artist:"Trey Songz", title:"Slow Motion", ytId:"h2mXMlvAJJk", spotifyId:"0IBdJUyUEcDo0BWABmwxYL" },
+  { artist:"Trey Songz", title:"Bottoms Up", ytId:"ekAXPCphKXQ", spotifyId:"3i53K8FBvgI0dIhwKydHDx" },
+  { artist:"Trey Songz", title:"Heart Attack", ytId:"sd8hhM_mJRo", spotifyId:"2iI7GBJOqyBrXgMbEU1FTA" },
 
   // Jason Derulo
-  { artist:"Jason Derulo", title:"Whatcha Say", ytId:"pBI3lc18k8Q" },
-  { artist:"Jason Derulo", title:"In My Head", ytId:"plxF_-LdZ9M" },
-  { artist:"Jason Derulo", title:"Ridin' Solo", ytId:"8ESdn0MuJWQ" },
-  { artist:"Jason Derulo", title:"Want To Want Me", ytId:"rClUOdS5Zyw" },
-  { artist:"Jason Derulo", title:"Talk Dirty", ytId:"RbtPXFlZlHg" },
-  { artist:"Jason Derulo", title:"Wiggle", ytId:"hiP14ED28CA" },
+  { artist:"Jason Derulo", title:"Whatcha Say", ytId:"pBI3lc18k8Q", spotifyId:"4R5yMfLCE3ufr7u9sYdDCU" },
+  { artist:"Jason Derulo", title:"In My Head", ytId:"plxF_-LdZ9M", spotifyId:"6gNsBqXAjDZx0iKHkS0gYH" },
+  { artist:"Jason Derulo", title:"Ridin' Solo", ytId:"8ESdn0MuJWQ", spotifyId:"4DgK7ZMkkQm4Zlf96OHWtt" },
+  { artist:"Jason Derulo", title:"Want To Want Me", ytId:"rClUOdS5Zyw", spotifyId:"5lQyBc0EkFpNaxLd5nSfLO" },
+  { artist:"Jason Derulo", title:"Talk Dirty", ytId:"RbtPXFlZlHg", spotifyId:"5vQzpPLiKYqUy5OO7kTVOe" },
+  { artist:"Jason Derulo", title:"Wiggle", ytId:"hiP14ED28CA", spotifyId:"3W4jhvt0VYLFoeOC8TXuvQ" },
 
   // Miguel
-  { artist:"Miguel", title:"Adorn", ytId:"8dM5QYdTo08" },
-  { artist:"Miguel", title:"Sure Thing", ytId:"q4GJVOMjCC4" },
-  { artist:"Miguel", title:"Coffee", ytId:"1bvEa0V-RKU" },
+  { artist:"Miguel", title:"Adorn", ytId:"8dM5QYdTo08", spotifyId:"7IZBO7ytQ0U10epxZkZSOy" },
+  { artist:"Miguel", title:"Sure Thing", ytId:"q4GJVOMjCC4", spotifyId:"0JXXNGljqupsJaZsgSbMZV" },
+  { artist:"Miguel", title:"Coffee", ytId:"1bvEa0V-RKU", spotifyId:"5vPJVkpLCMp0xI8Gi3Elmp" },
 
   // Frank Ocean
-  { artist:"Frank Ocean", title:"Thinkin Bout You", ytId:"6JHu3b-pbh8" },
-  { artist:"Frank Ocean", title:"Swim Good", ytId:"PmN9rZW0HGo" },
+  { artist:"Frank Ocean", title:"Thinkin Bout You", ytId:"6JHu3b-pbh8", spotifyId:"7DfFc7a6Rwfi3YQMRbDMau" },
+  { artist:"Frank Ocean", title:"Swim Good", ytId:"PmN9rZW0HGo", spotifyId:"6A7uqgC2N1nUhrCLAytHfE" },
 
   // SZA
-  { artist:"SZA", title:"Love Galore", ytId:"hHXer-Qno1E" },
-  { artist:"SZA", title:"The Weekend", ytId:"PAOhagWclhY" },
-  { artist:"SZA", title:"Good Days", ytId:"2p3zZoraK9g" },
-  { artist:"SZA", title:"Kiss Me More", ytId:"0EVVKs6DQLo" },
+  { artist:"SZA", title:"Love Galore", ytId:"hHXer-Qno1E", spotifyId:"0q75NwOoFiARAVp4EXU4Wi" },
+  { artist:"SZA", title:"The Weekend", ytId:"PAOhagWclhY", spotifyId:"3RLPbfDfLRu6npPc6vUZC3" },
+  { artist:"SZA", title:"Good Days", ytId:"2p3zZoraK9g", spotifyId:"3YJJjQPAbDT7mGpX3WtQ9A" },
+  { artist:"SZA", title:"Kiss Me More", ytId:"0EVVKs6DQLo", spotifyId:"748mdHnPGRAKchRMgOiz4h" },
 
   // H.E.R.
-  { artist:"H.E.R.", title:"Best Part", ytId:"vBy7FaapGRo" },
-  { artist:"H.E.R.", title:"Focus", ytId:"lZVNrNYgmlA" },
-  { artist:"H.E.R.", title:"Damage", ytId:"E4PrJ0YxXQs" },
+  { artist:"H.E.R.", title:"Best Part", ytId:"vBy7FaapGRo", spotifyId:"1RMJOxR6GRPsBHL8qeC2ux" },
+  { artist:"H.E.R.", title:"Focus", ytId:"lZVNrNYgmlA", spotifyId:"5nM8N6RS6Jlw90eBbOi6Gc" },
+  { artist:"H.E.R.", title:"Damage", ytId:"E4PrJ0YxXQs", spotifyId:"5x65fHm5cXabqpn5CJWI2D" },
 
   // Jhené Aiko
-  { artist:"Jhené Aiko", title:"The Worst", ytId:"sH6Uqq8WKOU" },
-  { artist:"Jhené Aiko", title:"While We're Young", ytId:"xQncUHFxVSw" },
-  { artist:"Jhené Aiko", title:"Sativa", ytId:"sJF6AUBlUSY" },
+  { artist:"Jhené Aiko", title:"The Worst", ytId:"sH6Uqq8WKOU", spotifyId:"3r8RuvgbX9s7ammBn07D3W" },
+  { artist:"Jhené Aiko", title:"While We're Young", ytId:"xQncUHFxVSw", spotifyId:"6ggAYdZ6p4R4XZN6iLlxz2" },
+  { artist:"Jhené Aiko", title:"Sativa", ytId:"sJF6AUBlUSY", spotifyId:"4SSnFejRGlZikf02HLewEF" },
 
   // Daniel Caesar
-  { artist:"Daniel Caesar", title:"Best Part", ytId:"vBy7FaapGRo" },
-  { artist:"Daniel Caesar", title:"Get You", ytId:"uQFVqltOXRg" },
-  { artist:"Daniel Caesar", title:"Peaches", ytId:"tQ0yjYUFKAE" },
+  { artist:"Daniel Caesar", title:"Best Part", ytId:"vBy7FaapGRo", spotifyId:"1RMJOxR6GRPsBHL8qeC2ux" },
+  { artist:"Daniel Caesar", title:"Get You", ytId:"uQFVqltOXRg", spotifyId:"7zFXmv6vqI4qOt4yGf3jYZ" },
+  { artist:"Daniel Caesar", title:"Peaches", ytId:"tQ0yjYUFKAE", spotifyId:"4iJyoBOLtHBaGxV4Hw56Ns" },
 
   // Giveon
-  { artist:"Giveon", title:"Heartbreak Anniversary", ytId:"uWRlisQu4fo" },
-  { artist:"Giveon", title:"For Tonight", ytId:"kYLcXryP2Aw" },
+  { artist:"Giveon", title:"Heartbreak Anniversary", ytId:"uWRlisQu4fo", spotifyId:"0oL3AKRGhFWZYJYfGm6wMG" },
+  { artist:"Giveon", title:"For Tonight", ytId:"kYLcXryP2Aw", spotifyId:"6EKYg4KKjN1TSQF9xbA0cQ" },
 
   // Khalid
-  { artist:"Khalid", title:"Location", ytId:"by3yRdlQvzs" },
-  { artist:"Khalid", title:"Young Dumb & Broke", ytId:"IPfJnp1guPc" },
-  { artist:"Khalid", title:"Talk", ytId:"hE2Ira-Cwxo" },
-  { artist:"Khalid", title:"Better", ytId:"x3bfa3DZ8JM" },
+  { artist:"Khalid", title:"Location", ytId:"by3yRdlQvzs", spotifyId:"152lZdxL1OR0ZMW6KquMif" },
+  { artist:"Khalid", title:"Young Dumb & Broke", ytId:"IPfJnp1guPc", spotifyId:"1BxfuPKGuaTgP7aM0Bbdwr" },
+  { artist:"Khalid", title:"Talk", ytId:"hE2Ira-Cwxo", spotifyId:"47Bg6IrMced3VGcNhi4Q1E" },
+  { artist:"Khalid", title:"Better", ytId:"x3bfa3DZ8JM", spotifyId:"0Io04WLJxwN3vPgQJLzwqR" },
 
   // Ella Mai
-  { artist:"Ella Mai", title:"Boo'd Up", ytId:"6YNZlXfW6Ho" },
-  { artist:"Ella Mai", title:"Trip", ytId:"6YFdOq00l4E" },
+  { artist:"Ella Mai", title:"Boo'd Up", ytId:"6YNZlXfW6Ho", spotifyId:"6JfKlDeuzQrVTRPZYMVNrX" },
+  { artist:"Ella Mai", title:"Trip", ytId:"6YFdOq00l4E", spotifyId:"60wwxj6Dd9NJlirf84wr2c" },
 
   // Summer Walker
-  { artist:"Summer Walker", title:"Girls Need Love", ytId:"h3AoMz2J1E0" },
-  { artist:"Summer Walker", title:"Playing Games", ytId:"OU-4svZ3wt0" },
+  { artist:"Summer Walker", title:"Girls Need Love", ytId:"h3AoMz2J1E0", spotifyId:"1X4Nc0p44PwAXp7R8BXkDT" },
+  { artist:"Summer Walker", title:"Playing Games", ytId:"OU-4svZ3wt0", spotifyId:"1hjScF9ckU6fzJKJ9VaMOx" },
 
   // Kehlani
-  { artist:"Kehlani", title:"Gangsta", ytId:"3-oOJrvx-JQ" },
-  { artist:"Kehlani", title:"Distraction", ytId:"7MBMw8F0-Lg" },
+  { artist:"Kehlani", title:"Gangsta", ytId:"3-oOJrvx-JQ", spotifyId:"0WKkHPR9KTKIiIWZMPjBfu" },
+  { artist:"Kehlani", title:"Distraction", ytId:"7MBMw8F0-Lg", spotifyId:"4VLnSS0J07XXTB0ZkfNlQm" },
 ];
 
 function pickDailyRnB(dateKeyStr){
@@ -1317,178 +1317,48 @@ function fmtTime(sec){
   return `${m}:${s}`;
 }
 
-function miniAudioPlayer({artist, title, ytId, todayKey}){
-  const state = { audio:null, loaded:false, loading:false, playing:false, meta:null, previewUrl:null };
-
-  const playBtn = el("button",{class:"miniPlay btn"},[document.createTextNode("▶ Play")]);
+function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
   const titleEl = el("div",{class:"h"},[document.createTextNode(title)]);
   const artistEl = el("div",{class:"m"},[document.createTextNode(artist)]);
-  const timeEl = el("div",{class:"miniTime muted"},[document.createTextNode("0:00 / 0:30")]);
-  const statusEl = el("div",{class:"miniStatus muted small"},[document.createTextNode("Tap Play for preview")]);
-
-  const seek = el("input",{type:"range", min:"0", max:"1000", value:"0", class:"miniSeek"});
   
-  // YouTube button
-  const ytBtn = el("button",{class:"btn ytPlayBtn small"},[document.createTextNode("▶ Watch on YouTube")]);
+  // Spotify embed iframe - this is the most reliable way to play music on iOS
+  const spotifyEmbed = el("div",{class:"spotifyEmbed"});
+  if(spotifyId){
+    const iframe = document.createElement("iframe");
+    iframe.style.borderRadius = "12px";
+    iframe.src = `https://open.spotify.com/embed/track/${spotifyId}?utm_source=generator&theme=0`;
+    iframe.width = "100%";
+    iframe.height = "80";
+    iframe.frameBorder = "0";
+    iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    iframe.loading = "lazy";
+    spotifyEmbed.appendChild(iframe);
+  }
+  
+  // YouTube fallback button
+  const ytBtn = el("button",{class:"btn ghost small", style:"margin-top:8px;"},[document.createTextNode("▶ Watch on YouTube")]);
   ytBtn.addEventListener("click", (e)=>{
     e.preventDefault();
     e.stopPropagation();
-    if(state.audio && state.playing){
-      try{ state.audio.pause(); }catch(_){}
-      state.playing = false;
-      playBtn.textContent = "▶ Play";
-    }
-    const ytUrl = `https://www.youtube.com/watch?v=${ytId}`;
-    window.location.href = ytUrl;
+    window.location.href = `https://www.youtube.com/watch?v=${ytId}`;
   });
 
-  const art = el("div",{class:"miniArt"});
-  art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
-
-  // Fetch preview URL immediately (but don't create audio yet - iOS requires user gesture)
-  (async function preload(){
-    try {
-      const meta = await fetchItunesPreview(artist, title);
-      state.meta = meta;
-      state.previewUrl = meta.previewUrl;
-      if(meta.artistName && meta.trackName){
-        titleEl.textContent = meta.trackName;
-        artistEl.textContent = meta.artistName;
-      }
-      if(meta.artwork){
-        art.style.backgroundImage = `url('${meta.artwork}')`;
-      }
-      statusEl.textContent = "Ready to play";
-    } catch(err) {
-      console.log("Preload error:", err);
-      statusEl.textContent = "Tap YouTube to listen";
-    }
-  })();
-
-  function setupAudio(url){
-    const audio = new Audio();
-    audio.setAttribute('playsinline', '');
-    audio.setAttribute('webkit-playsinline', '');
-    audio.preload = "auto";
-    
-    audio.addEventListener("timeupdate", ()=>{
-      if(!audio.duration) return;
-      const v = Math.floor((audio.currentTime / audio.duration) * 1000);
-      seek.value = String(v);
-      timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
-    });
-    audio.addEventListener("loadedmetadata", ()=>{
-      timeEl.textContent = `0:00 / ${fmtTime(audio.duration)}`;
-    });
-    audio.addEventListener("ended", ()=>{
-      state.playing = false;
-      playBtn.textContent = "▶ Play";
-      seek.value = "0";
-      statusEl.textContent = "Preview ended";
-    });
-    audio.addEventListener("error", (e)=>{
-      console.log("Audio error:", e);
-      statusEl.textContent = "Preview unavailable";
-      state.loaded = false;
-    });
-    audio.addEventListener("canplaythrough", ()=>{
-      statusEl.textContent = "Playing...";
-    });
-    
-    audio.src = url;
-    return audio;
-  }
-
-  playBtn.addEventListener("click", async (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // If already playing, pause
-    if(state.playing && state.audio){
-      state.audio.pause();
-      state.playing = false;
-      playBtn.textContent = "▶ Play";
-      statusEl.textContent = "Paused";
-      return;
-    }
-    
-    // If no preview URL yet, try to fetch it
-    if(!state.previewUrl){
-      playBtn.textContent = "Loading...";
-      playBtn.disabled = true;
-      try {
-        const meta = await fetchItunesPreview(artist, title);
-        state.meta = meta;
-        state.previewUrl = meta.previewUrl;
-        if(meta.artistName) artistEl.textContent = meta.artistName;
-        if(meta.trackName) titleEl.textContent = meta.trackName;
-        if(meta.artwork) art.style.backgroundImage = `url('${meta.artwork}')`;
-      } catch(err) {
-        console.log("Fetch error:", err);
-        statusEl.textContent = "No preview - tap YouTube";
-        playBtn.textContent = "▶ Play";
-        playBtn.disabled = false;
-        // Open YouTube as fallback
-        window.location.href = `https://www.youtube.com/watch?v=${ytId}`;
-        return;
-      }
-      playBtn.disabled = false;
-    }
-    
-    // Create audio element on user gesture (required for iOS)
-    if(!state.audio){
-      state.audio = setupAudio(state.previewUrl);
-    }
-    
-    // Stop any other playing audio
-    document.querySelectorAll("audio").forEach(a => {
-      if(a !== state.audio) try{ a.pause(); }catch(_){}
-    });
-    
-    // Play
-    playBtn.textContent = "Loading...";
-    statusEl.textContent = "Starting...";
-    
-    try {
-      await state.audio.play();
-      state.playing = true;
-      playBtn.textContent = "⏸ Pause";
-      statusEl.textContent = "Playing preview...";
-    } catch(err) {
-      console.log("Play error:", err);
-      statusEl.textContent = "Can't play - tap YouTube";
-      playBtn.textContent = "▶ Play";
-    }
-  });
-
-  seek.addEventListener("input", (e)=>{
-    e.preventDefault();
-    if(!state.audio || !state.audio.duration) return;
-    const ratio = Number(seek.value)/1000;
-    state.audio.currentTime = ratio * state.audio.duration;
-  });
-
-  const left = el("div",{class:"miniLeft"},[art]);
-  const mid = el("div",{class:"miniMid"},[
-    titleEl,
-    artistEl,
-    el("div",{class:"miniControls"},[
-      playBtn,
-      timeEl,
+  const content = el("div",{class:"stack", style:"gap:6px;"},[
+    el("div",{class:"row", style:"gap:8px;align-items:center;"},[
+      el("div",{style:"flex:1;"},[titleEl, artistEl]),
     ]),
-    seek,
-    el("div",{class:"row", style:"margin-top:10px;gap:8px;"},[ytBtn]),
-    statusEl
+    spotifyEmbed,
+    ytBtn
   ]);
 
-  return el("div",{class:"miniPlayer"},[left, mid]);
+  return content;
 }
 
 function rnbCard(todayKey){
   const pick = pickDailyRnB(todayKey);
 
   const body = el("div",{class:"stack"},[
-    miniAudioPlayer({ artist: pick.artist, title: pick.title, ytId: pick.ytId, todayKey }),
+    miniAudioPlayer({ artist: pick.artist, title: pick.title, ytId: pick.ytId, spotifyId: pick.spotifyId, todayKey }),
   ]);
 
   return card("Song of the Day ♪", "A little soul for your soul", body);

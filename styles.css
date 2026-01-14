@@ -1613,6 +1613,17 @@ body::before{
   font-size: 13px;
 }
 
+/* Spotify embed */
+.spotifyEmbed {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #282828;
+  min-height: 80px;
+}
+.spotifyEmbed iframe {
+  display: block;
+}
+
 @media (max-width: 600px) {
   .date-selector {
     flex-wrap: wrap;
