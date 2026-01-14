@@ -1155,7 +1155,8 @@ async function viewDashboard(settings){
   const frogRequired = !!settings.frogRequired;
 
   const dateLabel = isToday ? "Hello ✿" : formatDate(getSelectedDate());
-  const header = el("div",{},[
+    const isMobile = window.matchMedia("(max-width: 980px)").matches;
+const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode(dateLabel)]),
     el("div",{class:"subtle"},[document.createTextNode(isToday ? formatDate(new Date()) : `Viewing ${selectedDay}`)])
   ]);

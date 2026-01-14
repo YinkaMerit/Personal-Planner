@@ -1892,3 +1892,23 @@ body::before{
     overflow: visible;
   }
 }
+
+/* iOS PWA: reduce zoom/pan and rubber-band scrolling */
+html, body{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: manipulation; /* blocks pinch-zoom in many browsers */
+  -webkit-text-size-adjust: 100%;
+}
+
+body{
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure dedicated scroll regions still scroll */
+.scrollY, .overdueWrap, .dashRightScroll, .timelineWrap, .list, .panelScroll{
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
