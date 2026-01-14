@@ -1644,9 +1644,46 @@ body::before{
   /* Show mobile top section, hide desktop duplicates */
   .mobile-top-section {
     display: flex;
+    flex-direction: column;
   }
   .desktop-only {
     display: none !important;
+  }
+  
+  /* App container - fill viewport exactly */
+  .app {
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    padding-bottom: var(--sab);
+  }
+  
+  /* Topbar compact */
+  .topbar {
+    padding: 6px 10px;
+    gap: 6px;
+    min-height: 48px;
+  }
+  
+  /* Main area fills remaining space */
+  .main {
+    padding: 6px;
+    overflow: hidden;
+  }
+  .main::before {
+    display: none;
+  }
+  
+  /* Book fills available space */
+  .book {
+    height: 100%;
+    border-radius: 12px;
+  }
+  
+  /* Pagehost fills book */
+  .pagehost {
+    min-height: 100%;
+    height: 100%;
   }
   
   /* Page scrolling on mobile - critical for iOS PWA */
@@ -1660,7 +1697,7 @@ body::before{
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 12px 12px 120px 20px;
+    padding: 10px 8px 140px 16px;
   }
   
   /* Ensure touch events work */
@@ -1669,30 +1706,27 @@ body::before{
   }
   
   .spine {
-    left: 8px;
-    width: 6px;
+    left: 5px;
+    width: 4px;
   }
   
-  /* Header adjustments */
-  .topbar {
-    padding: 8px 10px;
-    gap: 8px;
-  }
-  .brand-title {
-    font-size: 14px;
-  }
-  .brand-sub {
-    font-size: 10px;
-  }
+  /* Brand compact */
   .brand-mark {
-    width: 36px;
-    height: 34px;
+    width: 32px;
+    height: 30px;
+    border-radius: 8px;
   }
   .brand-mark::before {
-    font-size: 16px;
+    font-size: 13px;
+  }
+  .brand-title {
+    font-size: 13px;
+  }
+  .brand-sub {
+    display: none;
   }
   
-  /* Hide export/import on very small screens */
+  /* Hide export/import */
   .top-actions > .btn.ghost:not(.small),
   .top-actions > .filebtn {
     display: none;
@@ -1703,148 +1737,220 @@ body::before{
     gap: 2px;
   }
   .date-input {
-    width: 110px;
-    padding: 6px 8px;
-    font-size: 13px;
+    width: 95px;
+    padding: 5px 6px;
+    font-size: 11px;
   }
   .btn.small {
-    padding: 6px 8px;
-    font-size: 12px;
+    padding: 5px 6px;
+    font-size: 10px;
   }
   
   /* Page headings smaller */
   .h1 {
-    font-size: 20px;
-    margin-bottom: 6px;
+    font-size: 17px;
+    margin-bottom: 3px;
   }
   .subtle {
-    font-size: 12px;
+    font-size: 11px;
   }
   
   /* Cards more compact */
+  .card {
+    border-radius: 12px;
+  }
+  .card::before {
+    display: none;
+  }
   .card-h {
-    padding: 12px 12px 10px 12px;
+    padding: 8px 10px 6px 10px;
   }
   .card-h .t {
-    font-size: 14px;
+    font-size: 12px;
+  }
+  .card-h .d {
+    font-size: 10px;
   }
   .card-b {
-    padding: 10px 12px 12px 12px;
+    padding: 6px 10px 8px 10px;
   }
   
   /* Stack spacing */
   .stack {
-    gap: 8px;
+    gap: 6px;
   }
   
   /* Grid stacks and smaller gap */
   .grid {
-    gap: 10px;
+    gap: 6px;
   }
   
   /* Buttons smaller */
   .btn {
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 8px;
   }
   
-  /* Scroll areas - flex to fill available space */
-  .tasksScroll {
-    height: auto;
-    max-height: 140px;
-  }
-  .overdueScroll {
-    max-height: 120px;
-  }
+  /* Scroll areas - disable on mobile, let page scroll */
+  .tasksScroll,
+  .overdueScroll,
   .relScroll,
   .finScroll,
   .fitScroll,
   .spiScroll {
-    height: auto;
-    max-height: 200px;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
   
   /* Mini audio player compact */
-  .mini-audio-player {
-    padding: 10px;
-    gap: 10px;
+  .miniPlayer {
+    gap: 8px;
+    padding: 8px;
   }
-  .mini-audio-player .art {
-    width: 50px;
-    height: 50px;
-    min-width: 50px;
+  .miniLeft {
+    width: 55px;
+    min-width: 55px;
   }
-  .mini-audio-player .info .title {
-    font-size: 13px;
+  .miniArt {
+    width: 55px;
+    height: 55px;
+    border-radius: 8px;
   }
-  .mini-audio-player .info .artist {
+  .miniMid .h {
+    font-size: 12px;
+  }
+  .miniMid .m {
+    font-size: 10px;
+  }
+  .miniControls {
+    gap: 6px;
+  }
+  .miniPlay {
+    padding: 5px 10px;
     font-size: 11px;
+  }
+  .miniTime {
+    font-size: 10px;
+  }
+  .miniSeek {
+    height: 3px;
+  }
+  .ytPlayBtn.small {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+  .miniStatus {
+    font-size: 9px;
   }
   
   /* Banner smaller */
   .banner {
-    padding: 14px;
+    padding: 10px;
+    border-radius: 12px;
   }
   .banner .t {
-    font-size: 12px;
+    font-size: 10px;
   }
   .banner .ref {
-    font-size: 14px;
+    font-size: 12px;
   }
   .banner .txt {
-    font-size: 13px;
+    font-size: 11px;
+    line-height: 1.3;
   }
   
   /* Grid2 stack on mobile */
   .grid2 {
     grid-template-columns: 1fr;
+    gap: 6px;
   }
   
   /* Form inputs */
   .input, select, textarea {
-    padding: 10px 12px;
+    padding: 8px 10px;
     font-size: 14px;
+    border-radius: 8px;
+  }
+  textarea {
+    min-height: 60px;
+  }
+  label {
+    font-size: 10px;
+    margin-bottom: 4px;
   }
   
   /* Items more compact */
   .item {
-    padding: 10px;
+    padding: 8px;
+    border-radius: 8px;
+  }
+  .item .h {
+    font-size: 12px;
+  }
+  .item .m {
+    font-size: 10px;
+  }
+  
+  /* List spacing */
+  .list {
+    gap: 4px;
   }
   
   /* Page nav buttons */
   .page-nav-btn {
-    width: 28px;
-    height: 44px;
-    font-size: 18px;
+    width: 24px;
+    height: 36px;
+    font-size: 14px;
+    border-radius: 6px;
   }
   .page-nav-btn.prev {
-    left: 2px;
+    left: 0;
   }
   .page-nav-btn.next {
-    right: 2px;
+    right: 0;
+  }
+  
+  /* Row spacing */
+  .row {
+    gap: 6px;
+  }
+  
+  /* Badge smaller */
+  .badge {
+    font-size: 9px;
+    padding: 3px 8px;
   }
 }
 
-/* Even smaller phones */
+/* Even smaller phones (iPhone SE, etc) */
 @media (max-width: 375px) {
   .topbar {
-    padding: 6px 8px;
+    padding: 5px 8px;
   }
   .brand {
-    gap: 6px;
+    gap: 4px;
   }
   .brand-title {
-    font-size: 13px;
+    font-size: 12px;
   }
   .brand-mark {
-    width: 32px;
-    height: 30px;
+    width: 28px;
+    height: 26px;
+  }
+  .brand-mark::before {
+    font-size: 11px;
   }
   .h1 {
-    font-size: 18px;
+    font-size: 15px;
   }
   .page {
-    padding: 8px 8px 90px 14px;
+    padding: 8px 6px 130px 12px;
+  }
+  .date-input {
+    width: 85px;
+    font-size: 10px;
   }
 }
 

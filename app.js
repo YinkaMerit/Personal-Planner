@@ -1318,50 +1318,39 @@ function fmtTime(sec){
 }
 
 function miniAudioPlayer({artist, title, ytId, todayKey}){
-  const state = { audio:null, loaded:false, loading:false, playing:false, meta:null };
+  const state = { audio:null, loaded:false, loading:false, playing:false, meta:null, previewUrl:null };
 
   const playBtn = el("button",{class:"miniPlay btn"},[document.createTextNode("▶ Play")]);
   const titleEl = el("div",{class:"h"},[document.createTextNode(title)]);
   const artistEl = el("div",{class:"m"},[document.createTextNode(artist)]);
-  const timeEl = el("div",{class:"miniTime muted"},[document.createTextNode("0:00 / 0:00")]);
-  const statusEl = el("div",{class:"miniStatus muted small"},[]);
+  const timeEl = el("div",{class:"miniTime muted"},[document.createTextNode("0:00 / 0:30")]);
+  const statusEl = el("div",{class:"miniStatus muted small"},[document.createTextNode("Tap Play for preview")]);
 
   const seek = el("input",{type:"range", min:"0", max:"1000", value:"0", class:"miniSeek"});
   
-  // YouTube button - use location.href for PWA compatibility
+  // YouTube button
   const ytBtn = el("button",{class:"btn ytPlayBtn small"},[document.createTextNode("▶ Watch on YouTube")]);
   ytBtn.addEventListener("click", (e)=>{
     e.preventDefault();
     e.stopPropagation();
-    // Pause preview if playing
     if(state.audio && state.playing){
       try{ state.audio.pause(); }catch(_){}
       state.playing = false;
       playBtn.textContent = "▶ Play";
     }
-    // Use location.href for better iOS PWA support
     const ytUrl = `https://www.youtube.com/watch?v=${ytId}`;
-    // Try window.open first, fall back to location
-    const newWin = window.open(ytUrl, "_blank");
-    if(!newWin || newWin.closed || typeof newWin.closed === 'undefined'){
-      window.location.href = ytUrl;
-    }
+    window.location.href = ytUrl;
   });
 
   const art = el("div",{class:"miniArt"});
-  // Load YouTube thumbnail immediately
   art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
 
-  async function ensureLoaded(){
-    if(state.loaded || state.loading) return;
-    state.loading = true;
-    statusEl.textContent = "Loading preview…";
-    playBtn.textContent = "Loading…";
-    playBtn.disabled = true;
-    try{
+  // Fetch preview URL immediately (but don't create audio yet - iOS requires user gesture)
+  (async function preload(){
+    try {
       const meta = await fetchItunesPreview(artist, title);
       state.meta = meta;
-
+      state.previewUrl = meta.previewUrl;
       if(meta.artistName && meta.trackName){
         titleEl.textContent = meta.trackName;
         artistEl.textContent = meta.artistName;
@@ -1369,96 +1358,111 @@ function miniAudioPlayer({artist, title, ytId, todayKey}){
       if(meta.artwork){
         art.style.backgroundImage = `url('${meta.artwork}')`;
       }
-
-      const audio = new Audio();
-      audio.preload = "auto";
-      audio.crossOrigin = "anonymous";
-      
-      // iOS requires setting src after creating Audio object
-      audio.src = meta.previewUrl;
-      
-      audio.addEventListener("timeupdate", ()=>{
-        if(!audio.duration) return;
-        const v = Math.floor((audio.currentTime / audio.duration) * 1000);
-        seek.value = String(v);
-        timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
-      });
-      audio.addEventListener("loadedmetadata", ()=>{
-        timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
-      });
-      audio.addEventListener("ended", ()=>{
-        state.playing = false;
-        playBtn.textContent = "▶ Play";
-        seek.value = "0";
-      });
-      audio.addEventListener("error", (e)=>{
-        console.log("Audio error:", e);
-        statusEl.textContent = "Preview unavailable";
-      });
-
-      // Load the audio
-      audio.load();
-      
-      state.audio = audio;
-      state.loaded = true;
-      statusEl.textContent = "Preview ready";
-    } catch(err){
-      console.log("Preview load error:", err);
-      statusEl.textContent = "Preview unavailable - tap YouTube";
-    } finally {
-      state.loading = false;
-      playBtn.disabled = false;
-      if(!state.playing) playBtn.textContent = "▶ Play";
+      statusEl.textContent = "Ready to play";
+    } catch(err) {
+      console.log("Preload error:", err);
+      statusEl.textContent = "Tap YouTube to listen";
     }
+  })();
+
+  function setupAudio(url){
+    const audio = new Audio();
+    audio.setAttribute('playsinline', '');
+    audio.setAttribute('webkit-playsinline', '');
+    audio.preload = "auto";
+    
+    audio.addEventListener("timeupdate", ()=>{
+      if(!audio.duration) return;
+      const v = Math.floor((audio.currentTime / audio.duration) * 1000);
+      seek.value = String(v);
+      timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+    });
+    audio.addEventListener("loadedmetadata", ()=>{
+      timeEl.textContent = `0:00 / ${fmtTime(audio.duration)}`;
+    });
+    audio.addEventListener("ended", ()=>{
+      state.playing = false;
+      playBtn.textContent = "▶ Play";
+      seek.value = "0";
+      statusEl.textContent = "Preview ended";
+    });
+    audio.addEventListener("error", (e)=>{
+      console.log("Audio error:", e);
+      statusEl.textContent = "Preview unavailable";
+      state.loaded = false;
+    });
+    audio.addEventListener("canplaythrough", ()=>{
+      statusEl.textContent = "Playing...";
+    });
+    
+    audio.src = url;
+    return audio;
   }
 
   playBtn.addEventListener("click", async (e)=>{
     e.preventDefault();
     e.stopPropagation();
     
-    await ensureLoaded();
-    if(!state.audio){
-      // If no audio, open YouTube instead
-      const ytUrl = `https://www.youtube.com/watch?v=${ytId}`;
-      const newWin = window.open(ytUrl, "_blank");
-      if(!newWin || newWin.closed || typeof newWin.closed === 'undefined'){
-        window.location.href = ytUrl;
-      }
-      return;
-    }
-
-    if(state.playing){
+    // If already playing, pause
+    if(state.playing && state.audio){
       state.audio.pause();
       state.playing = false;
       playBtn.textContent = "▶ Play";
-    } else {
-      // Stop any other playing audio
-      document.querySelectorAll("audio[data-mini='1']").forEach(a=>{ try{ a.pause(); }catch(_){} });
-      state.audio.dataset.mini = "1";
-      
+      statusEl.textContent = "Paused";
+      return;
+    }
+    
+    // If no preview URL yet, try to fetch it
+    if(!state.previewUrl){
+      playBtn.textContent = "Loading...";
+      playBtn.disabled = true;
       try {
-        // iOS requires play() to be called directly in response to user gesture
-        const playPromise = state.audio.play();
-        if(playPromise !== undefined){
-          playPromise.then(()=>{
-            state.playing = true;
-            statusEl.textContent = "Playing preview…";
-            playBtn.textContent = "⏸ Pause";
-          }).catch((err)=>{
-            console.log("Play error:", err);
-            statusEl.textContent = "Tap YouTube to listen";
-          });
-        }
+        const meta = await fetchItunesPreview(artist, title);
+        state.meta = meta;
+        state.previewUrl = meta.previewUrl;
+        if(meta.artistName) artistEl.textContent = meta.artistName;
+        if(meta.trackName) titleEl.textContent = meta.trackName;
+        if(meta.artwork) art.style.backgroundImage = `url('${meta.artwork}')`;
       } catch(err) {
-        console.log("Play exception:", err);
-        statusEl.textContent = "Tap YouTube to listen";
+        console.log("Fetch error:", err);
+        statusEl.textContent = "No preview - tap YouTube";
+        playBtn.textContent = "▶ Play";
+        playBtn.disabled = false;
+        // Open YouTube as fallback
+        window.location.href = `https://www.youtube.com/watch?v=${ytId}`;
+        return;
       }
+      playBtn.disabled = false;
+    }
+    
+    // Create audio element on user gesture (required for iOS)
+    if(!state.audio){
+      state.audio = setupAudio(state.previewUrl);
+    }
+    
+    // Stop any other playing audio
+    document.querySelectorAll("audio").forEach(a => {
+      if(a !== state.audio) try{ a.pause(); }catch(_){}
+    });
+    
+    // Play
+    playBtn.textContent = "Loading...";
+    statusEl.textContent = "Starting...";
+    
+    try {
+      await state.audio.play();
+      state.playing = true;
+      playBtn.textContent = "⏸ Pause";
+      statusEl.textContent = "Playing preview...";
+    } catch(err) {
+      console.log("Play error:", err);
+      statusEl.textContent = "Can't play - tap YouTube";
+      playBtn.textContent = "▶ Play";
     }
   });
 
-  seek.addEventListener("input", async (e)=>{
+  seek.addEventListener("input", (e)=>{
     e.preventDefault();
-    await ensureLoaded();
     if(!state.audio || !state.audio.duration) return;
     const ratio = Number(seek.value)/1000;
     state.audio.currentTime = ratio * state.audio.duration;
