@@ -1318,37 +1318,53 @@ function fmtTime(sec){
 }
 
 function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
-  const titleEl = el("div",{class:"h"},[document.createTextNode(title)]);
-  const artistEl = el("div",{class:"m"},[document.createTextNode(artist)]);
+  const titleEl = el("div",{class:"songTitle"},[document.createTextNode(title)]);
+  const artistEl = el("div",{class:"songArtist"},[document.createTextNode(artist)]);
   
-  // Spotify embed iframe - this is the most reliable way to play music on iOS
-  const spotifyEmbed = el("div",{class:"spotifyEmbed"});
-  if(spotifyId){
-    const iframe = document.createElement("iframe");
-    iframe.style.borderRadius = "12px";
-    iframe.src = `https://open.spotify.com/embed/track/${spotifyId}?utm_source=generator&theme=0`;
-    iframe.width = "100%";
-    iframe.height = "80";
-    iframe.frameBorder = "0";
-    iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
-    iframe.loading = "lazy";
-    spotifyEmbed.appendChild(iframe);
-  }
+  // Album art from YouTube thumbnail
+  const art = el("div",{class:"songArt"});
+  art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
   
-  // YouTube fallback button
-  const ytBtn = el("button",{class:"btn ghost small", style:"margin-top:8px;"},[document.createTextNode("▶ Watch on YouTube")]);
-  ytBtn.addEventListener("click", (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    window.location.href = `https://www.youtube.com/watch?v=${ytId}`;
-  });
+  // Spotify button - opens in Spotify app on iOS
+  const spotifyBtn = el("a",{
+    class:"musicBtn spotifyBtn",
+    href: `https://open.spotify.com/track/${spotifyId}`,
+    target:"_blank",
+    rel:"noopener"
+  },[
+    el("span",{class:"musicIcon"},[document.createTextNode("🎵")]),
+    document.createTextNode(" Play on Spotify")
+  ]);
+  
+  // Apple Music search - opens in Apple Music app
+  const appleMusicBtn = el("a",{
+    class:"musicBtn appleBtn",
+    href: `https://music.apple.com/us/search?term=${encodeURIComponent(artist + ' ' + title)}`,
+    target:"_blank",
+    rel:"noopener"
+  },[
+    el("span",{class:"musicIcon"},[document.createTextNode("🎵")]),
+    document.createTextNode(" Apple Music")
+  ]);
+  
+  // YouTube button
+  const ytBtn = el("a",{
+    class:"musicBtn ytBtn",
+    href: `https://www.youtube.com/watch?v=${ytId}`,
+    target:"_blank",
+    rel:"noopener"
+  },[
+    el("span",{class:"musicIcon"},[document.createTextNode("▶")]),
+    document.createTextNode(" YouTube")
+  ]);
 
-  const content = el("div",{class:"stack", style:"gap:6px;"},[
-    el("div",{class:"row", style:"gap:8px;align-items:center;"},[
-      el("div",{style:"flex:1;"},[titleEl, artistEl]),
-    ]),
-    spotifyEmbed,
-    ytBtn
+  const content = el("div",{class:"songCard"},[
+    art,
+    el("div",{class:"songInfo"},[
+      titleEl,
+      artistEl,
+      el("div",{class:"musicBtns"},[spotifyBtn, appleMusicBtn, ytBtn])
+    ])
   ]);
 
   return content;
