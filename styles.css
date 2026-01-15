@@ -1809,23 +1809,36 @@ body::before{
   
   /* App container - fill viewport exactly */
   .app {
-    height: 100vh;
-    height: 100dvh;
-    height: -webkit-fill-available;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    padding-top: var(--sat);
     padding-bottom: var(--sab);
+    padding-left: var(--sal);
+    padding-right: var(--sar);
+    overflow: hidden;
   }
   
   /* Topbar compact */
   .topbar {
-    padding: 6px 10px;
-    gap: 6px;
-    min-height: 48px;
+    padding: 6px 8px;
+    gap: 4px;
+    min-height: 44px;
+    width: 100%;
+    flex-shrink: 0;
   }
   
   /* Main area fills remaining space */
   .main {
-    padding: 6px;
+    padding: 4px;
     overflow: hidden;
+    width: 100%;
+    min-height: 0;
+    flex: 1;
   }
   .main::before {
     display: none;
@@ -1833,14 +1846,18 @@ body::before{
   
   /* Book fills available space */
   .book {
+    width: 100%;
     height: 100%;
-    border-radius: 12px;
+    border-radius: 10px;
+    margin: 0;
+    max-width: 100%;
   }
   
   /* Pagehost fills book */
   .pagehost {
-    min-height: 100%;
+    width: 100%;
     height: 100%;
+    min-height: 0;
   }
   
   /* Page scrolling on mobile - critical for iOS PWA */
@@ -1850,11 +1867,12 @@ body::before{
     left: 0;
     right: 0;
     bottom: 0;
-    overflow-y: scroll !important;
+    width: 100%;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 10px 8px 140px 16px;
+    padding: 8px 6px 120px 12px;
   }
   
   /* Ensure touch events work */
@@ -1894,59 +1912,65 @@ body::before{
     gap: 2px;
   }
   .date-input {
-    width: 95px;
-    padding: 5px 6px;
-    font-size: 11px;
+    width: 90px;
+    padding: 4px 5px;
+    font-size: 10px;
   }
   .btn.small {
-    padding: 5px 6px;
-    font-size: 10px;
+    padding: 4px 5px;
+    font-size: 9px;
   }
   
   /* Page headings smaller */
   .h1 {
-    font-size: 17px;
+    font-size: 16px;
     margin-bottom: 3px;
   }
   .subtle {
-    font-size: 11px;
+    font-size: 10px;
   }
   
-  /* Cards more compact */
+  /* Cards more compact - ensure no overflow */
   .card {
-    border-radius: 12px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
   }
   .card::before {
     display: none;
   }
   .card-h {
-    padding: 8px 10px 6px 10px;
+    padding: 6px 8px 4px 8px;
   }
   .card-h .t {
-    font-size: 12px;
+    font-size: 11px;
   }
   .card-h .d {
-    font-size: 10px;
+    font-size: 9px;
   }
   .card-b {
-    padding: 6px 10px 8px 10px;
+    padding: 6px 8px 8px 8px;
+    overflow: hidden;
   }
   
   /* Stack spacing */
   .stack {
-    gap: 6px;
+    gap: 5px;
+    width: 100%;
   }
   
   /* Grid stacks and smaller gap */
   .grid {
-    gap: 6px;
+    gap: 5px;
+    width: 100%;
   }
   
   /* Buttons smaller */
   .btn {
-    padding: 6px 10px;
-    font-size: 11px;
-    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 10px;
+    border-radius: 6px;
   }
   
   /* Scroll areas - disable on mobile, let page scroll */
@@ -2155,6 +2179,7 @@ body::before{
   /* Dashboard specific */
   .dashboard-root {
     height: auto;
+    width: 100%;
   }
   
   /* Cards should not constrain height */
@@ -2175,6 +2200,25 @@ body::before{
     flex: none;
     max-height: none;
     overflow: visible;
+  }
+  
+  /* Global width constraint for mobile */
+  .pagecontent,
+  .pagecontent > *,
+  .dashboard-root > *,
+  .stack,
+  .grid,
+  .row {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Prevent text from causing overflow */
+  .h1, .h, .t, .songTitle, .songArtist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
 }
 
