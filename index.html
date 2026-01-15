@@ -17,29 +17,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  /* iOS PWA viewport fix */
-  html, body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  }
-  @supports (-webkit-touch-callout: none) {
-    /* iOS specific */
-    html, body {
-      height: -webkit-fill-available;
-    }
-    .app {
-      min-height: -webkit-fill-available;
-      height: -webkit-fill-available;
-    }
-  }
-</style>
 </head>
 <body>
 <div class="app">

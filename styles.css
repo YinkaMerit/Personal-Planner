@@ -17,17 +17,24 @@
   --radius: 20px;
   --radius2: 16px;
   /* iOS safe areas */
-  --sat: env(safe-area-inset-top);
-  --sar: env(safe-area-inset-right);
-  --sab: env(safe-area-inset-bottom);
-  --sal: env(safe-area-inset-left);
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
   /* Floral colors */
   --petal: rgba(74,144,217,.15);
   --bloom: rgba(168,212,255,.3);
 }
 
 *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-html,body{
+
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
   font-family: "Nunito", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background:
     /* Floral decorative elements */
@@ -38,8 +45,17 @@ html,body{
     /* Main gradient */
     linear-gradient(165deg, #e8f4ff 0%, #f0f7ff 50%, #f8fbff 100%);
   color: var(--ink);
-  -webkit-overflow-scrolling: touch;
-  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Decorative floral pattern overlay */
@@ -63,15 +79,19 @@ html::before {
 a{color: var(--accent)}
 
 .app{
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1;
-  height:100vh;
-  height: 100dvh;
-  display:grid;
+  display: grid;
   grid-template-rows: auto 1fr;
   padding-top: var(--sat);
   padding-left: var(--sal);
   padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  overflow: hidden;
 }
 
 .topbar{
@@ -186,8 +206,9 @@ a{color: var(--accent)}
 
 .main{
   padding: 16px;
-  overflow:auto;
+  overflow: hidden;
   position: relative;
+  min-height: 0;
 }
 /* Decorative corner flourish */
 .main::before {
@@ -200,9 +221,11 @@ a{color: var(--accent)}
   pointer-events: none;
 }
 @media (max-width: 720px){ .main{padding: 12px} .main::before{display:none;} }
+@media (max-width: 430px){ .main{padding: 6px;} }
 
 .book{
   max-width: 1100px;
+  height: 100%;
   margin: 0 auto;
   position: relative;
   border-radius: 24px;
@@ -212,7 +235,12 @@ a{color: var(--accent)}
     0 20px 50px rgba(30,58,95,.1),
     0 8px 20px rgba(74,144,217,.08),
     inset 0 1px 0 rgba(255,255,255,.8);
-  overflow:hidden;
+  overflow: hidden;
+}
+@media (max-width: 430px){
+  .book {
+    border-radius: 12px;
+  }
 }
 .spine{
   position:absolute;
@@ -262,8 +290,9 @@ a{color: var(--accent)}
 }
 
 .pagehost{
-  position:relative;
-  min-height: calc(100vh - 64px - 32px);
+  position: relative;
+  height: 100%;
+  min-height: 0;
   perspective: 1800px;
   perspective-origin: left center;
   transform-style: preserve-3d;
@@ -2146,33 +2175,6 @@ body::before{
     flex: none;
     max-height: none;
     overflow: visible;
-  }
-}
-
-/* iOS PWA: reduce zoom/pan and rubber-band scrolling - DESKTOP ONLY */
-@media (min-width: 431px) {
-  html, body{
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    touch-action: manipulation;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  body{
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Mobile: allow body scroll as fallback */
-@media (max-width: 430px) {
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* page handles scroll */
-    touch-action: manipulation;
-    -webkit-text-size-adjust: 100%;
   }
 }
 
