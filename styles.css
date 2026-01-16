@@ -1904,12 +1904,18 @@ body::before{
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 8px 8px 120px 8px !important;
+    padding: 8px 8px 200px 8px !important;
   }
   
   /* Ensure touch events work */
   .page * {
     touch-action: pan-y pan-x;
+  }
+  
+  /* Page content wrapper needs to allow full scroll */
+  .pagecontent {
+    min-height: auto !important;
+    padding-bottom: 50px;
   }
   
   /* Brand compact */

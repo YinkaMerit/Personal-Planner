@@ -89,228 +89,228 @@ const SPECIAL_SONGS = {
 };
 
 const RNB_LOVE = [
-  // 90s/2000s Classics - Old School R&B
-  
   // Chris Brown
-  { artist:"Chris Brown", title:"With You" },
-  { artist:"Chris Brown", title:"Forever" },
-  { artist:"Chris Brown", title:"Say Goodbye" },
-  { artist:"Chris Brown", title:"Yo (Excuse Me Miss)" },
-  { artist:"Chris Brown", title:"Run It" },
-  { artist:"Chris Brown", title:"Take You Down" },
-  { artist:"Chris Brown", title:"No Air", note:"ft. Jordin Sparks" },
-  { artist:"Chris Brown", title:"Superhuman", note:"ft. Keri Hilson" },
+  { artist:"Chris Brown", title:"With You", ytId:"nmjdaBaZe8Y" },
+  { artist:"Chris Brown", title:"Forever", ytId:"5sMKX22BHeE" },
+  { artist:"Chris Brown", title:"Say Goodbye", ytId:"GJ26gAc7BtU" },
+  { artist:"Chris Brown", title:"Yo (Excuse Me Miss)", ytId:"yn_6LC4loY8" },
+  { artist:"Chris Brown", title:"Run It", ytId:"w6QGe-pXgdI" },
+  { artist:"Chris Brown", title:"Take You Down", ytId:"pydyGAqR11Y" },
+  { artist:"Chris Brown", title:"No Air", ytId:"WBKnpyoFEBo" },
+  { artist:"Chris Brown", title:"Superhuman", ytId:"fhMlSITt7hU" },
   
   // Keyshia Cole
-  { artist:"Keyshia Cole", title:"Love" },
-  { artist:"Keyshia Cole", title:"I Should Have Cheated" },
-  { artist:"Keyshia Cole", title:"Let It Go" },
-  { artist:"Keyshia Cole", title:"Heaven Sent" },
-  { artist:"Keyshia Cole", title:"I Remember" },
-  { artist:"Keyshia Cole", title:"Fallin Out" },
-  { artist:"Keyshia Cole", title:"I Changed My Mind" },
-  { artist:"Keyshia Cole", title:"Trust and Believe" },
+  { artist:"Keyshia Cole", title:"Love", ytId:"9PBZy9j3H3I" },
+  { artist:"Keyshia Cole", title:"I Should Have Cheated", ytId:"29qvbeDA0iU" },
+  { artist:"Keyshia Cole", title:"Let It Go", ytId:"Hybj2Gfk6G8" },
+  { artist:"Keyshia Cole", title:"Heaven Sent", ytId:"POkQXeTv7-4" },
+  { artist:"Keyshia Cole", title:"I Remember", ytId:"3v3T_KxvFyM" },
+  { artist:"Keyshia Cole", title:"Fallin Out", ytId:"lQjJ8_k1gI8" },
+  { artist:"Keyshia Cole", title:"I Changed My Mind", ytId:"LbE1qz8wktQ" },
+  { artist:"Keyshia Cole", title:"Trust", ytId:"SkOTimhMwSs" },
   
   // Rihanna
-  { artist:"Rihanna", title:"Unfaithful" },
-  { artist:"Rihanna", title:"Take A Bow" },
-  { artist:"Rihanna", title:"Umbrella" },
-  { artist:"Rihanna", title:"We Found Love" },
-  { artist:"Rihanna", title:"Stay" },
-  { artist:"Rihanna", title:"Diamonds" },
-  { artist:"Rihanna", title:"California King Bed" },
-  { artist:"Rihanna", title:"What's My Name" },
-  { artist:"Rihanna", title:"Love On The Brain" },
+  { artist:"Rihanna", title:"Unfaithful", ytId:"rp4UwPZfRis" },
+  { artist:"Rihanna", title:"Take A Bow", ytId:"J3UjJ4wKLkg" },
+  { artist:"Rihanna", title:"Umbrella", ytId:"CvBfHwUxHIk" },
+  { artist:"Rihanna", title:"We Found Love", ytId:"tg00YEETFzg" },
+  { artist:"Rihanna", title:"Stay", ytId:"JF8BRvqGCNs" },
+  { artist:"Rihanna", title:"Diamonds", ytId:"lWA2pjMjpBs" },
+  { artist:"Rihanna", title:"California King Bed", ytId:"nhBorPm6JjQ" },
+  { artist:"Rihanna", title:"What's My Name", ytId:"U0CGsw6h60k" },
+  { artist:"Rihanna", title:"Love On The Brain", ytId:"QMP-o8WXSPM" },
   
   // Nicki Minaj
-  { artist:"Nicki Minaj", title:"Your Love" },
-  { artist:"Nicki Minaj", title:"Right By My Side" },
-  { artist:"Nicki Minaj", title:"Moment 4 Life" },
-  { artist:"Nicki Minaj", title:"Save Me" },
-  { artist:"Nicki Minaj", title:"Grand Piano" },
+  { artist:"Nicki Minaj", title:"Your Love", ytId:"pSFyrrhKj1Q" },
+  { artist:"Nicki Minaj", title:"Right By My Side", ytId:"he3DJLXbebI" },
+  { artist:"Nicki Minaj", title:"Moment 4 Life", ytId:"Ks3_kuRAzHs" },
+  { artist:"Nicki Minaj", title:"Save Me", ytId:"AN3KSuzjhbU" },
+  { artist:"Nicki Minaj", title:"Grand Piano", ytId:"nFdvtuGYqUU" },
   
   // Mariah Carey
-  { artist:"Mariah Carey", title:"Touch My Body" },
-  { artist:"Mariah Carey", title:"We Belong Together" },
-  { artist:"Mariah Carey", title:"Always Be My Baby" },
-  { artist:"Mariah Carey", title:"Vision of Love" },
-  { artist:"Mariah Carey", title:"Hero" },
-  { artist:"Mariah Carey", title:"My All" },
-  { artist:"Mariah Carey", title:"Emotions" },
-  { artist:"Mariah Carey", title:"Fantasy" },
+  { artist:"Mariah Carey", title:"Touch My Body", ytId:"9b8erWuBA44" },
+  { artist:"Mariah Carey", title:"We Belong Together", ytId:"0habxsuXW4g" },
+  { artist:"Mariah Carey", title:"Always Be My Baby", ytId:"LfRNRymrv9k" },
+  { artist:"Mariah Carey", title:"Vision of Love", ytId:"tov22NtCMC4" },
+  { artist:"Mariah Carey", title:"Hero", ytId:"0IA3ZvCkRkQ" },
+  { artist:"Mariah Carey", title:"My All", ytId:"mIhI23gBBPQ" },
+  { artist:"Mariah Carey", title:"Emotions", ytId:"NrJEFrth27Q" },
+  { artist:"Mariah Carey", title:"Fantasy", ytId:"qq09UkPRdFY" },
   
   // Fantasia
-  { artist:"Fantasia", title:"When I See U" },
-  { artist:"Fantasia", title:"Free Yourself" },
-  { artist:"Fantasia", title:"Truth Is" },
-  { artist:"Fantasia", title:"I Believe" },
-  { artist:"Fantasia", title:"Bittersweet" },
+  { artist:"Fantasia", title:"When I See U", ytId:"R8iqEfje7Aw" },
+  { artist:"Fantasia", title:"Free Yourself", ytId:"BWs3fs9nnzc" },
+  { artist:"Fantasia", title:"Truth Is", ytId:"e265_NvKvRQ" },
+  { artist:"Fantasia", title:"I Believe", ytId:"KcdURLaRa-I" },
+  { artist:"Fantasia", title:"Bittersweet", ytId:"80lh4Oj2Ys4" },
   
   // Boyz II Men
-  { artist:"Boyz II Men", title:"End of the Road" },
-  { artist:"Boyz II Men", title:"I'll Make Love to You" },
-  { artist:"Boyz II Men", title:"On Bended Knee" },
-  { artist:"Boyz II Men", title:"Water Runs Dry" },
-  { artist:"Boyz II Men", title:"A Song for Mama" },
+  { artist:"Boyz II Men", title:"End of the Road", ytId:"zDKO6XYXioc" },
+  { artist:"Boyz II Men", title:"I'll Make Love to You", ytId:"fV8vB1BB2qc" },
+  { artist:"Boyz II Men", title:"On Bended Knee", ytId:"jSUSFow70no" },
+  { artist:"Boyz II Men", title:"Water Runs Dry", ytId:"9N9opF-PK5k" },
+  { artist:"Boyz II Men", title:"A Song for Mama", ytId:"se2dmYLfaHI" },
   
   // TLC
-  { artist:"TLC", title:"No Scrubs" },
-  { artist:"TLC", title:"Waterfalls" },
-  { artist:"TLC", title:"Creep" },
-  { artist:"TLC", title:"Red Light Special" },
+  { artist:"TLC", title:"No Scrubs", ytId:"FrLequ6dUdM" },
+  { artist:"TLC", title:"Waterfalls", ytId:"8WEtxJ4-sh4" },
+  { artist:"TLC", title:"Creep", ytId:"LlZydtG3xqI" },
+  { artist:"TLC", title:"Red Light Special", ytId:"dP2t9LBeAwo" },
   
   // Aaliyah
-  { artist:"Aaliyah", title:"Are You That Somebody" },
-  { artist:"Aaliyah", title:"One in a Million" },
-  { artist:"Aaliyah", title:"Try Again" },
-  { artist:"Aaliyah", title:"Rock the Boat" },
-  { artist:"Aaliyah", title:"Back and Forth" },
+  { artist:"Aaliyah", title:"Are You That Somebody", ytId:"uTMuqL0qx08" },
+  { artist:"Aaliyah", title:"One in a Million", ytId:"KKSz4NE6PwY" },
+  { artist:"Aaliyah", title:"Try Again", ytId:"qTA0RuZoIxM" },
+  { artist:"Aaliyah", title:"Rock the Boat", ytId:"3HSJU5fDg0A" },
+  { artist:"Aaliyah", title:"Back and Forth", ytId:"a02dBbBGSPg" },
   
   // Destiny's Child
-  { artist:"Destiny's Child", title:"Say My Name" },
-  { artist:"Destiny's Child", title:"Bills Bills Bills" },
-  { artist:"Destiny's Child", title:"Cater 2 U" },
-  { artist:"Destiny's Child", title:"Survivor" },
-  { artist:"Destiny's Child", title:"Bootylicious" },
+  { artist:"Destiny's Child", title:"Say My Name", ytId:"sQgd6MccwZc" },
+  { artist:"Destiny's Child", title:"Bills Bills Bills", ytId:"NiF6-0UTqtc" },
+  { artist:"Destiny's Child", title:"Cater 2 U", ytId:"juqws1LIH-I" },
+  { artist:"Destiny's Child", title:"Survivor", ytId:"Wmc8bQoL-J0" },
+  { artist:"Destiny's Child", title:"Bootylicious", ytId:"IyYnnUcgeMc" },
   
   // Mary J. Blige
-  { artist:"Mary J. Blige", title:"Real Love" },
-  { artist:"Mary J. Blige", title:"Be Without You" },
-  { artist:"Mary J. Blige", title:"Family Affair" },
-  { artist:"Mary J. Blige", title:"No More Drama" },
-  { artist:"Mary J. Blige", title:"Not Gon Cry" },
+  { artist:"Mary J. Blige", title:"Real Love", ytId:"OSmGu5LBs7E" },
+  { artist:"Mary J. Blige", title:"Be Without You", ytId:"8XNaPX6MKlU" },
+  { artist:"Mary J. Blige", title:"Family Affair", ytId:"znlFu_lemsU" },
+  { artist:"Mary J. Blige", title:"No More Drama", ytId:"em328ua_Lo8" },
+  { artist:"Mary J. Blige", title:"Not Gon Cry", ytId:"YXHBuIXAiXo" },
   
   // Jodeci
-  { artist:"Jodeci", title:"Forever My Lady" },
-  { artist:"Jodeci", title:"Come and Talk to Me" },
-  { artist:"Jodeci", title:"Cry for You" },
-  { artist:"Jodeci", title:"Feenin" },
+  { artist:"Jodeci", title:"Forever My Lady", ytId:"qZCPgfEZvzQ" },
+  { artist:"Jodeci", title:"Come and Talk to Me", ytId:"_WhlGjHUz4I" },
+  { artist:"Jodeci", title:"Cry for You", ytId:"Iznvc-eqKpU" },
+  { artist:"Jodeci", title:"Feenin", ytId:"_gjTIvpR0zw" },
   
   // SWV
-  { artist:"SWV", title:"Weak" },
-  { artist:"SWV", title:"Right Here" },
-  { artist:"SWV", title:"I'm So Into You" },
+  { artist:"SWV", title:"Weak", ytId:"976b8TPPFJU" },
+  { artist:"SWV", title:"Right Here", ytId:"vHwXoY0LiQk" },
+  { artist:"SWV", title:"I'm So Into You", ytId:"FL-pm-xRb40" },
   
   // Toni Braxton
-  { artist:"Toni Braxton", title:"Un-Break My Heart" },
-  { artist:"Toni Braxton", title:"Breathe Again" },
-  { artist:"Toni Braxton", title:"Another Sad Love Song" },
-  { artist:"Toni Braxton", title:"You're Makin Me High" },
+  { artist:"Toni Braxton", title:"Un-Break My Heart", ytId:"p2Rch6WvPJE" },
+  { artist:"Toni Braxton", title:"Breathe Again", ytId:"pRFEz2MjZgg" },
+  { artist:"Toni Braxton", title:"Another Sad Love Song", ytId:"2yQ0Fll_9pM" },
+  { artist:"Toni Braxton", title:"You're Makin Me High", ytId:"wIgOL21S98o" },
   
   // Brian McKnight
-  { artist:"Brian McKnight", title:"Back at One" },
-  { artist:"Brian McKnight", title:"One Last Cry" },
-  { artist:"Brian McKnight", title:"Anytime" },
+  { artist:"Brian McKnight", title:"Back at One", ytId:"rXPfovXw2tw" },
+  { artist:"Brian McKnight", title:"One Last Cry", ytId:"sz-NhGanOAE" },
+  { artist:"Brian McKnight", title:"Anytime", ytId:"A1kzG9Ld1kI" },
   
   // 112
-  { artist:"112", title:"Cupid" },
-  { artist:"112", title:"Peaches and Cream" },
-  { artist:"112", title:"It's Over Now" },
+  { artist:"112", title:"Cupid", ytId:"8dtzMPApA4M" },
+  { artist:"112", title:"Peaches and Cream", ytId:"wl2NCXzg1FQ" },
+  { artist:"112", title:"It's Over Now", ytId:"IihCzGUEPbs" },
   
   // Dru Hill
-  { artist:"Dru Hill", title:"In My Bed" },
-  { artist:"Dru Hill", title:"Never Make a Promise" },
-  { artist:"Dru Hill", title:"How Deep Is Your Love" },
-  { artist:"Dru Hill", title:"Beauty" },
+  { artist:"Dru Hill", title:"In My Bed", ytId:"_Ixip0K2r10" },
+  { artist:"Dru Hill", title:"Never Make a Promise", ytId:"JAnA6c7Jql4" },
+  { artist:"Dru Hill", title:"How Deep Is Your Love", ytId:"43XWafBLJIM" },
+  { artist:"Dru Hill", title:"Beauty", ytId:"L3w7FHq2EYE" },
   
   // Ginuwine
-  { artist:"Ginuwine", title:"Pony" },
-  { artist:"Ginuwine", title:"Differences" },
-  { artist:"Ginuwine", title:"So Anxious" },
+  { artist:"Ginuwine", title:"Pony", ytId:"lbnoG2dsUk0" },
+  { artist:"Ginuwine", title:"Differences", ytId:"U_90XNCBatY" },
+  { artist:"Ginuwine", title:"So Anxious", ytId:"DHpUtOcwhyU" },
   
   // Monica
-  { artist:"Monica", title:"Angel of Mine" },
-  { artist:"Monica", title:"Don't Take It Personal" },
-  { artist:"Monica", title:"The Boy Is Mine" },
+  { artist:"Monica", title:"Angel of Mine", ytId:"3eOuK-pYhy4" },
+  { artist:"Monica", title:"Don't Take It Personal", ytId:"asXau88O5Is" },
+  { artist:"Monica", title:"The Boy Is Mine", ytId:"qSIOp_K5GMw" },
   
   // Brandy
-  { artist:"Brandy", title:"Have You Ever" },
-  { artist:"Brandy", title:"Sittin Up in My Room" },
-  { artist:"Brandy", title:"I Wanna Be Down" },
+  { artist:"Brandy", title:"Have You Ever", ytId:"Xkj1An6Wnec" },
+  { artist:"Brandy", title:"Sittin Up in My Room", ytId:"yge2PqEZZJo" },
+  { artist:"Brandy", title:"I Wanna Be Down", ytId:"PzpLkcfBe-A" },
   
   // Joe
-  { artist:"Joe", title:"I Wanna Know" },
-  { artist:"Joe", title:"All the Things Your Man Won't Do" },
-  { artist:"Joe", title:"Stutter" },
+  { artist:"Joe", title:"I Wanna Know", ytId:"dJ8VjyPw0qY" },
+  { artist:"Joe", title:"All the Things Your Man Won't Do", ytId:"cVi25pSRAkc" },
+  { artist:"Joe", title:"Stutter", ytId:"eODhO-sA9aQ" },
   
   // Jagged Edge
-  { artist:"Jagged Edge", title:"Let's Get Married" },
-  { artist:"Jagged Edge", title:"Where the Party At" },
-  { artist:"Jagged Edge", title:"Promise" },
+  { artist:"Jagged Edge", title:"Let's Get Married", ytId:"Mo1HaVN1Pt0" },
+  { artist:"Jagged Edge", title:"Where the Party At", ytId:"9UCY_U4QwqI" },
+  { artist:"Jagged Edge", title:"Promise", ytId:"lXd1GHJPx-A" },
   
   // Next
-  { artist:"Next", title:"Too Close" },
-  { artist:"Next", title:"Wifey" },
+  { artist:"Next", title:"Too Close", ytId:"kwEZRPkAAu8" },
+  { artist:"Next", title:"Wifey", ytId:"aGFZq4od-VQ" },
   
   // En Vogue
-  { artist:"En Vogue", title:"Don't Let Go Love" },
-  { artist:"En Vogue", title:"My Lovin" },
-  { artist:"En Vogue", title:"Free Your Mind" },
+  { artist:"En Vogue", title:"Don't Let Go Love", ytId:"mwhwGmoYv1s" },
+  { artist:"En Vogue", title:"My Lovin", ytId:"JIuYQ_4TcXg" },
+  { artist:"En Vogue", title:"Free Your Mind", ytId:"i7iQbBbMAFE" },
   
   // Xscape
-  { artist:"Xscape", title:"Just Kickin It" },
-  { artist:"Xscape", title:"Understanding" },
-  { artist:"Xscape", title:"Who Can I Run To" },
+  { artist:"Xscape", title:"Just Kickin It", ytId:"w_BTEFAVwjU" },
+  { artist:"Xscape", title:"Understanding", ytId:"HR5J5jUDcnA" },
+  { artist:"Xscape", title:"Who Can I Run To", ytId:"xLjyPBQk_Os" },
   
   // Blackstreet
-  { artist:"Blackstreet", title:"No Diggity" },
-  { artist:"Blackstreet", title:"Before I Let You Go" },
-  { artist:"Blackstreet", title:"Don't Leave Me" },
+  { artist:"Blackstreet", title:"No Diggity", ytId:"3KL9mRus19o" },
+  { artist:"Blackstreet", title:"Before I Let You Go", ytId:"kC6TnBx0HIU" },
+  { artist:"Blackstreet", title:"Don't Leave Me", ytId:"DBUz2nkOKsc" },
   
   // Tevin Campbell
-  { artist:"Tevin Campbell", title:"Can We Talk" },
-  { artist:"Tevin Campbell", title:"I'm Ready" },
+  { artist:"Tevin Campbell", title:"Can We Talk", ytId:"3SoYkCAzMBk" },
+  { artist:"Tevin Campbell", title:"I'm Ready", ytId:"F6Ns_uiu-yg" },
   
   // Babyface
-  { artist:"Babyface", title:"Whip Appeal" },
-  { artist:"Babyface", title:"When Can I See You" },
-  { artist:"Babyface", title:"Every Time I Close My Eyes" },
+  { artist:"Babyface", title:"Whip Appeal", ytId:"fh5ejGUTGAo" },
+  { artist:"Babyface", title:"When Can I See You", ytId:"Ee9SCW91urE" },
+  { artist:"Babyface", title:"Every Time I Close My Eyes", ytId:"GbrSO81KhBY" },
   
   // New Edition
-  { artist:"New Edition", title:"Can You Stand the Rain" },
-  { artist:"New Edition", title:"If It Isn't Love" },
+  { artist:"New Edition", title:"Can You Stand the Rain", ytId:"7flrKMGfwjw" },
+  { artist:"New Edition", title:"If It Isn't Love", ytId:"ReI6gvzVP0Y" },
   
   // Bell Biv DeVoe
-  { artist:"Bell Biv DeVoe", title:"Poison" },
-  { artist:"Bell Biv DeVoe", title:"Do Me" },
+  { artist:"Bell Biv DeVoe", title:"Poison", ytId:"hgnhVcyLy1I" },
+  { artist:"Bell Biv DeVoe", title:"Do Me", ytId:"ZieygZyvw4A" },
   
   // Usher
-  { artist:"Usher", title:"You Make Me Wanna" },
-  { artist:"Usher", title:"Nice and Slow" },
-  { artist:"Usher", title:"U Remind Me" },
-  { artist:"Usher", title:"U Got It Bad" },
-  { artist:"Usher", title:"Burn" },
-  { artist:"Usher", title:"Confessions Part II" },
-  { artist:"Usher", title:"There Goes My Baby" },
+  { artist:"Usher", title:"You Make Me Wanna", ytId:"bQRzrnH6_HY" },
+  { artist:"Usher", title:"Nice and Slow", ytId:"DIpQ4AZSAf8" },
+  { artist:"Usher", title:"U Remind Me", ytId:"Bxau9B3jOHM" },
+  { artist:"Usher", title:"U Got It Bad", ytId:"o3IWTfcks4k" },
+  { artist:"Usher", title:"Burn", ytId:"t5XNWFw5HVw" },
+  { artist:"Usher", title:"Confessions Part II", ytId:"5Sy19X0xxrM" },
+  { artist:"Usher", title:"There Goes My Baby", ytId:"m6urbZyHgO4" },
   
-  // R&B Legends
-  { artist:"Luther Vandross", title:"Never Too Much" },
-  { artist:"Luther Vandross", title:"Here and Now" },
-  { artist:"Anita Baker", title:"Sweet Love" },
-  { artist:"Anita Baker", title:"Giving You the Best That I Got" },
+  // Luther Vandross
+  { artist:"Luther Vandross", title:"Never Too Much", ytId:"pNj9bXKGOiI" },
+  { artist:"Luther Vandross", title:"Here and Now", ytId:"0u_u4nlYmNs" },
+  
+  // Anita Baker
+  { artist:"Anita Baker", title:"Sweet Love", ytId:"2w6udgiojlE" },
+  { artist:"Anita Baker", title:"Giving You the Best That I Got", ytId:"gKGj8XwooYQ" },
   
   // Beyonce
-  { artist:"Beyonce", title:"Halo" },
-  { artist:"Beyonce", title:"Love On Top" },
-  { artist:"Beyonce", title:"Dangerously In Love" },
-  { artist:"Beyonce", title:"Me Myself and I" },
-  { artist:"Beyonce", title:"Irreplaceable" },
+  { artist:"Beyonce", title:"Halo", ytId:"bnVUHWCynig" },
+  { artist:"Beyonce", title:"Love On Top", ytId:"Ob7vObnFUJc" },
+  { artist:"Beyonce", title:"Dangerously In Love", ytId:"4Xemq4xCSEA" },
+  { artist:"Beyonce", title:"Me Myself and I", ytId:"4S37SGxZSMc" },
+  { artist:"Beyonce", title:"Irreplaceable", ytId:"2EwViQxSJJQ" },
   
   // Alicia Keys
-  { artist:"Alicia Keys", title:"If I Ain't Got You" },
-  { artist:"Alicia Keys", title:"No One" },
-  { artist:"Alicia Keys", title:"Fallin" },
-  { artist:"Alicia Keys", title:"You Don't Know My Name" },
+  { artist:"Alicia Keys", title:"If I Ain't Got You", ytId:"Ju8Hr50Ckwk" },
+  { artist:"Alicia Keys", title:"No One", ytId:"rywUS-ohqeE" },
+  { artist:"Alicia Keys", title:"Fallin", ytId:"Urdlvw0SSEc" },
+  { artist:"Alicia Keys", title:"You Don't Know My Name", ytId:"_ST6ZRbhGiA" },
   
   // Ciara
-  { artist:"Ciara", title:"Promise" },
-  { artist:"Ciara", title:"And I" },
-  { artist:"Ciara", title:"Body Party" },
+  { artist:"Ciara", title:"Promise", ytId:"UcGWy7xUZQE" },
+  { artist:"Ciara", title:"And I", ytId:"pG-lVf8f0Ks" },
+  { artist:"Ciara", title:"Body Party", ytId:"B9rSBcoX9ak" },
   
   // Ashanti
-  { artist:"Ashanti", title:"Foolish" },
-  { artist:"Ashanti", title:"Happy" },
-  { artist:"Ashanti", title:"Baby" },
+  { artist:"Ashanti", title:"Foolish", ytId:"gUPrnu3BEU8" },
+  { artist:"Ashanti", title:"Happy", ytId:"MrCsubL_OSQ" },
+  { artist:"Ashanti", title:"Baby", ytId:"QThbui6twrI" },
 ];
 
 function pickDailyRnB(dateKeyStr){
@@ -482,10 +482,31 @@ document.getElementById("fileImport").addEventListener("change", async (e)=>{
 const globalDatePicker = document.getElementById("globalDatePicker");
 globalDatePicker.value = dayKey(new Date());
 
+// Global tracker for active audio contexts/sources
+let activeAudioSources = [];
+
 function stopAllAudio() {
+  // Stop HTML audio elements
   document.querySelectorAll("audio").forEach(a => { 
     try { a.pause(); a.currentTime = 0; } catch(_) {} 
   });
+  
+  // Stop Web Audio API sources
+  activeAudioSources.forEach(source => {
+    try { 
+      if (source.sourceNode) source.sourceNode.stop();
+      if (source.audioContext) source.audioContext.close();
+    } catch(_) {}
+  });
+  activeAudioSources = [];
+}
+
+function registerAudioSource(source) {
+  activeAudioSources.push(source);
+}
+
+function unregisterAudioSource(source) {
+  activeAudioSources = activeAudioSources.filter(s => s !== source);
 }
 
 globalDatePicker.addEventListener("change", async (e) => {
@@ -1421,6 +1442,9 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
     loaded: false,
     unlocked: false
   };
+  
+  // Register this player's state for global stop
+  registerAudioSource(state);
 
   const titleEl = el("div",{class:"songTitle"},[document.createTextNode(title)]);
   const artistEl = el("div",{class:"songArtist"},[document.createTextNode(artist)]);
