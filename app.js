@@ -90,7 +90,61 @@ const SPECIAL_SONGS = {
 
 const RNB_LOVE = [
   // 90s/2000s Classics - Old School R&B
-  // YouTube links will use search instead of direct video IDs
+  
+  // Chris Brown
+  { artist:"Chris Brown", title:"With You" },
+  { artist:"Chris Brown", title:"Forever" },
+  { artist:"Chris Brown", title:"Say Goodbye" },
+  { artist:"Chris Brown", title:"Yo (Excuse Me Miss)" },
+  { artist:"Chris Brown", title:"Run It" },
+  { artist:"Chris Brown", title:"Take You Down" },
+  { artist:"Chris Brown", title:"No Air", note:"ft. Jordin Sparks" },
+  { artist:"Chris Brown", title:"Superhuman", note:"ft. Keri Hilson" },
+  
+  // Keyshia Cole
+  { artist:"Keyshia Cole", title:"Love" },
+  { artist:"Keyshia Cole", title:"I Should Have Cheated" },
+  { artist:"Keyshia Cole", title:"Let It Go" },
+  { artist:"Keyshia Cole", title:"Heaven Sent" },
+  { artist:"Keyshia Cole", title:"I Remember" },
+  { artist:"Keyshia Cole", title:"Fallin Out" },
+  { artist:"Keyshia Cole", title:"I Changed My Mind" },
+  { artist:"Keyshia Cole", title:"Trust and Believe" },
+  
+  // Rihanna
+  { artist:"Rihanna", title:"Unfaithful" },
+  { artist:"Rihanna", title:"Take A Bow" },
+  { artist:"Rihanna", title:"Umbrella" },
+  { artist:"Rihanna", title:"We Found Love" },
+  { artist:"Rihanna", title:"Stay" },
+  { artist:"Rihanna", title:"Diamonds" },
+  { artist:"Rihanna", title:"California King Bed" },
+  { artist:"Rihanna", title:"What's My Name" },
+  { artist:"Rihanna", title:"Love On The Brain" },
+  
+  // Nicki Minaj
+  { artist:"Nicki Minaj", title:"Your Love" },
+  { artist:"Nicki Minaj", title:"Right By My Side" },
+  { artist:"Nicki Minaj", title:"Moment 4 Life" },
+  { artist:"Nicki Minaj", title:"Save Me" },
+  { artist:"Nicki Minaj", title:"Grand Piano" },
+  
+  // Mariah Carey
+  { artist:"Mariah Carey", title:"Touch My Body" },
+  { artist:"Mariah Carey", title:"We Belong Together" },
+  { artist:"Mariah Carey", title:"Always Be My Baby" },
+  { artist:"Mariah Carey", title:"Vision of Love" },
+  { artist:"Mariah Carey", title:"Hero" },
+  { artist:"Mariah Carey", title:"My All" },
+  { artist:"Mariah Carey", title:"Emotions" },
+  { artist:"Mariah Carey", title:"Fantasy" },
+  
+  // Fantasia
+  { artist:"Fantasia", title:"When I See U" },
+  { artist:"Fantasia", title:"Free Yourself" },
+  { artist:"Fantasia", title:"Truth Is" },
+  { artist:"Fantasia", title:"I Believe" },
+  { artist:"Fantasia", title:"Bittersweet" },
   
   // Boyz II Men
   { artist:"Boyz II Men", title:"End of the Road" },
@@ -115,7 +169,7 @@ const RNB_LOVE = [
   // Destiny's Child
   { artist:"Destiny's Child", title:"Say My Name" },
   { artist:"Destiny's Child", title:"Bills Bills Bills" },
-  { artist:"Destiny's Child", title:"Jumpin Jumpin" },
+  { artist:"Destiny's Child", title:"Cater 2 U" },
   { artist:"Destiny's Child", title:"Survivor" },
   { artist:"Destiny's Child", title:"Bootylicious" },
   
@@ -124,12 +178,7 @@ const RNB_LOVE = [
   { artist:"Mary J. Blige", title:"Be Without You" },
   { artist:"Mary J. Blige", title:"Family Affair" },
   { artist:"Mary J. Blige", title:"No More Drama" },
-  { artist:"Mary J. Blige", title:"I'm Goin' Down" },
-  
-  // R. Kelly (Classics only)
-  { artist:"R. Kelly", title:"I Believe I Can Fly" },
-  { artist:"R. Kelly", title:"Bump N' Grind" },
-  { artist:"R. Kelly", title:"Step in the Name of Love" },
+  { artist:"Mary J. Blige", title:"Not Gon Cry" },
   
   // Jodeci
   { artist:"Jodeci", title:"Forever My Lady" },
@@ -137,7 +186,7 @@ const RNB_LOVE = [
   { artist:"Jodeci", title:"Cry for You" },
   { artist:"Jodeci", title:"Feenin" },
   
-  // SWV (Sisters With Voices)
+  // SWV
   { artist:"SWV", title:"Weak" },
   { artist:"SWV", title:"Right Here" },
   { artist:"SWV", title:"I'm So Into You" },
@@ -146,12 +195,7 @@ const RNB_LOVE = [
   { artist:"Toni Braxton", title:"Un-Break My Heart" },
   { artist:"Toni Braxton", title:"Breathe Again" },
   { artist:"Toni Braxton", title:"Another Sad Love Song" },
-  { artist:"Toni Braxton", title:"You're Makin' Me High" },
-  
-  // Keith Sweat
-  { artist:"Keith Sweat", title:"Nobody" },
-  { artist:"Keith Sweat", title:"Twisted" },
-  { artist:"Keith Sweat", title:"Make It Last Forever" },
+  { artist:"Toni Braxton", title:"You're Makin Me High" },
   
   // Brian McKnight
   { artist:"Brian McKnight", title:"Back at One" },
@@ -160,7 +204,7 @@ const RNB_LOVE = [
   
   // 112
   { artist:"112", title:"Cupid" },
-  { artist:"112", title:"Peaches & Cream" },
+  { artist:"112", title:"Peaches and Cream" },
   { artist:"112", title:"It's Over Now" },
   
   // Dru Hill
@@ -186,7 +230,7 @@ const RNB_LOVE = [
   
   // Joe
   { artist:"Joe", title:"I Wanna Know" },
-  { artist:"Joe", title:"All the Things" },
+  { artist:"Joe", title:"All the Things Your Man Won't Do" },
   { artist:"Joe", title:"Stutter" },
   
   // Jagged Edge
@@ -198,39 +242,20 @@ const RNB_LOVE = [
   { artist:"Next", title:"Too Close" },
   { artist:"Next", title:"Wifey" },
   
-  // Total
-  { artist:"Total", title:"Kissin' You" },
-  { artist:"Total", title:"Can't You See" },
-  
   // En Vogue
   { artist:"En Vogue", title:"Don't Let Go Love" },
-  { artist:"En Vogue", title:"My Lovin' You're Never Gonna Get It" },
+  { artist:"En Vogue", title:"My Lovin" },
   { artist:"En Vogue", title:"Free Your Mind" },
   
   // Xscape
-  { artist:"Xscape", title:"Just Kickin' It" },
+  { artist:"Xscape", title:"Just Kickin It" },
   { artist:"Xscape", title:"Understanding" },
   { artist:"Xscape", title:"Who Can I Run To" },
-  
-  // Tony! Toni! Toné!
-  { artist:"Tony Toni Tone", title:"Anniversary" },
-  { artist:"Tony Toni Tone", title:"Feels Good" },
-  
-  // Silk
-  { artist:"Silk", title:"Freak Like Me" },
-  { artist:"Silk", title:"Meeting in My Bedroom" },
-  
-  // LSG (Gerald Levert, Keith Sweat, Johnny Gill)
-  { artist:"LSG", title:"My Body" },
   
   // Blackstreet
   { artist:"Blackstreet", title:"No Diggity" },
   { artist:"Blackstreet", title:"Before I Let You Go" },
   { artist:"Blackstreet", title:"Don't Leave Me" },
-  
-  // Case
-  { artist:"Case", title:"Touch Me Tease Me" },
-  { artist:"Case", title:"Happily Ever After" },
   
   // Tevin Campbell
   { artist:"Tevin Campbell", title:"Can We Talk" },
@@ -241,10 +266,6 @@ const RNB_LOVE = [
   { artist:"Babyface", title:"When Can I See You" },
   { artist:"Babyface", title:"Every Time I Close My Eyes" },
   
-  // Bobby Brown
-  { artist:"Bobby Brown", title:"Every Little Step" },
-  { artist:"Bobby Brown", title:"My Prerogative" },
-  
   // New Edition
   { artist:"New Edition", title:"Can You Stand the Rain" },
   { artist:"New Edition", title:"If It Isn't Love" },
@@ -253,23 +274,43 @@ const RNB_LOVE = [
   { artist:"Bell Biv DeVoe", title:"Poison" },
   { artist:"Bell Biv DeVoe", title:"Do Me" },
   
-  // Guy
-  { artist:"Guy", title:"Groove Me" },
-  { artist:"Guy", title:"Let's Chill" },
-  
-  // Usher (90s/Early 2000s)
+  // Usher
   { artist:"Usher", title:"You Make Me Wanna" },
-  { artist:"Usher", title:"Nice & Slow" },
+  { artist:"Usher", title:"Nice and Slow" },
   { artist:"Usher", title:"U Remind Me" },
   { artist:"Usher", title:"U Got It Bad" },
   { artist:"Usher", title:"Burn" },
   { artist:"Usher", title:"Confessions Part II" },
+  { artist:"Usher", title:"There Goes My Baby" },
   
   // R&B Legends
   { artist:"Luther Vandross", title:"Never Too Much" },
   { artist:"Luther Vandross", title:"Here and Now" },
   { artist:"Anita Baker", title:"Sweet Love" },
   { artist:"Anita Baker", title:"Giving You the Best That I Got" },
+  
+  // Beyonce
+  { artist:"Beyonce", title:"Halo" },
+  { artist:"Beyonce", title:"Love On Top" },
+  { artist:"Beyonce", title:"Dangerously In Love" },
+  { artist:"Beyonce", title:"Me Myself and I" },
+  { artist:"Beyonce", title:"Irreplaceable" },
+  
+  // Alicia Keys
+  { artist:"Alicia Keys", title:"If I Ain't Got You" },
+  { artist:"Alicia Keys", title:"No One" },
+  { artist:"Alicia Keys", title:"Fallin" },
+  { artist:"Alicia Keys", title:"You Don't Know My Name" },
+  
+  // Ciara
+  { artist:"Ciara", title:"Promise" },
+  { artist:"Ciara", title:"And I" },
+  { artist:"Ciara", title:"Body Party" },
+  
+  // Ashanti
+  { artist:"Ashanti", title:"Foolish" },
+  { artist:"Ashanti", title:"Happy" },
+  { artist:"Ashanti", title:"Baby" },
 ];
 
 function pickDailyRnB(dateKeyStr){
