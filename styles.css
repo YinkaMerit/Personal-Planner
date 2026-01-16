@@ -1645,8 +1645,17 @@ body::before{
 /* Song Card */
 .songCard {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.songTopRow {
+  display: flex;
   gap: 12px;
   align-items: flex-start;
+}
+.songArtWrap {
+  position: relative;
+  flex-shrink: 0;
 }
 .songLeft {
   position: relative;
@@ -1660,6 +1669,9 @@ body::before{
   background-position: center;
   background-color: #e8f4ff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.songArt.hidden {
+  display: none;
 }
 .playBtn {
   position: absolute;
@@ -1687,6 +1699,22 @@ body::before{
 }
 .playBtn.playing {
   background: #e57373;
+}
+/* YouTube Player Container */
+.ytPlayerContainer {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+.ytPlayerContainer.hidden {
+  display: none;
+}
+.ytPlayerIframe {
+  width: 100%;
+  height: 200px;
+  border: none;
+  border-radius: 10px;
 }
 .songInfo {
   flex: 1;
@@ -1893,18 +1921,22 @@ body::before{
   
   /* Page scrolling on mobile - critical for iOS PWA */
   .page {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-height: 100% !important;
+    height: auto !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 8px 100px 8px !important;
+  }
+  
+  /* Pagehost needs to scroll */
+  .pagehost {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    padding: 8px 8px 200px 8px !important;
   }
   
   /* Ensure touch events work */
@@ -1915,7 +1947,19 @@ body::before{
   /* Page content wrapper needs to allow full scroll */
   .pagecontent {
     min-height: auto !important;
-    padding-bottom: 50px;
+    padding-bottom: 100px !important;
+  }
+  
+  /* fillPage on mobile should not constrain */
+  .fillPage {
+    height: auto !important;
+    min-height: auto !important;
+    padding-bottom: 80px;
+  }
+  
+  /* dashboard-root needs extra bottom padding */
+  .dashboard-root {
+    padding-bottom: 100px !important;
   }
   
   /* Brand compact */
@@ -2186,21 +2230,25 @@ body::before{
   .fillPage {
     height: auto !important;
     min-height: auto !important;
+    padding-bottom: 80px !important;
   }
   
   .fillMain {
     flex: none;
     min-height: auto;
+    height: auto !important;
   }
   
   .fillCol {
     flex: none;
     min-height: auto;
+    height: auto !important;
   }
   
   .fillGrid {
     flex: none;
     min-height: auto;
+    height: auto !important;
   }
   
   .scroll-area {
@@ -2209,10 +2257,19 @@ body::before{
     height: auto !important;
   }
   
+  /* All scroll containers should not constrain height */
+  .relScroll, .finScroll, .fitScroll, .spiScroll, .goalsScroll,
+  .overdueWrap, .dashRightScroll, .timelineWrap, .list, .panelScroll {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
   /* Dashboard specific */
   .dashboard-root {
     height: auto;
     width: 100%;
+    padding-bottom: 100px !important;
   }
   
   /* Cards should not constrain height */

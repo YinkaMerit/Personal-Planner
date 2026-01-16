@@ -1433,30 +1433,15 @@ function fmtTime(sec){
 }
 
 function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
-  const state = { 
-    audioContext: null, 
-    audioBuffer: null, 
-    sourceNode: null,
-    gainNode: null,
-    playing: false, 
-    loaded: false,
-    unlocked: false
-  };
-  
-  // Register this player's state for global stop
-  registerAudioSource(state);
-
   const titleEl = el("div",{class:"songTitle"},[document.createTextNode(title)]);
   const artistEl = el("div",{class:"songArtist"},[document.createTextNode(artist)]);
-  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play")]);
-  const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("")]);
+  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play to listen")]);
   
-  // Album art - use YouTube thumbnail if ytId exists, otherwise use a placeholder
+  // Album art from YouTube thumbnail
   const art = el("div",{class:"songArt"});
   if (ytId) {
     art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
   } else {
-    // Music note placeholder gradient
     art.style.background = "linear-gradient(135deg, #4a90d9 0%, #a8d4ff 100%)";
     art.innerHTML = '<span style="font-size:24px;color:white;">♪</span>';
     art.style.display = "flex";
@@ -1467,12 +1452,42 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
   // Play button
   const playBtn = el("button",{class:"playBtn"},[document.createTextNode("▶")]);
   
-  // Progress bar
-  const progressWrap = el("div",{class:"progressWrap"});
-  const progressBar = el("div",{class:"progressBar"});
-  progressWrap.appendChild(progressBar);
+  // YouTube iframe container (hidden initially)
+  const iframeContainer = el("div",{class:"ytPlayerContainer hidden"});
+  let iframeLoaded = false;
+  let player = null;
   
-  // YouTube button - use direct link if ytId exists, otherwise use search
+  function loadYouTubePlayer() {
+    if (iframeLoaded || !ytId) return;
+    
+    // Create iframe for YouTube embed
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`;
+    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+    iframe.setAttribute("allowfullscreen", "true");
+    iframe.className = "ytPlayerIframe";
+    
+    iframeContainer.appendChild(iframe);
+    iframeContainer.classList.remove("hidden");
+    iframeLoaded = true;
+    
+    statusEl.textContent = "Player loaded - use YouTube controls";
+    playBtn.textContent = "🎵";
+    
+    // Hide the album art when player is shown
+    art.classList.add("hidden");
+  }
+  
+  playBtn.addEventListener("click", () => {
+    if (!ytId) {
+      statusEl.textContent = "No video available";
+      return;
+    }
+    loadYouTubePlayer();
+  });
+  
+  // YouTube link button
   const ytUrl = ytId 
     ? `https://www.youtube.com/watch?v=${ytId}`
     : `https://www.youtube.com/results?search_query=${encodeURIComponent(artist + " " + title)}`;
@@ -1482,172 +1497,20 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
     href: ytUrl,
     target:"_blank",
     rel:"noopener"
-  },[document.createTextNode(ytId ? "▶ Watch on YouTube" : "🔍 Find on YouTube")]);
+  },[document.createTextNode("▶ Watch on YouTube")]);
 
-  async function loadAndPlay() {
-    // Step 1: Create/unlock AudioContext
-    if (!state.audioContext) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      state.audioContext = new AudioContext();
-      state.gainNode = state.audioContext.createGain();
-      state.gainNode.gain.value = 1.0;
-      state.gainNode.connect(state.audioContext.destination);
-    }
-    
-    // Resume if suspended
-    if (state.audioContext.state === 'suspended') {
-      await state.audioContext.resume();
-    }
-    
-    // Step 2: Load audio if not loaded
-    if (!state.loaded) {
-      statusEl.textContent = "Loading...";
-      playBtn.textContent = "...";
-      
-      try {
-        // Fetch from iTunes
-        const term = encodeURIComponent(`${artist} ${title}`);
-        const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        if (data.results && data.results.length > 0) {
-          // Find best match
-          const norm = s => String(s||"").toLowerCase();
-          const aN = norm(artist);
-          const tN = norm(title);
-          let best = null;
-          for (const r of data.results) {
-            if (!r.previewUrl) continue;
-            const ra = norm(r.artistName);
-            const rt = norm(r.trackName);
-            const score = (ra.includes(aN)?3:0) + (aN.includes(ra)?2:0) + (rt.includes(tN)?3:0) + (tN.includes(rt)?2:0);
-            if (!best || score > best.score) best = { score, r };
-          }
-          
-          if (best && best.r.previewUrl) {
-            // Update artwork
-            if (best.r.artworkUrl100) {
-              art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
-            }
-            
-            statusEl.textContent = "Downloading...";
-            
-            // Download audio data
-            const audioRes = await fetch(best.r.previewUrl);
-            const arrayBuffer = await audioRes.arrayBuffer();
-            
-            statusEl.textContent = "Decoding...";
-            
-            // Decode audio
-            state.audioBuffer = await state.audioContext.decodeAudioData(arrayBuffer);
-            state.loaded = true;
-            
-            statusEl.textContent = "Ready";
-          } else {
-            statusEl.textContent = "No preview";
-            playBtn.textContent = "▶";
-            return;
-          }
-        }
-      } catch (e) {
-        console.log("Load error:", e);
-        statusEl.textContent = "Error - try YouTube";
-        playBtn.textContent = "▶";
-        return;
-      }
-    }
-    
-    // Step 3: Play
-    if (state.audioBuffer) {
-      // Stop any existing playback
-      if (state.sourceNode) {
-        try { state.sourceNode.stop(); } catch(e) {}
-      }
-      
-      // Create new source
-      state.sourceNode = state.audioContext.createBufferSource();
-      state.sourceNode.buffer = state.audioBuffer;
-      state.sourceNode.connect(state.gainNode);
-      
-      state.sourceNode.onended = function() {
-        state.playing = false;
-        playBtn.textContent = "▶";
-        playBtn.classList.remove("playing");
-        progressBar.style.width = "0%";
-        statusEl.textContent = "Ended";
-      };
-      
-      // Start playback
-      const startTime = state.audioContext.currentTime;
-      state.sourceNode.start(0);
-      state.playing = true;
-      playBtn.textContent = "⏸";
-      playBtn.classList.add("playing");
-      statusEl.textContent = "Playing...";
-      
-      // Update progress
-      const duration = state.audioBuffer.duration;
-      function updateProgress() {
-        if (!state.playing) return;
-        const elapsed = state.audioContext.currentTime - startTime;
-        const pct = Math.min(100, (elapsed / duration) * 100);
-        progressBar.style.width = pct + "%";
-        timeEl.textContent = formatTime(elapsed) + " / " + formatTime(duration);
-        if (elapsed < duration) {
-          requestAnimationFrame(updateProgress);
-        }
-      }
-      updateProgress();
-    }
-  }
+  // Build layout
+  const infoCol = el("div",{class:"songInfo"},[titleEl, artistEl, statusEl]);
+  const artWrap = el("div",{class:"songArtWrap"},[art, playBtn]);
+  const topRow = el("div",{class:"songTopRow"},[artWrap, infoCol]);
   
-  function formatTime(sec) {
-    if (!isFinite(sec)) return "0:00";
-    sec = Math.max(0, Math.floor(sec));
-    const m = Math.floor(sec / 60);
-    const s = String(sec % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  }
-  
-  function stopPlayback() {
-    if (state.sourceNode) {
-      try { state.sourceNode.stop(); } catch(e) {}
-      state.sourceNode = null;
-    }
-    state.playing = false;
-    playBtn.textContent = "▶";
-    playBtn.classList.remove("playing");
-    statusEl.textContent = "Stopped";
-  }
-
-  // Play button click
-  playBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (state.playing) {
-      stopPlayback();
-    } else {
-      loadAndPlay();
-    }
-  });
-
-  const content = el("div",{class:"songCard"},[
-    el("div",{class:"songLeft"},[
-      art,
-      playBtn
-    ]),
-    el("div",{class:"songInfo"},[
-      titleEl,
-      artistEl,
-      progressWrap,
-      el("div",{class:"songMeta"},[timeEl, statusEl]),
-      ytBtn
-    ])
+  const container = el("div",{class:"songCard"},[
+    topRow,
+    iframeContainer,
+    ytBtn
   ]);
-
-  return content;
+  
+  return container;
 }
 
 function rnbCard(todayKey){
@@ -2356,12 +2219,12 @@ el("div",{class:"row spread"},[
     el("div",{class:"scroll-area relScroll flexFill"},[touchpointsList(touchpoints, contacts)])
   ]);
 
-  const top = overdue.length ? card("Overdue", "Based on your rules.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
+  const top = overdue.length ? card("Overdue", "People you haven't contacted recently.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
 
   return el("div",{class:"fillPage"},[
     el("div",{class:"stack"},[header, top]),
     el("div",{class:"fillMain"},[
-      el("div",{class:"grid fillGrid"},[cardFill("Contacts", "Rule = every N days.", leftBody),
+      el("div",{class:"grid fillGrid"},[cardFill("Contacts", "Set how often you want to stay in touch.", leftBody),
       cardFill("Check-ins", "Calls, texts, meets.", rightBody)])
     ])
   ]);
@@ -2383,12 +2246,12 @@ function contactsList(contacts, ruleByContact, overdueSet){
       el("div",{class:"top"},[
         el("div",{},[
           el("div",{class:"h"},[document.createTextNode(c.name)]),
-          el("div",{class:"m"},[document.createTextNode(days ? `Every ${days} day(s)` : "No frequency rule")])
+          el("div",{class:"m"},[document.createTextNode(days ? `Contact every ${days} day${days > 1 ? 's' : ''}` : "No reminder set")])
         ]),
         el("div",{class:"actions"},[
           status,
           btn("Edit",{kind:"ghost", onclick: ()=>openContactModal(c)}),
-          btn("Rule",{kind:"ghost", onclick: ()=>openRuleModal(c, r || null)}),
+          btn("Reminder",{kind:"ghost", onclick: ()=>openRuleModal(c, r || null)}),
           btn("Delete",{kind:"danger", onclick: async ()=>{
             if (r) await del("contactRules", r.id);
             await del("contacts", c.id);
@@ -2468,9 +2331,9 @@ function openRuleModal(contact, existing){
   const days = el("input",{class:"input", type:"number", min:"1", max:"365", value: Number(r.desiredEveryDays || 7)});
 
   const body = el("div",{class:"stack"},[
-    el("div",{class:"muted small"},[document.createTextNode(`Contact: ${contact.name}`)]),
-    rowLabel("Desired frequency (every N days)", days),
-    el("div",{class:"muted small"},[document.createTextNode("Due triggers when the last touchpoint is older than N days.")])
+    el("div",{class:"muted small"},[document.createTextNode(`Person: ${contact.name}`)]),
+    rowLabel("Stay in touch every (days)", days),
+    el("div",{class:"muted small"},[document.createTextNode("You'll see a reminder when it's been longer than this since your last contact.")])
   ]);
 
   const footer = el("div",{},[
@@ -2485,7 +2348,7 @@ function openRuleModal(contact, existing){
     }})
   ]);
 
-  modal.open({ title:"Reminder rule", body, footer });
+  modal.open({ title:"Set Contact Reminder", body, footer });
 }
 
 function openTouchpointModal(contacts, existing=null){
