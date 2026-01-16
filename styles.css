@@ -2478,3 +2478,59 @@ body::before{
     max-width: 100% !important;
   }
 }
+
+
+/* ================= iOS Safari: disable 3D page flip so inner scroll works =================
+   iOS Safari often blocks overflow scrolling inside 3D transformed/perspective parents.
+   This swaps the 3D flip for a 2D slide ONLY on iOS, keeping the app usable.
+*/
+@supports (-webkit-touch-callout: none) {
+  .pagehost{
+    perspective: none !important;
+    -webkit-perspective: none !important;
+    transform-style: flat !important;
+    -webkit-transform-style: flat !important;
+  }
+  .page{
+    transform-style: flat !important;
+    -webkit-transform-style: flat !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
+  }
+
+  /* Remove fold overlays on iOS (they're tied to 3D rotation) */
+  .page::before, .page::after, .page-back, .page-front{
+    display: none !important;
+  }
+
+  /* Base states */
+  .page.current{ transform: translateX(0) !important; }
+  .page.next{ transform: translateX(0) !important; opacity: 1 !important; }
+  .page.prev{ transform: translateX(-105%) !important; opacity: 1 !important; transition: none !important; }
+
+  /* Forward navigation: slide current page out to the left */
+  .pagehost.flipping .page.current{
+    animation: iosSlideForward .55s ease forwards !important;
+  }
+  @keyframes iosSlideForward{
+    from{ transform: translateX(0); }
+    to{ transform: translateX(-105%); }
+  }
+
+  /* Back navigation: slide prev page in from the left */
+  .pagehost.flipping-back .page.prev{
+    animation: iosSlideBack .55s ease forwards !important;
+  }
+  @keyframes iosSlideBack{
+    from{ transform: translateX(-105%); }
+    to{ transform: translateX(0); }
+  }
+
+  /* Make sure scroll areas can capture touch scrolling */
+  .scrollY, .overdueWrap, .dashRightScroll, .timelineWrap, .list, .panelScroll,
+  .relScroll, .finScroll, .fitScroll, .spiScroll, .goalsScroll{
+    touch-action: pan-y !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}

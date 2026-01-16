@@ -1,4 +1,4 @@
-const CACHE_NAME = "tees-planner-cache-20260114000532";
+const CACHE_NAME = "tees-planner-cache-20260116160531";
 const CACHE = CACHE_NAME;
 const ASSETS = [
   "./",
