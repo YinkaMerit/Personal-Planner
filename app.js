@@ -1269,12 +1269,29 @@ async function viewDashboard(settings){
   const hasFrog = dayTasks.some(t=>t.isFrog);
   const frogRequired = !!settings.frogRequired;
 
-  const dateLabel = isToday ? "Hello ✿" : formatDate(getSelectedDate());
-    const isMobile = window.matchMedia("(max-width: 980px)").matches;
-const header = el("div",{},[
+  // Check if it's birthday (January 24th)
+  const selectedDateObj = getSelectedDate();
+  const isBirthday = selectedDateObj.getMonth() === 0 && selectedDateObj.getDate() === 24;
+  
+  let dateLabel;
+  if (isBirthday) {
+    dateLabel = "Happy Birthday My Love 🎂💕";
+  } else if (isToday) {
+    dateLabel = "Hello ✿";
+  } else {
+    dateLabel = formatDate(getSelectedDate());
+  }
+
+  const isMobile = window.matchMedia("(max-width: 980px)").matches;
+  
+  const headerClasses = isBirthday ? "dashboard-header birthday-header" : "dashboard-header";
+  const header = el("div",{class: headerClasses},[
     el("div",{class:"h1"},[document.createTextNode(dateLabel)]),
     el("div",{class:"subtle"},[document.createTextNode(isToday ? formatDate(new Date()) : `Viewing ${selectedDay}`)])
   ]);
+
+  // Add birthday class to root if it's birthday
+  const rootClasses = isBirthday ? "stack dashboard-root birthday-mode" : "stack dashboard-root";
 
 
   const v = verseOfDay(selectedDay);
@@ -1363,7 +1380,7 @@ const header = el("div",{},[
 
   const grid = el("div",{class:"grid"},[left, right]);
 
-  const root = el("div",{class:"stack dashboard-root"},[header, mobileTop, grid]);
+  const root = el("div",{class: rootClasses},[header, mobileTop, grid]);
   return root;
 }
 
