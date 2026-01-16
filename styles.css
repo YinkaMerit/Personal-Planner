@@ -288,6 +288,15 @@ a{color: var(--accent)}
   .page-nav-btn.prev { left: 4px; }
   .page-nav-btn.next { right: 4px; }
 }
+/* Hide nav buttons on mobile - use swipe or menu instead */
+@media (max-width: 430px) {
+  .page-nav-btn {
+    display: none !important;
+  }
+  .spine {
+    display: none !important;
+  }
+}
 
 .pagehost{
   position: relative;
@@ -1872,17 +1881,12 @@ body::before{
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 8px 6px 120px 12px;
+    padding: 10px 10px 120px 10px;
   }
   
   /* Ensure touch events work */
   .page * {
     touch-action: pan-y pan-x;
-  }
-  
-  .spine {
-    left: 5px;
-    width: 4px;
   }
   
   /* Brand compact */
