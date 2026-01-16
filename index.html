@@ -13,10 +13,35 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M18%2022h28v4H18zM18%2030h22v4H18zM18%2038h28v4H18z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2236%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M45%2060h90v12H45zM45%2084h70v12H45zM45%20108h90v12H45z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./styles.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* CRITICAL iOS Safari fix - must be before external CSS */
+*, *::before, *::after {
+  box-sizing: border-box !important;
+  max-width: 100vw;
+}
+html {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.app, .main, .book, .pagehost, .page {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+</style>
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 <div class="app">
