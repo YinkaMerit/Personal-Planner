@@ -421,6 +421,11 @@ a{color: var(--accent)}
   .spine {
     display: none !important;
   }
+  
+  /* Smooth fade transition for page changes on mobile */
+  .page.current {
+    transition: opacity 0.3s ease-out;
+  }
 }
 
 .pagehost{
@@ -2018,12 +2023,11 @@ body::before{
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
-    /* Keep 3D for animation */
-    perspective: 1200px;
-    perspective-origin: left center;
-    transform-style: preserve-3d;
-    -webkit-perspective: 1200px;
-    -webkit-transform-style: preserve-3d;
+    /* No 3D on mobile - use simple fade instead */
+    perspective: none !important;
+    transform-style: flat !important;
+    -webkit-perspective: none !important;
+    -webkit-transform-style: flat !important;
   }
   
   .page {
@@ -2034,32 +2038,27 @@ body::before{
     min-height: auto !important;
     overflow: visible !important;
     padding: 8px 8px 30px 8px !important;
-    /* Allow transform for animation */
-    transform-origin: left center;
-    backface-visibility: hidden !important;
-    -webkit-backface-visibility: hidden !important;
+    /* Simple transforms only */
+    transform: none !important;
+    -webkit-transform: none !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
   }
   
-  /* Page states on mobile - for flip animation */
+  /* Page states on mobile - simple, no 3D */
   .page.current {
-    transform: rotateY(0deg);
+    opacity: 1;
     z-index: 3;
   }
-  .page.next {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    transform: rotateY(0deg);
-    z-index: 1;
-  }
+  .page.next,
   .page.prev {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    transform: rotateY(-180deg);
-    z-index: 1;
+    display: none !important;
+  }
+  
+  /* Disable flip animations on mobile */
+  .pagehost.flipping .page,
+  .pagehost.flipping-back .page {
+    animation: none !important;
   }
   
   /* iOS touch action - allow vertical scroll */

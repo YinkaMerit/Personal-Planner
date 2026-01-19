@@ -681,12 +681,11 @@ async function navigate(r, skipAnim=false){
   
   if (isNavigating && !skipAnim && !isSameRoute) return;
   
-  // Scroll to top BEFORE rendering new content
-  scrollToTop();
-  
   document.querySelectorAll(".navitem").forEach(b => b.classList.toggle("active", b.dataset.route === targetKey));
 
-  // First render: no flip
+  const isMobile = window.matchMedia("(max-width: 430px)").matches;
+
+  // First render: no animation
   if (!currentPage){
     currentPage = el("div", {class:"page current"});
     currentPage.append(withWatermark(await renderRoute(target)));
@@ -695,14 +694,17 @@ async function navigate(r, skipAnim=false){
     currentRouteKey = targetKey;
     currentRouteFull = target;
     updatePageNavButtons();
+    scrollToTop();
     return;
   }
 
   const fromKey = currentRouteKey || "cover";
   const doFlip = (!skipAnim) && (fromKey !== targetKey);
 
-  // Same section (or forced refresh): update in place, no page turn
+  // Same section (or forced refresh): update in place, no animation
   if(!doFlip){
+    // Scroll to top first
+    scrollToTop();
     currentPage.innerHTML = "";
     currentPage.append(withWatermark(await renderRoute(target)));
     currentRouteKey = targetKey;
@@ -719,46 +721,69 @@ async function navigate(r, skipAnim=false){
   isNavigating = true;
 
   try {
-    // Create incoming page - position it off-screen initially
-    const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
-    incomingPage.append(withWatermark(await renderRoute(target)));
-    
-    // Add to DOM but hidden/off-screen via CSS class
-    pageHost.append(incomingPage);
+    if (isMobile) {
+      // MOBILE: Use simple fade/slide animation (more reliable on iOS)
+      // First, fade out current page
+      currentPage.style.transition = "opacity 0.3s ease-out";
+      currentPage.style.opacity = "0";
+      
+      await new Promise(res => setTimeout(res, 300));
+      
+      // Scroll to top while old page is faded out
+      scrollToTop();
+      
+      // Replace content
+      currentPage.innerHTML = "";
+      currentPage.append(withWatermark(await renderRoute(target)));
+      
+      // Fade in new content
+      currentPage.style.opacity = "1";
+      
+      await new Promise(res => setTimeout(res, 300));
+      
+      // Clean up
+      currentPage.style.transition = "";
+      
+      currentRouteKey = targetKey;
+      currentRouteFull = target;
+    } else {
+      // DESKTOP: Use 3D flip animation
+      const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
+      incomingPage.append(withWatermark(await renderRoute(target)));
+      
+      pageHost.append(incomingPage);
 
-    currentPage.style.pointerEvents = "none";
-    incomingPage.style.pointerEvents = "none";
+      currentPage.style.pointerEvents = "none";
+      incomingPage.style.pointerEvents = "none";
 
-    // Force reflow to ensure initial state is rendered
-    void incomingPage.offsetWidth;
-    
-    // Small delay to ensure DOM is ready, then start animation
-    await new Promise(res => requestAnimationFrame(res));
-    
-    // Add animation class
-    pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
-    
-    // Wait for animation to complete
-    await new Promise(res => setTimeout(res, 2450));
-    
-    // Clean up animation
-    pageHost.classList.remove("flipping", "flipping-back");
-    currentPage.style.pointerEvents = "";
-    incomingPage.style.pointerEvents = "";
+      // Force reflow
+      void incomingPage.offsetWidth;
+      
+      await new Promise(res => requestAnimationFrame(res));
+      
+      pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
+      
+      // Wait for animation
+      await new Promise(res => setTimeout(res, 2450));
+      
+      pageHost.classList.remove("flipping", "flipping-back");
+      currentPage.style.pointerEvents = "";
+      incomingPage.style.pointerEvents = "";
 
-    currentPage.remove();
-    incomingPage.classList.remove("next", "prev");
-    incomingPage.classList.add("current");
-    currentPage = incomingPage;
+      currentPage.remove();
+      incomingPage.classList.remove("next", "prev");
+      incomingPage.classList.add("current");
+      currentPage = incomingPage;
 
-    currentRouteKey = targetKey;
-    currentRouteFull = target;
+      currentRouteKey = targetKey;
+      currentRouteFull = target;
+      
+      scrollToTop();
+    }
   } finally {
     isNavigating = false;
   }
   updatePageNavButtons();
-  // Scroll again after animation completes
-  scrollToTop();
 }
 
 // Scroll to top of page
@@ -767,6 +792,8 @@ function scrollToTop() {
   if (main) {
     main.scrollTop = 0;
   }
+  // Also ensure window is at top
+  window.scrollTo(0, 0);
 }
 
 // Update prev/next button visibility
