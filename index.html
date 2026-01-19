@@ -1,47 +1,101 @@
 <!doctype html>
 <html lang="en">
-<head> <meta charset="utf-8" /> <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" /> <title>Tee's Planner</title> <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M18%2022h28v4H18zM18%2030h22v4H18zM18%2038h28v4H18z%22%20fill%3D%22white%22/%3E%3C/svg%3E"> <meta name="theme-color" content="#4a90d9"> 
-  <!-- iOS PWA meta tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Tee Planner">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2236%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M45%2060h90v12H45zM45%2084h70v12H45zM45%20108h90v12H45z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
-  <link rel="manifest" href="./manifest.webmanifest">
-  
-  <!-- iOS PWA scroll fixes - must be inline and before external CSS -->
-  <style>
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      position: fixed;
-      width: 100%;
-    }
-    .app {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .topbar {
-      flex-shrink: 0;
-    }
-    .main {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-    }
-  </style>
-  
-  <link rel="stylesheet" href="./styles.css" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tee's Planner">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#4a90d9">
+<meta name="format-detection" content="telephone=no">
+<title>Tee's Planner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M18%2022h28v4H18zM18%2030h22v4H18zM18%2038h28v4H18z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2236%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M45%2060h90v12H45zM45%2084h70v12H45zM45%20108h90v12H45z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* CRITICAL iOS Safari fix - must be before external CSS */
+*, *::before, *::after {
+  box-sizing: border-box !important;
+  max-width: 100vw;
+}
+html {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+  position: fixed;
+}
+body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100%;
+  position: fixed;
+}
+.app, .main, .book, .pagehost, .page {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+/* iOS PWA scroll fix */
+@media (max-width: 980px) {
+  html, body {
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  .app {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  .topbar {
+    flex-shrink: 0 !important;
+  }
+  .main {
+    position: relative !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain;
+  }
+  .book, .pagehost {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  .page {
+    position: relative !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  .pagecontent, .dashboard-root, .fillPage {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 200px !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 <div class="app">
