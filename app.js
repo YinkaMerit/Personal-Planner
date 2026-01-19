@@ -681,6 +681,9 @@ async function navigate(r, skipAnim=false){
   
   if (isNavigating && !skipAnim && !isSameRoute) return;
   
+  // Scroll to top BEFORE rendering new content
+  scrollToTop();
+  
   document.querySelectorAll(".navitem").forEach(b => b.classList.toggle("active", b.dataset.route === targetKey));
 
   // First render: no flip
@@ -692,7 +695,6 @@ async function navigate(r, skipAnim=false){
     currentRouteKey = targetKey;
     currentRouteFull = target;
     updatePageNavButtons();
-    scrollToTop();
     return;
   }
 
@@ -706,7 +708,6 @@ async function navigate(r, skipAnim=false){
     currentRouteKey = targetKey;
     currentRouteFull = target;
     updatePageNavButtons();
-    scrollToTop();
     return;
   }
 
@@ -718,9 +719,11 @@ async function navigate(r, skipAnim=false){
   isNavigating = true;
 
   try {
-    // Different section: flip animation
+    // Create incoming page - position it off-screen initially
     const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
     incomingPage.append(withWatermark(await renderRoute(target)));
+    
+    // Add to DOM but hidden/off-screen via CSS class
     pageHost.append(incomingPage);
 
     currentPage.style.pointerEvents = "none";
@@ -732,11 +735,13 @@ async function navigate(r, skipAnim=false){
     // Small delay to ensure DOM is ready, then start animation
     await new Promise(res => requestAnimationFrame(res));
     
+    // Add animation class
     pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
     
-    // Wait for animation to complete (matches CSS 2.4s)
+    // Wait for animation to complete
     await new Promise(res => setTimeout(res, 2450));
     
+    // Clean up animation
     pageHost.classList.remove("flipping", "flipping-back");
     currentPage.style.pointerEvents = "";
     incomingPage.style.pointerEvents = "";
@@ -749,24 +754,18 @@ async function navigate(r, skipAnim=false){
     currentRouteKey = targetKey;
     currentRouteFull = target;
   } finally {
-    // Always reset isNavigating even if there's an error
     isNavigating = false;
   }
   updatePageNavButtons();
+  // Scroll again after animation completes
   scrollToTop();
 }
 
-// Scroll to top of page after navigation
+// Scroll to top of page
 function scrollToTop() {
-  // Scroll the main container to top
   const main = document.querySelector('.main');
   if (main) {
     main.scrollTop = 0;
-  }
-  // Also try scrolling the page content
-  const page = document.querySelector('.page.current');
-  if (page) {
-    page.scrollTop = 0;
   }
 }
 
@@ -791,13 +790,11 @@ navigate(route(), true);
 
 // Page navigation buttons - use event delegation for reliability
 document.addEventListener("click", (e) => {
-  if (e.target.id === "btnPrevPage" || e.target.closest("#btnPrevPage") ||
-      e.target.id === "btnPrevPageTop" || e.target.closest("#btnPrevPageTop")) {
+  if (e.target.id === "btnPrevPage" || e.target.closest("#btnPrevPage")) {
     e.preventDefault();
     goPrevPage();
   }
-  if (e.target.id === "btnNextPage" || e.target.closest("#btnNextPage") ||
-      e.target.id === "btnNextPageTop" || e.target.closest("#btnNextPageTop")) {
+  if (e.target.id === "btnNextPage" || e.target.closest("#btnNextPage")) {
     e.preventDefault();
     goNextPage();
   }
