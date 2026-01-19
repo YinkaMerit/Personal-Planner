@@ -692,6 +692,7 @@ async function navigate(r, skipAnim=false){
     currentRouteKey = targetKey;
     currentRouteFull = target;
     updatePageNavButtons();
+    scrollToTop();
     return;
   }
 
@@ -705,6 +706,7 @@ async function navigate(r, skipAnim=false){
     currentRouteKey = targetKey;
     currentRouteFull = target;
     updatePageNavButtons();
+    scrollToTop();
     return;
   }
 
@@ -751,6 +753,21 @@ async function navigate(r, skipAnim=false){
     isNavigating = false;
   }
   updatePageNavButtons();
+  scrollToTop();
+}
+
+// Scroll to top of page after navigation
+function scrollToTop() {
+  // Scroll the main container to top
+  const main = document.querySelector('.main');
+  if (main) {
+    main.scrollTop = 0;
+  }
+  // Also try scrolling the page content
+  const page = document.querySelector('.page.current');
+  if (page) {
+    page.scrollTop = 0;
+  }
 }
 
 // Update prev/next button visibility
@@ -774,11 +791,13 @@ navigate(route(), true);
 
 // Page navigation buttons - use event delegation for reliability
 document.addEventListener("click", (e) => {
-  if (e.target.id === "btnPrevPage" || e.target.closest("#btnPrevPage")) {
+  if (e.target.id === "btnPrevPage" || e.target.closest("#btnPrevPage") ||
+      e.target.id === "btnPrevPageTop" || e.target.closest("#btnPrevPageTop")) {
     e.preventDefault();
     goPrevPage();
   }
-  if (e.target.id === "btnNextPage" || e.target.closest("#btnNextPage")) {
+  if (e.target.id === "btnNextPage" || e.target.closest("#btnNextPage") ||
+      e.target.id === "btnNextPageTop" || e.target.closest("#btnNextPageTop")) {
     e.preventDefault();
     goNextPage();
   }
@@ -792,6 +811,12 @@ setInterval(async ()=>{
 }, 30_000);
 
 async function maybePromptDailyReview(settings){
+  // Only prompt if user is on dashboard
+  if (currentRouteKey !== "dashboard") return;
+  
+  // Don't prompt if user is actively navigating
+  if (isNavigating) return;
+  
   const today = dayKey(new Date());
   const existing = (await getAll("dailyReviews")).find(r => r.date === today);
   if (existing) return;
@@ -803,7 +828,10 @@ async function maybePromptDailyReview(settings){
   const key = `tpp_review_prompted_${today}`;
   if (sessionStorage.getItem(key) === "1") return;
   sessionStorage.setItem(key, "1");
-  openDailyReviewModal(today, null);
+  
+  // Don't auto-open modal - user can click the Review button
+  // This prevents unexpected popups
+  // openDailyReviewModal(today, null);
 }
 
 async function maybeDueNotifications(settings){
@@ -1343,6 +1371,15 @@ async function viewDashboard(settings){
     review?.notes ? el("div",{class:"muted"},[document.createTextNode(review.notes)]) : el("div",{class:"muted"},[document.createTextNode("How was your day?")])
   ]);
 
+  // Create a separate scoreBody for mobile (can't reuse same DOM node)
+  const scoreBodyMobile = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      review ? badge(`${review.score}/10`, "good") : badge("Pending", "warn"),
+      btn(review ? "Edit" : "Review", { kind:"ghost", onclick: ()=>openDailyReviewModal(selectedDay, review) })
+    ]),
+    review?.notes ? el("div",{class:"muted"},[document.createTextNode(review.notes)]) : el("div",{class:"muted"},[document.createTextNode("How was your day?")])
+  ]);
+
   // Create verse banner for mobile
   const verseBannerMobile = el("div",{class:"banner"},[
     el("div",{class:"t"},[document.createTextNode("My Verse")]),
@@ -1360,7 +1397,9 @@ async function viewDashboard(settings){
   // Mobile top section - verse and music (shown first on mobile via CSS)
   const mobileTop = el("div",{class:"mobile-top-section stack"},[
     verseBannerMobile,
-    rnbCard(selectedDay)
+    rnbCard(selectedDay),
+    // Daily Check-in shown early on mobile
+    el("div",{class:"mobile-only"}, [card("Daily Check-in", "Reflect on your day", scoreBodyMobile)])
   ]);
 
   const left = el("div",{class:"stack dashboard-left"},[
@@ -1374,7 +1413,8 @@ async function viewDashboard(settings){
   if (overdueCard) rightItems.push(overdueCard);
   // Desktop shows music here (hidden on mobile via CSS)
   rightItems.push(el("div",{class:"desktop-only"}, [rnbCard(selectedDay)]));
-  rightItems.push(card("Daily Check-in", "Reflect on your day", scoreBody));
+  // Daily Check-in only on desktop (mobile has it in mobileTop)
+  rightItems.push(el("div",{class:"desktop-only"}, [card("Daily Check-in", "Reflect on your day", scoreBody)]));
   
   const right = el("div",{class:"stack dashboard-right"}, rightItems);
 

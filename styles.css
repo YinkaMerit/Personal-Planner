@@ -1919,11 +1919,30 @@ body::before{
 .desktop-only {
   display: block;
 }
+.mobile-only {
+  display: none;
+}
+/* Page nav in topbar - hidden on desktop */
+.page-nav-topbar {
+  display: none;
+}
 
 @media (max-width: 980px) {
   /* Mobile/tablet: show verse + song at top of Today (Dashboard) */
   .mobile-top-section { display: flex; }
   .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+  
+  /* Show page nav buttons in topbar on mobile */
+  .page-nav-topbar {
+    display: flex;
+    gap: 4px;
+  }
+  .page-nav-top {
+    font-size: 18px !important;
+    font-weight: bold;
+    padding: 4px 10px !important;
+  }
 }
 
 
@@ -1935,6 +1954,9 @@ body::before{
   }
   .desktop-only {
     display: none !important;
+  }
+  .mobile-only {
+    display: block !important;
   }
   
   /* App container - fill viewport exactly for iOS PWA */
