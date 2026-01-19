@@ -78,248 +78,154 @@ function isSelectedDateToday() {
 }
 
 
-// Special song for January 24th
-const SPECIAL_SONGS = {
-  "2026-01-24": { artist:"Ryan Ofei", title:"Celebrate", ytId:"ZY1hOYo3_c4" },
-  "2025-01-24": { artist:"Ryan Ofei", title:"Celebrate", ytId:"ZY1hOYo3_c4" },
-  "2027-01-24": { artist:"Ryan Ofei", title:"Celebrate", ytId:"ZY1hOYo3_c4" },
-  "2028-01-24": { artist:"Ryan Ofei", title:"Celebrate", ytId:"ZY1hOYo3_c4" },
-  "2029-01-24": { artist:"Ryan Ofei", title:"Celebrate", ytId:"ZY1hOYo3_c4" },
-  "2030-01-24": { artist:"Ryan Ofei", title:"Celebrate", ytId:"ZY1hOYo3_c4" },
-};
-
 const RNB_LOVE = [
-  // Chris Brown
-  { artist:"Chris Brown", title:"With You", ytId:"nmjdaBaZe8Y" },
-  { artist:"Chris Brown", title:"Forever", ytId:"5sMKX22BHeE" },
-  { artist:"Chris Brown", title:"Say Goodbye", ytId:"GJ26gAc7BtU" },
-  { artist:"Chris Brown", title:"Yo (Excuse Me Miss)", ytId:"yn_6LC4loY8" },
-  { artist:"Chris Brown", title:"Run It", ytId:"w6QGe-pXgdI" },
-  { artist:"Chris Brown", title:"Take You Down", ytId:"pydyGAqR11Y" },
-  { artist:"Chris Brown", title:"No Air", ytId:"WBKnpyoFEBo" },
-  { artist:"Chris Brown", title:"Superhuman", ytId:"fhMlSITt7hU" },
-  
-  // Keyshia Cole
-  { artist:"Keyshia Cole", title:"Love", ytId:"9PBZy9j3H3I" },
-  { artist:"Keyshia Cole", title:"I Should Have Cheated", ytId:"29qvbeDA0iU" },
-  { artist:"Keyshia Cole", title:"Let It Go", ytId:"Hybj2Gfk6G8" },
-  { artist:"Keyshia Cole", title:"Heaven Sent", ytId:"POkQXeTv7-4" },
-  { artist:"Keyshia Cole", title:"I Remember", ytId:"3v3T_KxvFyM" },
-  { artist:"Keyshia Cole", title:"Fallin Out", ytId:"lQjJ8_k1gI8" },
-  { artist:"Keyshia Cole", title:"I Changed My Mind", ytId:"LbE1qz8wktQ" },
-  { artist:"Keyshia Cole", title:"Trust", ytId:"SkOTimhMwSs" },
-  
+  // Mariah Carey
+  { artist:"Mariah Carey", title:"We Belong Together", ytId:"0habxsuXW4g" },
+  { artist:"Mariah Carey", title:"Touch My Body", ytId:"9b8erWuBA44" },
+  { artist:"Mariah Carey", title:"Obsessed", ytId:"H1Yt0xJKDY8" },
+  { artist:"Mariah Carey", title:"Emotions", ytId:"NrJEFrth27Q" },
+
+  // Beyoncé
+  { artist:"Beyoncé", title:"Halo", ytId:"bnVUHWCynig" },
+  { artist:"Beyoncé", title:"Love On Top", ytId:"Ob7vObnFUJc" },
+  { artist:"Beyoncé", title:"Drunk in Love", ytId:"p1JPKLa-Ofc" },
+  { artist:"Beyoncé", title:"Crazy In Love", ytId:"ViwtNLUqkMY" },
+  { artist:"Beyoncé", title:"Single Ladies", ytId:"4m1EFMoRFvY" },
+  { artist:"Beyoncé", title:"Irreplaceable", ytId:"2EwViQxSJJQ" },
+  { artist:"Beyoncé", title:"XO", ytId:"3xUfCUFPL-8" },
+
   // Rihanna
-  { artist:"Rihanna", title:"Unfaithful", ytId:"rp4UwPZfRis" },
-  { artist:"Rihanna", title:"Take A Bow", ytId:"J3UjJ4wKLkg" },
   { artist:"Rihanna", title:"Umbrella", ytId:"CvBfHwUxHIk" },
   { artist:"Rihanna", title:"We Found Love", ytId:"tg00YEETFzg" },
-  { artist:"Rihanna", title:"Stay", ytId:"JF8BRvqGCNs" },
   { artist:"Rihanna", title:"Diamonds", ytId:"lWA2pjMjpBs" },
-  { artist:"Rihanna", title:"California King Bed", ytId:"nhBorPm6JjQ" },
+  { artist:"Rihanna", title:"Stay", ytId:"JF8BRvqGCNs" },
+  { artist:"Rihanna", title:"Only Girl", ytId:"pa14VNsdSYM" },
+  { artist:"Rihanna", title:"Rude Boy", ytId:"e82VE8UtW8A" },
   { artist:"Rihanna", title:"What's My Name", ytId:"U0CGsw6h60k" },
-  { artist:"Rihanna", title:"Love On The Brain", ytId:"QMP-o8WXSPM" },
-  
-  // Nicki Minaj
-  { artist:"Nicki Minaj", title:"Your Love", ytId:"pSFyrrhKj1Q" },
-  { artist:"Nicki Minaj", title:"Right By My Side", ytId:"he3DJLXbebI" },
-  { artist:"Nicki Minaj", title:"Moment 4 Life", ytId:"Ks3_kuRAzHs" },
-  { artist:"Nicki Minaj", title:"Save Me", ytId:"AN3KSuzjhbU" },
-  { artist:"Nicki Minaj", title:"Grand Piano", ytId:"nFdvtuGYqUU" },
-  
-  // Mariah Carey
-  { artist:"Mariah Carey", title:"Touch My Body", ytId:"9b8erWuBA44" },
-  { artist:"Mariah Carey", title:"We Belong Together", ytId:"0habxsuXW4g" },
-  { artist:"Mariah Carey", title:"Always Be My Baby", ytId:"LfRNRymrv9k" },
-  { artist:"Mariah Carey", title:"Vision of Love", ytId:"tov22NtCMC4" },
-  { artist:"Mariah Carey", title:"Hero", ytId:"0IA3ZvCkRkQ" },
-  { artist:"Mariah Carey", title:"My All", ytId:"mIhI23gBBPQ" },
-  { artist:"Mariah Carey", title:"Emotions", ytId:"NrJEFrth27Q" },
-  { artist:"Mariah Carey", title:"Fantasy", ytId:"qq09UkPRdFY" },
-  
-  // Fantasia
-  { artist:"Fantasia", title:"When I See U", ytId:"R8iqEfje7Aw" },
-  { artist:"Fantasia", title:"Free Yourself", ytId:"BWs3fs9nnzc" },
-  { artist:"Fantasia", title:"Truth Is", ytId:"e265_NvKvRQ" },
-  { artist:"Fantasia", title:"I Believe", ytId:"KcdURLaRa-I" },
-  { artist:"Fantasia", title:"Bittersweet", ytId:"80lh4Oj2Ys4" },
-  
-  // Boyz II Men
-  { artist:"Boyz II Men", title:"End of the Road", ytId:"zDKO6XYXioc" },
-  { artist:"Boyz II Men", title:"I'll Make Love to You", ytId:"fV8vB1BB2qc" },
-  { artist:"Boyz II Men", title:"On Bended Knee", ytId:"jSUSFow70no" },
-  { artist:"Boyz II Men", title:"Water Runs Dry", ytId:"9N9opF-PK5k" },
-  { artist:"Boyz II Men", title:"A Song for Mama", ytId:"se2dmYLfaHI" },
-  
-  // TLC
-  { artist:"TLC", title:"No Scrubs", ytId:"FrLequ6dUdM" },
-  { artist:"TLC", title:"Waterfalls", ytId:"8WEtxJ4-sh4" },
-  { artist:"TLC", title:"Creep", ytId:"LlZydtG3xqI" },
-  { artist:"TLC", title:"Red Light Special", ytId:"dP2t9LBeAwo" },
-  
-  // Aaliyah
-  { artist:"Aaliyah", title:"Are You That Somebody", ytId:"uTMuqL0qx08" },
-  { artist:"Aaliyah", title:"One in a Million", ytId:"KKSz4NE6PwY" },
-  { artist:"Aaliyah", title:"Try Again", ytId:"qTA0RuZoIxM" },
-  { artist:"Aaliyah", title:"Rock the Boat", ytId:"3HSJU5fDg0A" },
-  { artist:"Aaliyah", title:"Back and Forth", ytId:"a02dBbBGSPg" },
-  
-  // Destiny's Child
-  { artist:"Destiny's Child", title:"Say My Name", ytId:"sQgd6MccwZc" },
-  { artist:"Destiny's Child", title:"Bills Bills Bills", ytId:"NiF6-0UTqtc" },
-  { artist:"Destiny's Child", title:"Cater 2 U", ytId:"juqws1LIH-I" },
-  { artist:"Destiny's Child", title:"Survivor", ytId:"Wmc8bQoL-J0" },
-  { artist:"Destiny's Child", title:"Bootylicious", ytId:"IyYnnUcgeMc" },
-  
-  // Mary J. Blige
-  { artist:"Mary J. Blige", title:"Real Love", ytId:"OSmGu5LBs7E" },
-  { artist:"Mary J. Blige", title:"Be Without You", ytId:"8XNaPX6MKlU" },
-  { artist:"Mary J. Blige", title:"Family Affair", ytId:"znlFu_lemsU" },
-  { artist:"Mary J. Blige", title:"No More Drama", ytId:"em328ua_Lo8" },
-  { artist:"Mary J. Blige", title:"Not Gon Cry", ytId:"YXHBuIXAiXo" },
-  
-  // Jodeci
-  { artist:"Jodeci", title:"Forever My Lady", ytId:"qZCPgfEZvzQ" },
-  { artist:"Jodeci", title:"Come and Talk to Me", ytId:"_WhlGjHUz4I" },
-  { artist:"Jodeci", title:"Cry for You", ytId:"Iznvc-eqKpU" },
-  { artist:"Jodeci", title:"Feenin", ytId:"_gjTIvpR0zw" },
-  
-  // SWV
-  { artist:"SWV", title:"Weak", ytId:"976b8TPPFJU" },
-  { artist:"SWV", title:"Right Here", ytId:"vHwXoY0LiQk" },
-  { artist:"SWV", title:"I'm So Into You", ytId:"FL-pm-xRb40" },
-  
-  // Toni Braxton
-  { artist:"Toni Braxton", title:"Un-Break My Heart", ytId:"p2Rch6WvPJE" },
-  { artist:"Toni Braxton", title:"Breathe Again", ytId:"pRFEz2MjZgg" },
-  { artist:"Toni Braxton", title:"Another Sad Love Song", ytId:"2yQ0Fll_9pM" },
-  { artist:"Toni Braxton", title:"You're Makin Me High", ytId:"wIgOL21S98o" },
-  
-  // Brian McKnight
-  { artist:"Brian McKnight", title:"Back at One", ytId:"rXPfovXw2tw" },
-  { artist:"Brian McKnight", title:"One Last Cry", ytId:"sz-NhGanOAE" },
-  { artist:"Brian McKnight", title:"Anytime", ytId:"A1kzG9Ld1kI" },
-  
-  // 112
-  { artist:"112", title:"Cupid", ytId:"8dtzMPApA4M" },
-  { artist:"112", title:"Peaches and Cream", ytId:"wl2NCXzg1FQ" },
-  { artist:"112", title:"It's Over Now", ytId:"IihCzGUEPbs" },
-  
-  // Dru Hill
-  { artist:"Dru Hill", title:"In My Bed", ytId:"_Ixip0K2r10" },
-  { artist:"Dru Hill", title:"Never Make a Promise", ytId:"JAnA6c7Jql4" },
-  { artist:"Dru Hill", title:"How Deep Is Your Love", ytId:"43XWafBLJIM" },
-  { artist:"Dru Hill", title:"Beauty", ytId:"L3w7FHq2EYE" },
-  
-  // Ginuwine
-  { artist:"Ginuwine", title:"Pony", ytId:"lbnoG2dsUk0" },
-  { artist:"Ginuwine", title:"Differences", ytId:"U_90XNCBatY" },
-  { artist:"Ginuwine", title:"So Anxious", ytId:"DHpUtOcwhyU" },
-  
-  // Monica
-  { artist:"Monica", title:"Angel of Mine", ytId:"3eOuK-pYhy4" },
-  { artist:"Monica", title:"Don't Take It Personal", ytId:"asXau88O5Is" },
-  { artist:"Monica", title:"The Boy Is Mine", ytId:"qSIOp_K5GMw" },
-  
-  // Brandy
-  { artist:"Brandy", title:"Have You Ever", ytId:"Xkj1An6Wnec" },
-  { artist:"Brandy", title:"Sittin Up in My Room", ytId:"yge2PqEZZJo" },
-  { artist:"Brandy", title:"I Wanna Be Down", ytId:"PzpLkcfBe-A" },
-  
-  // Joe
-  { artist:"Joe", title:"I Wanna Know", ytId:"dJ8VjyPw0qY" },
-  { artist:"Joe", title:"All the Things Your Man Won't Do", ytId:"cVi25pSRAkc" },
-  { artist:"Joe", title:"Stutter", ytId:"eODhO-sA9aQ" },
-  
-  // Jagged Edge
-  { artist:"Jagged Edge", title:"Let's Get Married", ytId:"Mo1HaVN1Pt0" },
-  { artist:"Jagged Edge", title:"Where the Party At", ytId:"9UCY_U4QwqI" },
-  { artist:"Jagged Edge", title:"Promise", ytId:"lXd1GHJPx-A" },
-  
-  // Next
-  { artist:"Next", title:"Too Close", ytId:"kwEZRPkAAu8" },
-  { artist:"Next", title:"Wifey", ytId:"aGFZq4od-VQ" },
-  
-  // En Vogue
-  { artist:"En Vogue", title:"Don't Let Go Love", ytId:"mwhwGmoYv1s" },
-  { artist:"En Vogue", title:"My Lovin", ytId:"JIuYQ_4TcXg" },
-  { artist:"En Vogue", title:"Free Your Mind", ytId:"i7iQbBbMAFE" },
-  
-  // Xscape
-  { artist:"Xscape", title:"Just Kickin It", ytId:"w_BTEFAVwjU" },
-  { artist:"Xscape", title:"Understanding", ytId:"HR5J5jUDcnA" },
-  { artist:"Xscape", title:"Who Can I Run To", ytId:"xLjyPBQk_Os" },
-  
-  // Blackstreet
-  { artist:"Blackstreet", title:"No Diggity", ytId:"3KL9mRus19o" },
-  { artist:"Blackstreet", title:"Before I Let You Go", ytId:"kC6TnBx0HIU" },
-  { artist:"Blackstreet", title:"Don't Leave Me", ytId:"DBUz2nkOKsc" },
-  
-  // Tevin Campbell
-  { artist:"Tevin Campbell", title:"Can We Talk", ytId:"3SoYkCAzMBk" },
-  { artist:"Tevin Campbell", title:"I'm Ready", ytId:"F6Ns_uiu-yg" },
-  
-  // Babyface
-  { artist:"Babyface", title:"Whip Appeal", ytId:"fh5ejGUTGAo" },
-  { artist:"Babyface", title:"When Can I See You", ytId:"Ee9SCW91urE" },
-  { artist:"Babyface", title:"Every Time I Close My Eyes", ytId:"GbrSO81KhBY" },
-  
-  // New Edition
-  { artist:"New Edition", title:"Can You Stand the Rain", ytId:"7flrKMGfwjw" },
-  { artist:"New Edition", title:"If It Isn't Love", ytId:"ReI6gvzVP0Y" },
-  
-  // Bell Biv DeVoe
-  { artist:"Bell Biv DeVoe", title:"Poison", ytId:"hgnhVcyLy1I" },
-  { artist:"Bell Biv DeVoe", title:"Do Me", ytId:"ZieygZyvw4A" },
-  
+
+  // Alicia Keys
+  { artist:"Alicia Keys", title:"No One", ytId:"rywUS-ohqeE" },
+  { artist:"Alicia Keys", title:"Fallin", ytId:"Urdlvw0SINE" },
+  { artist:"Alicia Keys", title:"Girl on Fire", ytId:"J91ti_MpdHA" },
+  { artist:"Alicia Keys", title:"If I Ain't Got You", ytId:"Ju8Hr50Ckwk" },
+  { artist:"Alicia Keys", title:"Empire State of Mind", ytId:"0UjsXo9l6I8" },
+
   // Usher
-  { artist:"Usher", title:"You Make Me Wanna", ytId:"bQRzrnH6_HY" },
-  { artist:"Usher", title:"Nice and Slow", ytId:"DIpQ4AZSAf8" },
-  { artist:"Usher", title:"U Remind Me", ytId:"Bxau9B3jOHM" },
-  { artist:"Usher", title:"U Got It Bad", ytId:"o3IWTfcks4k" },
+  { artist:"Usher", title:"Yeah!", ytId:"GxBSyx85Kp8" },
   { artist:"Usher", title:"Burn", ytId:"t5XNWFw5HVw" },
   { artist:"Usher", title:"Confessions Part II", ytId:"5Sy19X0xxrM" },
-  { artist:"Usher", title:"There Goes My Baby", ytId:"m6urbZyHgO4" },
-  
-  // Luther Vandross
-  { artist:"Luther Vandross", title:"Never Too Much", ytId:"pNj9bXKGOiI" },
-  { artist:"Luther Vandross", title:"Here and Now", ytId:"0u_u4nlYmNs" },
-  
-  // Anita Baker
-  { artist:"Anita Baker", title:"Sweet Love", ytId:"2w6udgiojlE" },
-  { artist:"Anita Baker", title:"Giving You the Best That I Got", ytId:"gKGj8XwooYQ" },
-  
-  // Beyonce
-  { artist:"Beyonce", title:"Halo", ytId:"bnVUHWCynig" },
-  { artist:"Beyonce", title:"Love On Top", ytId:"Ob7vObnFUJc" },
-  { artist:"Beyonce", title:"Dangerously In Love", ytId:"4Xemq4xCSEA" },
-  { artist:"Beyonce", title:"Me Myself and I", ytId:"4S37SGxZSMc" },
-  { artist:"Beyonce", title:"Irreplaceable", ytId:"2EwViQxSJJQ" },
-  
-  // Alicia Keys
-  { artist:"Alicia Keys", title:"If I Ain't Got You", ytId:"Ju8Hr50Ckwk" },
-  { artist:"Alicia Keys", title:"No One", ytId:"rywUS-ohqeE" },
-  { artist:"Alicia Keys", title:"Fallin", ytId:"Urdlvw0SSEc" },
-  { artist:"Alicia Keys", title:"You Don't Know My Name", ytId:"_ST6ZRbhGiA" },
-  
-  // Ciara
-  { artist:"Ciara", title:"Promise", ytId:"UcGWy7xUZQE" },
-  { artist:"Ciara", title:"And I", ytId:"pG-lVf8f0Ks" },
-  { artist:"Ciara", title:"Body Party", ytId:"B9rSBcoX9ak" },
-  
-  // Ashanti
-  { artist:"Ashanti", title:"Foolish", ytId:"gUPrnu3BEU8" },
-  { artist:"Ashanti", title:"Happy", ytId:"MrCsubL_OSQ" },
-  { artist:"Ashanti", title:"Baby", ytId:"QThbui6twrI" },
+  { artist:"Usher", title:"U Got It Bad", ytId:"pdW52ljxECU" },
+  { artist:"Usher", title:"Nice & Slow", ytId:"rjlDyifgP-w" },
+  { artist:"Usher", title:"OMG", ytId:"1RnPB76mjxI" },
+  { artist:"Usher", title:"DJ Got Us Fallin In Love", ytId:"C-dvTjK_07c" },
+
+  // Ne-Yo
+  { artist:"Ne-Yo", title:"So Sick", ytId:"IxszlJppRQI" },
+  { artist:"Ne-Yo", title:"Closer", ytId:"z_aC5xPQ2f4" },
+  { artist:"Ne-Yo", title:"Miss Independent", ytId:"k6M5C-oKw9k" },
+  { artist:"Ne-Yo", title:"Because of You", ytId:"v2vV70XH8Qg" },
+  { artist:"Ne-Yo", title:"Sexy Love", ytId:"61vJwo4IDAE" },
+
+  // John Legend
+  { artist:"John Legend", title:"All of Me", ytId:"450p7goxZqg" },
+  { artist:"John Legend", title:"Ordinary People", ytId:"PIh07c_P4hc" },
+  { artist:"John Legend", title:"Tonight", ytId:"MahTKZDHXaA" },
+  { artist:"John Legend", title:"Green Light", ytId:"K3p5CxA4daw" },
+
+  // Bruno Mars
+  { artist:"Bruno Mars", title:"Just The Way You Are", ytId:"LjhCEhWiKXk" },
+  { artist:"Bruno Mars", title:"When I Was Your Man", ytId:"ekzHIouo8Q4" },
+  { artist:"Bruno Mars", title:"Treasure", ytId:"nPvuNsRccVw" },
+  { artist:"Bruno Mars", title:"Locked Out of Heaven", ytId:"e-fA-gBCkj0" },
+  { artist:"Bruno Mars", title:"Grenade", ytId:"SR6iYWJxHqs" },
+  { artist:"Bruno Mars", title:"Uptown Funk", ytId:"OPf0YbXqDm0" },
+  { artist:"Bruno Mars", title:"24K Magic", ytId:"UqyT8IEBkvY" },
+  { artist:"Bruno Mars", title:"Versace on the Floor", ytId:"fwgZUzKl3uQ" },
+
+  // The Weeknd
+  { artist:"The Weeknd", title:"Earned It", ytId:"waU75jdUnYw" },
+  { artist:"The Weeknd", title:"Blinding Lights", ytId:"4NRXx6U8ABQ" },
+  { artist:"The Weeknd", title:"Starboy", ytId:"34Na4j8AVgA" },
+  { artist:"The Weeknd", title:"Can't Feel My Face", ytId:"KEI4qSrkPAs" },
+  { artist:"The Weeknd", title:"The Hills", ytId:"yzTuBuRdAyA" },
+  { artist:"The Weeknd", title:"Save Your Tears", ytId:"XXYlFuWEuKI" },
+
+  // Chris Brown
+  { artist:"Chris Brown", title:"Forever", ytId:"5sMKX22BHeE" },
+  { artist:"Chris Brown", title:"With You", ytId:"6Bb8PYJmcL8" },
+  { artist:"Chris Brown", title:"Run It!", ytId:"NxF84svg7vI" },
+  { artist:"Chris Brown", title:"Yeah 3x", ytId:"cGjMgCcPF8Y" },
+  { artist:"Chris Brown", title:"Don't Wake Me Up", ytId:"1e5lVKoRfik" },
+
+  // Trey Songz
+  { artist:"Trey Songz", title:"Say Aah", ytId:"eH7GddDMyzA" },
+  { artist:"Trey Songz", title:"Slow Motion", ytId:"h2mXMlvAJJk" },
+  { artist:"Trey Songz", title:"Bottoms Up", ytId:"ekAXPCphKXQ" },
+  { artist:"Trey Songz", title:"Heart Attack", ytId:"sd8hhM_mJRo" },
+
+  // Jason Derulo
+  { artist:"Jason Derulo", title:"Whatcha Say", ytId:"pBI3lc18k8Q" },
+  { artist:"Jason Derulo", title:"In My Head", ytId:"plxF_-LdZ9M" },
+  { artist:"Jason Derulo", title:"Ridin' Solo", ytId:"8ESdn0MuJWQ" },
+  { artist:"Jason Derulo", title:"Want To Want Me", ytId:"rClUOdS5Zyw" },
+  { artist:"Jason Derulo", title:"Talk Dirty", ytId:"RbtPXFlZlHg" },
+  { artist:"Jason Derulo", title:"Wiggle", ytId:"hiP14ED28CA" },
+
+  // Miguel
+  { artist:"Miguel", title:"Adorn", ytId:"8dM5QYdTo08" },
+  { artist:"Miguel", title:"Sure Thing", ytId:"q4GJVOMjCC4" },
+  { artist:"Miguel", title:"Coffee", ytId:"1bvEa0V-RKU" },
+
+  // Frank Ocean
+  { artist:"Frank Ocean", title:"Thinkin Bout You", ytId:"6JHu3b-pbh8" },
+  { artist:"Frank Ocean", title:"Swim Good", ytId:"PmN9rZW0HGo" },
+
+  // SZA
+  { artist:"SZA", title:"Love Galore", ytId:"hHXer-Qno1E" },
+  { artist:"SZA", title:"The Weekend", ytId:"PAOhagWclhY" },
+  { artist:"SZA", title:"Good Days", ytId:"2p3zZoraK9g" },
+  { artist:"SZA", title:"Kiss Me More", ytId:"0EVVKs6DQLo" },
+
+  // H.E.R.
+  { artist:"H.E.R.", title:"Best Part", ytId:"vBy7FaapGRo" },
+  { artist:"H.E.R.", title:"Focus", ytId:"lZVNrNYgmlA" },
+  { artist:"H.E.R.", title:"Damage", ytId:"E4PrJ0YxXQs" },
+
+  // Jhené Aiko
+  { artist:"Jhené Aiko", title:"The Worst", ytId:"sH6Uqq8WKOU" },
+  { artist:"Jhené Aiko", title:"While We're Young", ytId:"xQncUHFxVSw" },
+  { artist:"Jhené Aiko", title:"Sativa", ytId:"sJF6AUBlUSY" },
+
+  // Daniel Caesar
+  { artist:"Daniel Caesar", title:"Best Part", ytId:"vBy7FaapGRo" },
+  { artist:"Daniel Caesar", title:"Get You", ytId:"uQFVqltOXRg" },
+  { artist:"Daniel Caesar", title:"Peaches", ytId:"tQ0yjYUFKAE" },
+
+  // Giveon
+  { artist:"Giveon", title:"Heartbreak Anniversary", ytId:"uWRlisQu4fo" },
+  { artist:"Giveon", title:"For Tonight", ytId:"kYLcXryP2Aw" },
+
+  // Khalid
+  { artist:"Khalid", title:"Location", ytId:"by3yRdlQvzs" },
+  { artist:"Khalid", title:"Young Dumb & Broke", ytId:"IPfJnp1guPc" },
+  { artist:"Khalid", title:"Talk", ytId:"hE2Ira-Cwxo" },
+  { artist:"Khalid", title:"Better", ytId:"x3bfa3DZ8JM" },
+
+  // Ella Mai
+  { artist:"Ella Mai", title:"Boo'd Up", ytId:"6YNZlXfW6Ho" },
+  { artist:"Ella Mai", title:"Trip", ytId:"6YFdOq00l4E" },
+
+  // Summer Walker
+  { artist:"Summer Walker", title:"Girls Need Love", ytId:"h3AoMz2J1E0" },
+  { artist:"Summer Walker", title:"Playing Games", ytId:"OU-4svZ3wt0" },
+
+  // Kehlani
+  { artist:"Kehlani", title:"Gangsta", ytId:"3-oOJrvx-JQ" },
+  { artist:"Kehlani", title:"Distraction", ytId:"7MBMw8F0-Lg" },
 ];
 
 function pickDailyRnB(dateKeyStr){
-  // Check for special date first
-  if (SPECIAL_SONGS[dateKeyStr]) {
-    return SPECIAL_SONGS[dateKeyStr];
-  }
-  
-  // Deterministic daily pick, no internet needed
+  // deterministic daily pick, no internet needed
   let h = 2166136261;
   for (let i=0; i<dateKeyStr.length; i++){
     h ^= dateKeyStr.charCodeAt(i);
@@ -482,31 +388,10 @@ document.getElementById("fileImport").addEventListener("change", async (e)=>{
 const globalDatePicker = document.getElementById("globalDatePicker");
 globalDatePicker.value = dayKey(new Date());
 
-// Global tracker for active audio contexts/sources
-let activeAudioSources = [];
-
 function stopAllAudio() {
-  // Stop HTML audio elements
   document.querySelectorAll("audio").forEach(a => { 
     try { a.pause(); a.currentTime = 0; } catch(_) {} 
   });
-  
-  // Stop Web Audio API sources
-  activeAudioSources.forEach(source => {
-    try { 
-      if (source.sourceNode) source.sourceNode.stop();
-      if (source.audioContext) source.audioContext.close();
-    } catch(_) {}
-  });
-  activeAudioSources = [];
-}
-
-function registerAudioSource(source) {
-  activeAudioSources.push(source);
-}
-
-function unregisterAudioSource(source) {
-  activeAudioSources = activeAudioSources.filter(s => s !== source);
 }
 
 globalDatePicker.addEventListener("change", async (e) => {
@@ -683,9 +568,7 @@ async function navigate(r, skipAnim=false){
   
   document.querySelectorAll(".navitem").forEach(b => b.classList.toggle("active", b.dataset.route === targetKey));
 
-  const isMobile = window.matchMedia("(max-width: 430px)").matches;
-
-  // First render: no animation
+  // First render: no flip
   if (!currentPage){
     currentPage = el("div", {class:"page current"});
     currentPage.append(withWatermark(await renderRoute(target)));
@@ -701,9 +584,8 @@ async function navigate(r, skipAnim=false){
   const fromKey = currentRouteKey || "cover";
   const doFlip = (!skipAnim) && (fromKey !== targetKey);
 
-  // Same section (or forced refresh): update in place, no animation
+  // Same section (or forced refresh): update in place, no page turn
   if(!doFlip){
-    // Scroll to top first
     scrollToTop();
     currentPage.innerHTML = "";
     currentPage.append(withWatermark(await renderRoute(target)));
@@ -721,79 +603,56 @@ async function navigate(r, skipAnim=false){
   isNavigating = true;
 
   try {
-    if (isMobile) {
-      // MOBILE: Use simple fade/slide animation (more reliable on iOS)
-      // First, fade out current page
-      currentPage.style.transition = "opacity 0.3s ease-out";
-      currentPage.style.opacity = "0";
-      
-      await new Promise(res => setTimeout(res, 300));
-      
-      // Scroll to top while old page is faded out
-      scrollToTop();
-      
-      // Replace content
-      currentPage.innerHTML = "";
-      currentPage.append(withWatermark(await renderRoute(target)));
-      
-      // Fade in new content
-      currentPage.style.opacity = "1";
-      
-      await new Promise(res => setTimeout(res, 300));
-      
-      // Clean up
-      currentPage.style.transition = "";
-      
-      currentRouteKey = targetKey;
-      currentRouteFull = target;
-    } else {
-      // DESKTOP: Use 3D flip animation
-      const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
-      incomingPage.append(withWatermark(await renderRoute(target)));
-      
-      pageHost.append(incomingPage);
+    // Different section: flip animation
+    // Create incoming page - HIDDEN initially to prevent flash at bottom
+    const incomingPage = el("div", {class: goingBackward ? "page prev page-hidden" : "page next page-hidden"});
+    incomingPage.append(withWatermark(await renderRoute(target)));
+    pageHost.append(incomingPage);
 
-      currentPage.style.pointerEvents = "none";
-      incomingPage.style.pointerEvents = "none";
+    currentPage.style.pointerEvents = "none";
+    incomingPage.style.pointerEvents = "none";
 
-      // Force reflow
-      void incomingPage.offsetWidth;
-      
-      await new Promise(res => requestAnimationFrame(res));
-      
-      pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
-      
-      // Wait for animation
-      await new Promise(res => setTimeout(res, 2450));
-      
-      pageHost.classList.remove("flipping", "flipping-back");
-      currentPage.style.pointerEvents = "";
-      incomingPage.style.pointerEvents = "";
+    // Force reflow to ensure initial state is rendered
+    void incomingPage.offsetWidth;
+    
+    // Scroll to top before animation starts
+    scrollToTop();
+    
+    // Small delay to ensure DOM is ready, then start animation
+    await new Promise(res => requestAnimationFrame(res));
+    
+    // Remove hidden class and start animation
+    incomingPage.classList.remove("page-hidden");
+    pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
+    
+    // Wait for animation to complete (matches CSS 2.4s)
+    await new Promise(res => setTimeout(res, 2450));
+    
+    pageHost.classList.remove("flipping", "flipping-back");
+    currentPage.style.pointerEvents = "";
+    incomingPage.style.pointerEvents = "";
 
-      currentPage.remove();
-      incomingPage.classList.remove("next", "prev");
-      incomingPage.classList.add("current");
-      currentPage = incomingPage;
+    currentPage.remove();
+    incomingPage.classList.remove("next", "prev");
+    incomingPage.classList.add("current");
+    currentPage = incomingPage;
 
-      currentRouteKey = targetKey;
-      currentRouteFull = target;
-      
-      scrollToTop();
-    }
+    currentRouteKey = targetKey;
+    currentRouteFull = target;
   } finally {
+    // Always reset isNavigating even if there's an error
     isNavigating = false;
   }
   updatePageNavButtons();
+  scrollToTop();
 }
 
-// Scroll to top of page
+// Scroll to top of the main container
 function scrollToTop() {
   const main = document.querySelector('.main');
   if (main) {
     main.scrollTop = 0;
   }
-  // Also ensure window is at top
-  window.scrollTo(0, 0);
 }
 
 // Update prev/next button visibility
@@ -835,12 +694,6 @@ setInterval(async ()=>{
 }, 30_000);
 
 async function maybePromptDailyReview(settings){
-  // Only prompt if user is on dashboard
-  if (currentRouteKey !== "dashboard") return;
-  
-  // Don't prompt if user is actively navigating
-  if (isNavigating) return;
-  
   const today = dayKey(new Date());
   const existing = (await getAll("dailyReviews")).find(r => r.date === today);
   if (existing) return;
@@ -852,10 +705,7 @@ async function maybePromptDailyReview(settings){
   const key = `tpp_review_prompted_${today}`;
   if (sessionStorage.getItem(key) === "1") return;
   sessionStorage.setItem(key, "1");
-  
-  // Don't auto-open modal - user can click the Review button
-  // This prevents unexpected popups
-  // openDailyReviewModal(today, null);
+  openDailyReviewModal(today, null);
 }
 
 async function maybeDueNotifications(settings){
@@ -1334,16 +1184,11 @@ async function viewDashboard(settings){
     dateLabel = formatDate(getSelectedDate());
   }
 
-  const isMobile = window.matchMedia("(max-width: 980px)").matches;
-  
   const headerClasses = isBirthday ? "dashboard-header birthday-header" : "dashboard-header";
   const header = el("div",{class: headerClasses},[
     el("div",{class:"h1"},[document.createTextNode(dateLabel)]),
     el("div",{class:"subtle"},[document.createTextNode(isToday ? formatDate(new Date()) : `Viewing ${selectedDay}`)])
   ]);
-
-  // Add birthday class to root if it's birthday
-  const rootClasses = isBirthday ? "stack dashboard-root birthday-mode" : "stack dashboard-root";
 
 
   const v = verseOfDay(selectedDay);
@@ -1395,7 +1240,7 @@ async function viewDashboard(settings){
     review?.notes ? el("div",{class:"muted"},[document.createTextNode(review.notes)]) : el("div",{class:"muted"},[document.createTextNode("How was your day?")])
   ]);
 
-  // Create a separate scoreBody for mobile (can't reuse same DOM node)
+  // Create separate scoreBody for mobile (can't reuse same DOM node)
   const scoreBodyMobile = el("div",{class:"stack"},[
     el("div",{class:"row spread"},[
       review ? badge(`${review.score}/10`, "good") : badge("Pending", "warn"),
@@ -1418,11 +1263,10 @@ async function viewDashboard(settings){
     verse.text ? el("div",{class:"txt"},[document.createTextNode(verse.text)]) : el("div",{class:"txt"})
   ]);
 
-  // Mobile top section - verse and music (shown first on mobile via CSS)
+  // Mobile top section - verse, music, and Daily Check-in (shown first on mobile via CSS)
   const mobileTop = el("div",{class:"mobile-top-section stack"},[
     verseBannerMobile,
     rnbCard(selectedDay),
-    // Daily Check-in shown early on mobile
     el("div",{class:"mobile-only"}, [card("Daily Check-in", "Reflect on your day", scoreBodyMobile)])
   ]);
 
@@ -1437,13 +1281,14 @@ async function viewDashboard(settings){
   if (overdueCard) rightItems.push(overdueCard);
   // Desktop shows music here (hidden on mobile via CSS)
   rightItems.push(el("div",{class:"desktop-only"}, [rnbCard(selectedDay)]));
-  // Daily Check-in only on desktop (mobile has it in mobileTop)
+  // Daily Check-in - desktop only (mobile has it in mobileTop)
   rightItems.push(el("div",{class:"desktop-only"}, [card("Daily Check-in", "Reflect on your day", scoreBody)]));
   
   const right = el("div",{class:"stack dashboard-right"}, rightItems);
 
   const grid = el("div",{class:"grid"},[left, right]);
 
+  const rootClasses = isBirthday ? "stack dashboard-root birthday-mode" : "stack dashboard-root";
   const root = el("div",{class: rootClasses},[header, mobileTop, grid]);
   return root;
 }
@@ -1513,220 +1358,125 @@ function fmtTime(sec){
   return `${m}:${s}`;
 }
 
-function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
-  const state = { 
-    audioContext: null, 
-    audioBuffer: null, 
-    sourceNode: null,
-    gainNode: null,
-    playing: false, 
-    loaded: false,
-    unlocked: false
-  };
-  
-  // Register this player's state for global stop
-  registerAudioSource(state);
+function miniAudioPlayer({artist, title, ytId, todayKey}){
+  const state = { audio:null, loaded:false, loading:false, playing:false, meta:null };
 
-  const titleEl = el("div",{class:"songTitle"},[document.createTextNode(title)]);
-  const artistEl = el("div",{class:"songArtist"},[document.createTextNode(artist)]);
-  const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play")]);
-  const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("")]);
-  
-  // Album art from YouTube thumbnail
-  const art = el("div",{class:"songArt"});
-  if (ytId) {
-    art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
-  } else {
-    art.style.background = "linear-gradient(135deg, #4a90d9 0%, #a8d4ff 100%)";
-  }
-  
-  // Play button
-  const playBtn = el("button",{class:"playBtn"},[document.createTextNode("▶")]);
-  
-  // Progress bar
-  const progressWrap = el("div",{class:"progressWrap"});
-  const progressBar = el("div",{class:"progressBar"});
-  progressWrap.appendChild(progressBar);
-  
-  // YouTube button
-  const ytBtn = el("a",{
-    class:"musicBtn ytBtn",
-    href: ytId ? `https://www.youtube.com/watch?v=${ytId}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(artist + " " + title)}`,
-    target:"_blank",
-    rel:"noopener"
-  },[document.createTextNode("▶ Watch on YouTube")]);
+  const playBtn = el("button",{class:"miniPlay btn"},[document.createTextNode("▶ Play")]);
+  const titleEl = el("div",{class:"h"},[document.createTextNode(title)]);
+  const artistEl = el("div",{class:"m"},[document.createTextNode(artist)]);
+  const timeEl = el("div",{class:"miniTime muted"},[document.createTextNode("0:00 / 0:00")]);
+  const statusEl = el("div",{class:"miniStatus muted small"},[]);
 
-  async function loadAndPlay() {
-    // Step 1: Create/unlock AudioContext
-    if (!state.audioContext) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      state.audioContext = new AudioContext();
-      state.gainNode = state.audioContext.createGain();
-      state.gainNode.gain.value = 1.0;
-      state.gainNode.connect(state.audioContext.destination);
+  const seek = el("input",{type:"range", min:"0", max:"1000", value:"0", class:"miniSeek"});
+  
+  const ytBtn = el("button",{class:"btn ytPlayBtn small"},[document.createTextNode("▶ Play Full Video")]);
+  ytBtn.addEventListener("click", ()=>{
+    // Pause preview if playing
+    if(state.audio && state.playing){
+      try{ state.audio.pause(); }catch(_){}
+      state.playing = false;
+      playBtn.textContent = "▶ Play";
     }
-    
-    // Resume if suspended
-    if (state.audioContext.state === 'suspended') {
-      await state.audioContext.resume();
-    }
-    
-    // Step 2: Load audio if not loaded
-    if (!state.loaded) {
-      statusEl.textContent = "Loading...";
-      playBtn.textContent = "...";
-      
-      try {
-        // Fetch from iTunes
-        const term = encodeURIComponent(`${artist} ${title}`);
-        const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        if (data.results && data.results.length > 0) {
-          // Find best match
-          const norm = s => String(s||"").toLowerCase();
-          const aN = norm(artist);
-          const tN = norm(title);
-          let best = null;
-          for (const r of data.results) {
-            if (!r.previewUrl) continue;
-            const ra = norm(r.artistName);
-            const rt = norm(r.trackName);
-            const score = (ra.includes(aN)?3:0) + (aN.includes(ra)?2:0) + (rt.includes(tN)?3:0) + (tN.includes(rt)?2:0);
-            if (!best || score > best.score) best = { score, r };
-          }
-          
-          if (best && best.r.previewUrl) {
-            // Update artwork
-            if (best.r.artworkUrl100) {
-              art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
-            }
-            
-            statusEl.textContent = "Downloading...";
-            
-            // Download audio data
-            const audioRes = await fetch(best.r.previewUrl);
-            const arrayBuffer = await audioRes.arrayBuffer();
-            
-            statusEl.textContent = "Decoding...";
-            
-            // Decode audio
-            state.audioBuffer = await state.audioContext.decodeAudioData(arrayBuffer);
-            state.loaded = true;
-            
-            statusEl.textContent = "Ready";
-          } else {
-            statusEl.textContent = "No preview";
-            playBtn.textContent = "▶";
-            return;
-          }
-        }
-      } catch (e) {
-        console.log("Load error:", e);
-        statusEl.textContent = "Error - try YouTube";
-        playBtn.textContent = "▶";
-        return;
+    window.open(`https://www.youtube.com/watch?v=${ytId}`, "_blank");
+  });
+
+  const art = el("div",{class:"miniArt"});
+  // Load YouTube thumbnail immediately
+  art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
+
+  async function ensureLoaded(){
+    if(state.loaded || state.loading) return;
+    state.loading = true;
+    statusEl.textContent = "Loading preview…";
+    playBtn.textContent = "Loading…";
+    playBtn.disabled = true;
+    try{
+      const meta = await fetchItunesPreview(artist, title);
+      state.meta = meta;
+
+      if(meta.artistName && meta.trackName){
+        titleEl.textContent = meta.trackName;
+        artistEl.textContent = meta.artistName;
       }
-    }
-    
-    // Step 3: Play
-    if (state.audioBuffer) {
-      // Stop any existing playback
-      if (state.sourceNode) {
-        try { state.sourceNode.stop(); } catch(e) {}
+      if(meta.artwork){
+        art.style.backgroundImage = `url('${meta.artwork}')`;
       }
-      
-      // Create new source
-      state.sourceNode = state.audioContext.createBufferSource();
-      state.sourceNode.buffer = state.audioBuffer;
-      state.sourceNode.connect(state.gainNode);
-      
-      state.sourceNode.onended = function() {
+
+      const audio = new Audio(meta.previewUrl);
+      audio.preload = "auto";
+      audio.addEventListener("timeupdate", ()=>{
+        if(!audio.duration) return;
+        const v = Math.floor((audio.currentTime / audio.duration) * 1000);
+        seek.value = String(v);
+        timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+      });
+      audio.addEventListener("loadedmetadata", ()=>{
+        timeEl.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+      });
+      audio.addEventListener("ended", ()=>{
         state.playing = false;
-        playBtn.textContent = "▶";
-        playBtn.classList.remove("playing");
-        progressBar.style.width = "0%";
-        statusEl.textContent = "Ended";
-      };
-      
-      // Start playback
-      const startTime = state.audioContext.currentTime;
-      state.sourceNode.start(0);
-      state.playing = true;
-      playBtn.textContent = "⏸";
-      playBtn.classList.add("playing");
-      statusEl.textContent = "Playing...";
-      
-      // Update progress
-      const duration = state.audioBuffer.duration;
-      function updateProgress() {
-        if (!state.playing) return;
-        const elapsed = state.audioContext.currentTime - startTime;
-        const pct = Math.min(100, (elapsed / duration) * 100);
-        progressBar.style.width = pct + "%";
-        timeEl.textContent = formatTime(elapsed) + " / " + formatTime(duration);
-        if (elapsed < duration) {
-          requestAnimationFrame(updateProgress);
-        }
-      }
-      updateProgress();
+        playBtn.textContent = "▶ Play";
+        seek.value = "0";
+      });
+
+      state.audio = audio;
+      state.loaded = true;
+      statusEl.textContent = "Preview ready";
+    } catch(_){
+      statusEl.textContent = "Preview unavailable";
+    } finally {
+      state.loading = false;
+      playBtn.disabled = false;
+      if(!state.playing) playBtn.textContent = "▶ Play";
     }
-  }
-  
-  function formatTime(sec) {
-    if (!isFinite(sec)) return "0:00";
-    sec = Math.max(0, Math.floor(sec));
-    const m = Math.floor(sec / 60);
-    const s = String(sec % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  }
-  
-  function stopPlayback() {
-    if (state.sourceNode) {
-      try { state.sourceNode.stop(); } catch(e) {}
-      state.sourceNode = null;
-    }
-    state.playing = false;
-    playBtn.textContent = "▶";
-    playBtn.classList.remove("playing");
-    statusEl.textContent = "Stopped";
   }
 
-  // Play button click
-  playBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (state.playing) {
-      stopPlayback();
+  playBtn.addEventListener("click", async ()=>{
+    await ensureLoaded();
+    if(!state.audio) return;
+
+    if(state.playing){
+      state.audio.pause();
+      state.playing = false;
+      playBtn.textContent = "▶ Play";
     } else {
-      loadAndPlay();
+      document.querySelectorAll("audio[data-mini='1']").forEach(a=>{ try{ a.pause(); }catch(_){} });
+      state.audio.dataset.mini = "1";
+      await state.audio.play();
+      state.playing = true;
+      statusEl.textContent = "Playing preview…";
+      playBtn.textContent = "⏸ Pause";
     }
   });
 
-  const content = el("div",{class:"songCard"},[
-    el("div",{class:"songLeft"},[
-      art,
-      playBtn
+  seek.addEventListener("input", async ()=>{
+    await ensureLoaded();
+    if(!state.audio || !state.audio.duration) return;
+    const ratio = Number(seek.value)/1000;
+    state.audio.currentTime = ratio * state.audio.duration;
+  });
+
+  const left = el("div",{class:"miniLeft"},[art]);
+  const mid = el("div",{class:"miniMid"},[
+    titleEl,
+    artistEl,
+    el("div",{class:"miniControls"},[
+      playBtn,
+      timeEl,
     ]),
-    el("div",{class:"songInfo"},[
-      titleEl,
-      artistEl,
-      progressWrap,
-      el("div",{class:"songMeta"},[timeEl, statusEl]),
-      ytBtn
-    ])
+    seek,
+    el("div",{class:"row", style:"margin-top:10px;gap:8px;"},[ytBtn]),
+    statusEl
   ]);
 
-  return content;
+  return el("div",{class:"miniPlayer"},[left, mid]);
 }
 
 function rnbCard(todayKey){
   const pick = pickDailyRnB(todayKey);
 
   const body = el("div",{class:"stack"},[
-    miniAudioPlayer({ artist: pick.artist, title: pick.title, ytId: pick.ytId, spotifyId: pick.spotifyId, todayKey }),
+    miniAudioPlayer({ artist: pick.artist, title: pick.title, ytId: pick.ytId, todayKey }),
   ]);
 
   return card("Song of the Day ♪", "A little soul for your soul", body);
@@ -2428,12 +2178,12 @@ el("div",{class:"row spread"},[
     el("div",{class:"scroll-area relScroll flexFill"},[touchpointsList(touchpoints, contacts)])
   ]);
 
-  const top = overdue.length ? card("Overdue", "People you haven't contacted recently.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
+  const top = overdue.length ? card("Overdue", "Based on your rules.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
 
   return el("div",{class:"fillPage"},[
     el("div",{class:"stack"},[header, top]),
     el("div",{class:"fillMain"},[
-      el("div",{class:"grid fillGrid"},[cardFill("Contacts", "Set how often you want to stay in touch.", leftBody),
+      el("div",{class:"grid fillGrid"},[cardFill("Contacts", "Rule = every N days.", leftBody),
       cardFill("Check-ins", "Calls, texts, meets.", rightBody)])
     ])
   ]);
@@ -2455,12 +2205,12 @@ function contactsList(contacts, ruleByContact, overdueSet){
       el("div",{class:"top"},[
         el("div",{},[
           el("div",{class:"h"},[document.createTextNode(c.name)]),
-          el("div",{class:"m"},[document.createTextNode(days ? `Contact every ${days} day${days > 1 ? 's' : ''}` : "No reminder set")])
+          el("div",{class:"m"},[document.createTextNode(days ? `Every ${days} day(s)` : "No frequency rule")])
         ]),
         el("div",{class:"actions"},[
           status,
           btn("Edit",{kind:"ghost", onclick: ()=>openContactModal(c)}),
-          btn("Reminder",{kind:"ghost", onclick: ()=>openRuleModal(c, r || null)}),
+          btn("Rule",{kind:"ghost", onclick: ()=>openRuleModal(c, r || null)}),
           btn("Delete",{kind:"danger", onclick: async ()=>{
             if (r) await del("contactRules", r.id);
             await del("contacts", c.id);
@@ -2540,9 +2290,9 @@ function openRuleModal(contact, existing){
   const days = el("input",{class:"input", type:"number", min:"1", max:"365", value: Number(r.desiredEveryDays || 7)});
 
   const body = el("div",{class:"stack"},[
-    el("div",{class:"muted small"},[document.createTextNode(`Person: ${contact.name}`)]),
-    rowLabel("Stay in touch every (days)", days),
-    el("div",{class:"muted small"},[document.createTextNode("You'll see a reminder when it's been longer than this since your last contact.")])
+    el("div",{class:"muted small"},[document.createTextNode(`Contact: ${contact.name}`)]),
+    rowLabel("Desired frequency (every N days)", days),
+    el("div",{class:"muted small"},[document.createTextNode("Due triggers when the last touchpoint is older than N days.")])
   ]);
 
   const footer = el("div",{},[
@@ -2557,7 +2307,7 @@ function openRuleModal(contact, existing){
     }})
   ]);
 
-  modal.open({ title:"Set Contact Reminder", body, footer });
+  modal.open({ title:"Reminder rule", body, footer });
 }
 
 function openTouchpointModal(contacts, existing=null){

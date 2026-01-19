@@ -17,10 +17,10 @@
   --radius: 20px;
   --radius2: 16px;
   /* iOS safe areas */
-  --sat: env(safe-area-inset-top, 0px);
-  --sar: env(safe-area-inset-right, 0px);
-  --sab: env(safe-area-inset-bottom, 0px);
-  --sal: env(safe-area-inset-left, 0px);
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
   /* Floral colors */
   --petal: rgba(74,144,217,.15);
   --bloom: rgba(168,212,255,.3);
@@ -71,14 +71,7 @@
 
 .birthday-mode .birthday-header .h1 {
   color: #d63384;
-  font-size: 22px;
   text-shadow: 1px 1px 2px rgba(255,105,180,0.3);
-  animation: birthday-sparkle 2s ease-in-out infinite;
-}
-
-@keyframes birthday-sparkle {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
 }
 
 .birthday-mode .card {
@@ -100,56 +93,15 @@
   border-color: rgba(255,105,180,0.3);
 }
 
-.birthday-mode .btn {
-  border-color: rgba(255,105,180,0.3);
-}
-
-.birthday-mode .btn:hover {
-  background: linear-gradient(to bottom, #fff, rgba(255,105,180,0.15));
-  border-color: #ff69b4;
-}
-
-/* Birthday confetti animation on the page background */
-.birthday-mode::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(255,105,180,0.15) 0%, transparent 20%),
-    radial-gradient(circle at 90% 30%, rgba(255,215,0,0.1) 0%, transparent 15%),
-    radial-gradient(circle at 20% 80%, rgba(255,20,147,0.1) 0%, transparent 18%),
-    radial-gradient(circle at 80% 70%, rgba(255,182,193,0.15) 0%, transparent 20%),
-    radial-gradient(circle at 50% 50%, rgba(255,105,180,0.08) 0%, transparent 30%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.birthday-mode > * {
-  position: relative;
-  z-index: 1;
-}
-
 /* ==================== END BIRTHDAY THEME ==================== */
 
-/* CRITICAL: Force all elements to respect viewport width */
-*, *::before, *::after {
-  box-sizing: border-box !important;
+/* Mobile-only helper class */
+.mobile-only {
+  display: none;
 }
 
-html {
-  width: 100%;
-  max-width: 100vw;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  -webkit-text-size-adjust: 100%;
-  -webkit-overflow-scrolling: touch;
-}
-
-body {
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{
   font-family: "Nunito", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background:
     /* Floral decorative elements */
@@ -160,19 +112,8 @@ body {
     /* Main gradient */
     linear-gradient(165deg, #e8f4ff 0%, #f0f7ff 50%, #f8fbff 100%);
   color: var(--ink);
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  max-width: 100vw;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  -webkit-text-size-adjust: 100%;
+  -webkit-overflow-scrolling: touch;
+  min-height: 100vh;
 }
 
 /* Decorative floral pattern overlay */
@@ -196,21 +137,15 @@ html::before {
 a{color: var(--accent)}
 
 .app{
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  max-width: 100vw;
+  position: relative;
   z-index: 1;
-  display: grid;
+  height:100vh;
+  height: 100dvh;
+  display:grid;
   grid-template-rows: auto 1fr;
   padding-top: var(--sat);
   padding-left: var(--sal);
   padding-right: var(--sar);
-  padding-bottom: var(--sab);
-  overflow: hidden;
 }
 
 .topbar{
@@ -290,10 +225,6 @@ a{color: var(--accent)}
   letter-spacing: 0.3px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(74,144,217,.1);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(74,144,217,.2);
-  user-select: none;
-  -webkit-user-select: none;
 }
 .btn:hover{
   background: linear-gradient(to bottom, #fff, rgba(168,212,255,.4));
@@ -325,9 +256,8 @@ a{color: var(--accent)}
 
 .main{
   padding: 16px;
-  overflow: hidden;
+  overflow:auto;
   position: relative;
-  min-height: 0;
 }
 /* Decorative corner flourish */
 .main::before {
@@ -340,11 +270,9 @@ a{color: var(--accent)}
   pointer-events: none;
 }
 @media (max-width: 720px){ .main{padding: 12px} .main::before{display:none;} }
-@media (max-width: 430px){ .main{padding: 6px;} }
 
 .book{
   max-width: 1100px;
-  height: 100%;
   margin: 0 auto;
   position: relative;
   border-radius: 24px;
@@ -354,12 +282,7 @@ a{color: var(--accent)}
     0 20px 50px rgba(30,58,95,.1),
     0 8px 20px rgba(74,144,217,.08),
     inset 0 1px 0 rgba(255,255,255,.8);
-  overflow: hidden;
-}
-@media (max-width: 430px){
-  .book {
-    border-radius: 12px;
-  }
+  overflow:hidden;
 }
 .spine{
   position:absolute;
@@ -407,31 +330,10 @@ a{color: var(--accent)}
   .page-nav-btn.prev { left: 4px; }
   .page-nav-btn.next { right: 4px; }
 }
-/* Show nav buttons on mobile - positioned on the right side */
-@media (max-width: 430px) {
-  .page-nav-btn {
-    display: flex !important;
-    width: 28px;
-    height: 50px;
-    font-size: 20px;
-    z-index: 100;
-  }
-  .page-nav-btn.prev { left: 2px; }
-  .page-nav-btn.next { right: 2px; }
-  .spine {
-    display: none !important;
-  }
-  
-  /* Smooth fade transition for page changes on mobile */
-  .page.current {
-    transition: opacity 0.3s ease-out;
-  }
-}
 
 .pagehost{
-  position: relative;
-  height: 100%;
-  min-height: 0;
+  position:relative;
+  min-height: calc(100vh - 64px - 32px);
   perspective: 1800px;
   perspective-origin: left center;
   transform-style: preserve-3d;
@@ -490,6 +392,12 @@ a{color: var(--accent)}
 .page.current{transform: rotateY(0deg); z-index: 3; box-shadow: 2px 0 15px rgba(15,23,42,.08)}
 .page.next{transform: rotateY(0deg); z-index: 1; opacity: 1}
 .page.prev{transform: rotateY(-180deg); z-index: 1; opacity: 1; transition: none}
+
+/* Hidden state - used to prevent flash before animation starts */
+.page.page-hidden {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
 
 /* Flip animation - only apply transition to current page */
 .page.current{transition: box-shadow 2.4s ease}
@@ -639,8 +547,6 @@ a{color: var(--accent)}
     0 1px 3px rgba(74,144,217,.08);
   position: relative;
   overflow: hidden;
-  width: 100%;
-  max-width: 100%;
 }
 /* Subtle floral accent on cards */
 .card::before {
@@ -671,8 +577,8 @@ a{color: var(--accent)}
 .card-h .d{font-size:12px; color:var(--muted); margin-top:4px; font-weight: 500;}
 .card-b{padding: 14px 16px 16px 16px}
 
-.row{display:flex; gap:10px; align-items:center; max-width:100%; flex-wrap:wrap}
-.row.spread{justify-content:space-between; width:100%}
+.row{display:flex; gap:10px; align-items:center}
+.row.spread{justify-content:space-between}
 .stack{display:flex; flex-direction:column; gap:12px}
 
 .input, select, textarea{
@@ -1761,154 +1667,26 @@ body::before{
   gap: 8px;
 }
 
-/* Song Card */
-.songCard {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-.songLeft {
-  position: relative;
-  flex-shrink: 0;
-}
-.songArt {
-  width: 70px;
-  height: 70px;
+/* YouTube player container */
+.ytPlayerContainer {
+  margin-top: 10px;
   border-radius: 10px;
-  background-size: cover;
-  background-position: center;
-  background-color: #e8f4ff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.playBtn {
-  position: absolute;
-  bottom: -8px;
-  right: -8px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(74,144,217,0.4);
-  transition: all 0.2s;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.playBtn:hover, .playBtn:active {
-  transform: scale(1.1);
-  background: #3a7bc8;
-}
-.playBtn.playing {
-  background: #e57373;
-}
-.songInfo {
-  flex: 1;
-  min-width: 0;
-}
-.songTitle {
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--ink);
-  margin-bottom: 2px;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-.songArtist {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ytPlayerContainer iframe {
+  border-radius: 10px;
 }
-.progressWrap {
-  height: 4px;
-  background: rgba(74,144,217,0.15);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-.progressBar {
-  height: 100%;
-  width: 0%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.1s linear;
-}
-.songMeta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.songTime {
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-.songStatus {
-  font-size: 10px;
-  text-align: right;
-}
-.ytBtn {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
+.ytPlayBtn {
+  background: #ff0000 !important;
+  color: white !important;
   font-weight: 600;
-  text-decoration: none;
-  background: #FF0000;
-  color: white;
-  transition: all 0.2s;
-  touch-action: manipulation;
 }
-.ytBtn:hover, .ytBtn:active {
-  background: #CC0000;
+.ytPlayBtn:hover {
+  background: #cc0000 !important;
 }
-
-@media (max-width: 430px) {
-  .songCard {
-    gap: 10px;
-  }
-  .songArt {
-    width: 60px;
-    height: 60px;
-  }
-  .playBtn {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    bottom: -6px;
-    right: -6px;
-  }
-  .songTitle {
-    font-size: 13px;
-  }
-  .songArtist {
-    font-size: 11px;
-    margin-bottom: 6px;
-  }
-  .ytBtn {
-    padding: 5px 10px;
-    font-size: 10px;
-  }
-}
-
-/* Spotify embed */
-.spotifyEmbed {
-  border-radius: 12px;
-  overflow: hidden;
-  background: #282828;
-  min-height: 80px;
-}
-.spotifyEmbed iframe {
-  display: block;
+.ytPlayBtn.small {
+  padding: 8px 14px;
+  font-size: 13px;
 }
 
 @media (max-width: 600px) {
@@ -1930,23 +1708,11 @@ body::before{
 .desktop-only {
   display: block;
 }
-.mobile-only {
-  display: none;
-}
-
-@media (max-width: 980px) {
-  /* Mobile/tablet: show verse + song at top of Today (Dashboard) */
-  .mobile-top-section { display: flex; }
-  .desktop-only { display: none !important; }
-  .mobile-only { display: block !important; }
-}
-
 
 @media (max-width: 430px) {
   /* Show mobile top section, hide desktop duplicates */
   .mobile-top-section {
     display: flex;
-    flex-direction: column;
   }
   .desktop-only {
     display: none !important;
@@ -1955,157 +1721,80 @@ body::before{
     display: block !important;
   }
   
-  /* App container - fill viewport exactly for iOS PWA */
-  .app {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    height: 100% !important;
-    padding-top: var(--sat);
-    padding-bottom: var(--sab);
-    padding-left: var(--sal);
-    padding-right: var(--sar);
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  /* Topbar compact - fixed at top, never scrolls */
-  .topbar {
-    padding: 4px 6px;
-    gap: 3px;
-    min-height: 42px;
-    width: 100%;
-    max-width: 100%;
-    flex: 0 0 auto !important;
-    overflow: hidden;
-  }
-  
-  /* Main area - THE ONLY SCROLL CONTAINER ON iOS */
+  /* iOS PWA: Main is the scroll container */
   .main {
-    padding: 4px;
-    position: relative !important;
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    height: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-y: scroll !important;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: contain;
-  }
-  .main::before {
-    display: none;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
   }
   
-  /* Everything inside main: NO height constraints, NO overflow hidden */
+  /* Book contains the pages */
   .book {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    border-radius: 8px;
-    margin: 0;
-    overflow: hidden !important;
-    /* Keep perspective for animation */
+    position: relative;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+  
+  /* Pagehost needs perspective for 3D flip */
+  .pagehost {
+    position: relative;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
     perspective: 1200px;
     -webkit-perspective: 1200px;
   }
   
-  .pagehost {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
-    /* No 3D on mobile - use simple fade instead */
-    perspective: none !important;
-    transform-style: flat !important;
-    -webkit-perspective: none !important;
-    -webkit-transform-style: flat !important;
-  }
-  
+  /* Page: relative positioning for scroll, but absolute during animation */
   .page {
     position: relative !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    overflow: visible !important;
+    padding: 12px 12px 150px 20px;
     height: auto !important;
     min-height: auto !important;
-    overflow: visible !important;
-    padding: 8px 8px 30px 8px !important;
-    /* Simple transforms only */
-    transform: none !important;
-    -webkit-transform: none !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
   }
   
-  /* Page states on mobile - simple, no 3D */
-  .page.current {
-    opacity: 1;
-    z-index: 3;
+  /* During flip animation, incoming page needs absolute positioning */
+  .pagehost.flipping .page.next,
+  .pagehost.flipping-back .page.prev {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    min-height: 100vh;
   }
-  .page.next,
-  .page.prev {
+  
+  /* Hide page nav buttons on mobile - use swipe or menu */
+  .page-nav-btn {
     display: none !important;
   }
   
-  /* Disable flip animations on mobile */
-  .pagehost.flipping .page,
-  .pagehost.flipping-back .page {
-    animation: none !important;
+  .spine {
+    display: none !important;
   }
   
-  /* iOS touch action - allow vertical scroll */
-  .main {
-    touch-action: pan-y !important;
-    -webkit-touch-callout: none;
-  }
-  
-  /* Content containers need generous padding at bottom for scroll */
-  .pagecontent {
-    min-height: auto !important;
-    height: auto !important;
-    padding-bottom: 200px !important;
-    overflow: visible !important;
-  }
-  
-  .fillPage {
-    height: auto !important;
-    min-height: auto !important;
-    padding-bottom: 200px !important;
-    overflow: visible !important;
-  }
-  
-  .dashboard-root {
-    height: auto !important;
-    min-height: auto !important;
-    padding-bottom: 200px !important;
-    overflow: visible !important;
-  }
-  
-  /* Brand compact */
-  .brand-mark {
-    width: 32px;
-    height: 30px;
-    border-radius: 8px;
-  }
-  .brand-mark::before {
-    font-size: 13px;
+  /* Header adjustments */
+  .topbar {
+    padding: 8px 10px;
+    gap: 8px;
   }
   .brand-title {
-    font-size: 13px;
+    font-size: 14px;
   }
   .brand-sub {
-    display: none;
+    font-size: 10px;
+  }
+  .brand-mark {
+    width: 36px;
+    height: 34px;
+  }
+  .brand-mark::before {
+    font-size: 16px;
   }
   
-  /* Hide export/import */
+  /* Hide export/import on very small screens */
   .top-actions > .btn.ghost:not(.small),
   .top-actions > .filebtn {
     display: none;
@@ -2116,299 +1805,195 @@ body::before{
     gap: 2px;
   }
   .date-input {
-    width: 90px;
-    padding: 4px 5px;
-    font-size: 10px;
+    width: 110px;
+    padding: 6px 8px;
+    font-size: 13px;
   }
   .btn.small {
-    padding: 4px 5px;
-    font-size: 9px;
+    padding: 6px 8px;
+    font-size: 12px;
   }
   
   /* Page headings smaller */
   .h1 {
-    font-size: 16px;
-    margin-bottom: 3px;
+    font-size: 20px;
+    margin-bottom: 6px;
   }
   .subtle {
-    font-size: 10px;
+    font-size: 12px;
   }
   
-  /* Cards more compact - ensure no overflow */
-  .card {
-    border-radius: 10px;
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-  }
-  .card::before {
-    display: none;
-  }
+  /* Cards more compact */
   .card-h {
-    padding: 6px 8px 4px 8px;
+    padding: 12px 12px 10px 12px;
   }
   .card-h .t {
-    font-size: 11px;
-  }
-  .card-h .d {
-    font-size: 9px;
+    font-size: 14px;
   }
   .card-b {
-    padding: 6px 8px 8px 8px;
-    overflow: hidden;
+    padding: 10px 12px 12px 12px;
   }
   
   /* Stack spacing */
   .stack {
-    gap: 5px;
-    width: 100%;
+    gap: 8px;
   }
   
   /* Grid stacks and smaller gap */
   .grid {
-    gap: 5px;
-    width: 100%;
+    gap: 10px;
   }
   
   /* Buttons smaller */
   .btn {
-    padding: 5px 8px;
-    font-size: 10px;
-    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
   }
   
-  /* Scroll areas - disable on mobile, let page scroll */
-  .tasksScroll,
-  .overdueScroll,
+  /* Scroll areas - flex to fill available space */
+  .tasksScroll {
+    height: auto;
+    max-height: 140px;
+  }
+  .overdueScroll {
+    max-height: 120px;
+  }
   .relScroll,
   .finScroll,
   .fitScroll,
   .spiScroll {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
+    height: auto;
+    max-height: 200px;
   }
   
   /* Mini audio player compact */
-  .miniPlayer {
-    gap: 8px;
-    padding: 8px;
+  .mini-audio-player {
+    padding: 10px;
+    gap: 10px;
   }
-  .miniLeft {
-    width: 55px;
-    min-width: 55px;
+  .mini-audio-player .art {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
   }
-  .miniArt {
-    width: 55px;
-    height: 55px;
-    border-radius: 8px;
+  .mini-audio-player .info .title {
+    font-size: 13px;
   }
-  .miniMid .h {
-    font-size: 12px;
-  }
-  .miniMid .m {
-    font-size: 10px;
-  }
-  .miniControls {
-    gap: 6px;
-  }
-  .miniPlay {
-    padding: 5px 10px;
+  .mini-audio-player .info .artist {
     font-size: 11px;
-  }
-  .miniTime {
-    font-size: 10px;
-  }
-  .miniSeek {
-    height: 3px;
-  }
-  .ytPlayBtn.small {
-    padding: 5px 8px;
-    font-size: 10px;
-  }
-  .miniStatus {
-    font-size: 9px;
   }
   
   /* Banner smaller */
   .banner {
-    padding: 10px;
-    border-radius: 12px;
+    padding: 14px;
   }
   .banner .t {
-    font-size: 10px;
-  }
-  .banner .ref {
     font-size: 12px;
   }
+  .banner .ref {
+    font-size: 14px;
+  }
   .banner .txt {
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 13px;
   }
   
   /* Grid2 stack on mobile */
   .grid2 {
     grid-template-columns: 1fr;
-    gap: 6px;
   }
   
   /* Form inputs */
   .input, select, textarea {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 14px;
-    border-radius: 8px;
-  }
-  textarea {
-    min-height: 60px;
-  }
-  label {
-    font-size: 10px;
-    margin-bottom: 4px;
   }
   
   /* Items more compact */
   .item {
-    padding: 8px;
-    border-radius: 8px;
-  }
-  .item .h {
-    font-size: 12px;
-  }
-  .item .m {
-    font-size: 10px;
-  }
-  
-  /* List spacing */
-  .list {
-    gap: 4px;
+    padding: 10px;
   }
   
   /* Page nav buttons */
   .page-nav-btn {
-    width: 24px;
-    height: 36px;
-    font-size: 14px;
-    border-radius: 6px;
+    width: 28px;
+    height: 44px;
+    font-size: 18px;
   }
   .page-nav-btn.prev {
-    left: 0;
+    left: 2px;
   }
   .page-nav-btn.next {
-    right: 0;
-  }
-  
-  /* Row spacing */
-  .row {
-    gap: 6px;
-  }
-  
-  /* Badge smaller */
-  .badge {
-    font-size: 9px;
-    padding: 3px 8px;
+    right: 2px;
   }
 }
 
-/* Even smaller phones (iPhone SE, etc) */
+/* Even smaller phones */
 @media (max-width: 375px) {
   .topbar {
-    padding: 5px 8px;
+    padding: 6px 8px;
   }
   .brand {
-    gap: 4px;
+    gap: 6px;
   }
   .brand-title {
-    font-size: 12px;
+    font-size: 13px;
   }
   .brand-mark {
-    width: 28px;
-    height: 26px;
-  }
-  .brand-mark::before {
-    font-size: 11px;
+    width: 32px;
+    height: 30px;
   }
   .h1 {
-    font-size: 15px;
+    font-size: 18px;
   }
   .page {
-    padding: 8px 6px 130px 12px;
-  }
-  .date-input {
-    width: 85px;
-    font-size: 10px;
+    padding: 8px 8px 90px 14px;
   }
 }
 
-/* Mobile scrolling - additional rules for smaller screens */
+/* Mobile scrolling - let the page scroll instead of inner containers */
 @media (max-width: 430px) {
   /* Override wrapper height for mobile */
   .page > div {
     height: auto !important;
     min-height: auto !important;
-    overflow: visible !important;
   }
   
   .pagecontent {
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
-    padding-bottom: 150px !important;
   }
   
-  /* Let the page content flow */
+  /* Let the page itself scroll, not inner containers */
   .fillPage {
     height: auto !important;
     min-height: auto !important;
-    padding-bottom: 150px !important;
-    overflow: visible !important;
   }
   
   .fillMain {
     flex: none;
     min-height: auto;
-    height: auto !important;
-    overflow: visible !important;
   }
   
   .fillCol {
     flex: none;
     min-height: auto;
-    height: auto !important;
-    overflow: visible !important;
   }
   
   .fillGrid {
     flex: none;
     min-height: auto;
-    height: auto !important;
-    overflow: visible !important;
   }
   
-  /* Keep scroll-area containers scrollable but with limited height */
   .scroll-area {
-    max-height: 300px !important;
-    overflow-y: auto !important;
-  }
-  
-  /* Keep individual list containers scrollable with a max height */
-  .relScroll, .finScroll, .fitScroll, .spiScroll, .goalsScroll,
-  .overdueWrap, .dashRightScroll, .timelineWrap, .panelScroll {
-    max-height: 250px !important;
-    overflow-y: auto !important;
-  }
-  
-  /* Lists inside cards should be scrollable */
-  .card-b .list {
-    max-height: 200px;
-    overflow-y: auto;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
   }
   
   /* Dashboard specific */
   .dashboard-root {
-    height: auto !important;
-    width: 100%;
-    padding-bottom: 150px !important;
-    overflow: visible !important;
+    height: auto;
   }
   
   /* Cards should not constrain height */
@@ -2429,133 +2014,5 @@ body::before{
     flex: none;
     max-height: none;
     overflow: visible;
-  }
-  
-  /* Global width constraint for mobile */
-  .pagecontent,
-  .pagecontent > *,
-  .dashboard-root > *,
-  .stack,
-  .grid,
-  .row {
-    max-width: 100% !important;
-    box-sizing: border-box;
-  }
-  
-  /* Prevent text from causing overflow */
-  .h1, .h, .t, .songTitle, .songArtist {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
-  }
-}
-
-/* Ensure dedicated scroll regions still scroll */
-.scrollY, .overdueWrap, .dashRightScroll, .timelineWrap, .list, .panelScroll{
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ========== iOS PWA Standalone Mode Specific Fixes ========== */
-@media (display-mode: standalone) {
-  html, body {
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-  }
-  
-  .app {
-    width: 100% !important;
-    max-width: 100vw !important;
-  }
-  
-  .main, .book, .pagehost, .page {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
-/* iOS Safari specific - using supports query */
-@supports (-webkit-touch-callout: none) {
-  /* iOS only styles */
-  html, body {
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-  }
-  
-  .app {
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow: hidden !important;
-  }
-  
-  /* iOS scroll container fix */
-  @media (max-width: 980px) {
-    .main {
-      width: 100% !important;
-      max-width: 100% !important;
-      /* iOS specific: use scroll with momentum */
-      overflow-y: scroll !important;
-      -webkit-overflow-scrolling: touch;
-      /* iOS flexbox scroll fix: needs height: 0 with flex: 1 */
-      flex: 1 1 auto;
-      height: 0 !important;
-      min-height: 0 !important;
-    }
-    
-    .book {
-      width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      overflow: visible !important;
-    }
-    
-    .pagehost {
-      width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      overflow: visible !important;
-      /* Disable transforms that break scroll */
-      perspective: none !important;
-      -webkit-perspective: none !important;
-    }
-    
-    .page {
-      position: relative !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      overflow: visible !important;
-      padding-left: 8px !important;
-      padding-right: 8px !important;
-      /* Remove transforms */
-      transform: none !important;
-      -webkit-transform: none !important;
-    }
-    
-    /* Content needs extra bottom padding */
-    .pagecontent,
-    .dashboard-root,
-    .fillPage {
-      padding-bottom: 200px !important;
-      height: auto !important;
-      overflow: visible !important;
-    }
-  }
-  
-  /* Force all children to respect width */
-  .page > * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  
-  .card {
-    max-width: 100% !important;
-  }
-  
-  .songCard {
-    max-width: 100% !important;
   }
 }
