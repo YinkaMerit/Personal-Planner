@@ -1939,7 +1939,7 @@ body::before{
   
   /* App container - fill viewport exactly for iOS PWA */
   .app {
-    position: fixed !important;
+    position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
@@ -1952,37 +1952,40 @@ body::before{
     padding-left: var(--sal);
     padding-right: var(--sar);
     overflow: hidden !important;
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
-  /* Topbar compact - fixed at top */
+  /* Topbar compact - fixed at top, never scrolls */
   .topbar {
     padding: 4px 6px;
     gap: 3px;
     min-height: 42px;
     width: 100%;
     max-width: 100%;
-    flex-shrink: 0;
+    flex: 0 0 auto !important;
     overflow: hidden;
   }
   
-  /* Main area - THIS IS THE SCROLL CONTAINER */
+  /* Main area - THE ONLY SCROLL CONTAINER ON iOS */
   .main {
     padding: 4px;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
+    position: relative !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: auto !important;
     width: 100% !important;
     max-width: 100% !important;
-    flex: 1 1 0;
-    min-height: 0 !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain;
   }
   .main::before {
     display: none;
   }
   
-  /* Everything below main should NOT constrain height - let content flow */
+  /* Everything inside main: NO height constraints, NO overflow hidden */
   .book {
     width: 100% !important;
     max-width: 100% !important;
@@ -1991,6 +1994,7 @@ body::before{
     border-radius: 8px;
     margin: 0;
     overflow: visible !important;
+    transform: none !important;
   }
   
   .pagehost {
@@ -2000,6 +2004,9 @@ body::before{
     min-height: auto !important;
     overflow: visible !important;
     perspective: none !important;
+    transform-style: flat !important;
+    -webkit-perspective: none !important;
+    -webkit-transform-style: flat !important;
   }
   
   .page {
@@ -2011,32 +2018,36 @@ body::before{
     overflow: visible !important;
     padding: 8px 8px 30px 8px !important;
     transform: none !important;
+    -webkit-transform: none !important;
+    backface-visibility: visible !important;
+    -webkit-backface-visibility: visible !important;
   }
   
-  /* Ensure touch events work */
-  .page, .page * {
-    touch-action: pan-y pan-x;
+  /* iOS touch action - allow vertical scroll */
+  .main {
+    touch-action: pan-y !important;
+    -webkit-touch-callout: none;
   }
   
-  /* Content containers need padding at bottom */
+  /* Content containers need generous padding at bottom for scroll */
   .pagecontent {
     min-height: auto !important;
     height: auto !important;
-    padding-bottom: 120px !important;
+    padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
   .fillPage {
     height: auto !important;
     min-height: auto !important;
-    padding-bottom: 120px !important;
+    padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
   .dashboard-root {
     height: auto !important;
     min-height: auto !important;
-    padding-bottom: 120px !important;
+    padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
@@ -2442,26 +2453,58 @@ body::before{
     overflow: hidden !important;
   }
   
-  .main {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  .book {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  .pagehost {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  .page {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+  /* iOS scroll container fix */
+  @media (max-width: 980px) {
+    .main {
+      width: 100% !important;
+      max-width: 100% !important;
+      /* iOS specific: use scroll with momentum */
+      overflow-y: scroll !important;
+      -webkit-overflow-scrolling: touch;
+      /* iOS flexbox scroll fix: needs height: 0 with flex: 1 */
+      flex: 1 1 auto;
+      height: 0 !important;
+      min-height: 0 !important;
+    }
+    
+    .book {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    
+    .pagehost {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      /* Disable transforms that break scroll */
+      perspective: none !important;
+      -webkit-perspective: none !important;
+    }
+    
+    .page {
+      position: relative !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      /* Remove transforms */
+      transform: none !important;
+      -webkit-transform: none !important;
+    }
+    
+    /* Content needs extra bottom padding */
+    .pagecontent,
+    .dashboard-root,
+    .fillPage {
+      padding-bottom: 200px !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
   }
   
   /* Force all children to respect width */
