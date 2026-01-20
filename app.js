@@ -683,8 +683,6 @@ async function navigate(r, skipAnim=false){
   
   document.querySelectorAll(".navitem").forEach(b => b.classList.toggle("active", b.dataset.route === targetKey));
 
-  const isMobile = window.matchMedia("(max-width: 430px)").matches;
-
   // First render: no animation
   if (!currentPage){
     currentPage = el("div", {class:"page current"});
@@ -703,13 +701,12 @@ async function navigate(r, skipAnim=false){
 
   // Same section (or forced refresh): update in place, no animation
   if(!doFlip){
+    scrollToTop();
     currentPage.innerHTML = "";
     currentPage.append(withWatermark(await renderRoute(target)));
     currentRouteKey = targetKey;
     currentRouteFull = target;
     updatePageNavButtons();
-    // Scroll to top AFTER content loads
-    scrollToTop();
     return;
   }
 
@@ -720,66 +717,43 @@ async function navigate(r, skipAnim=false){
 
   isNavigating = true;
 
+  // Scroll to top BEFORE navigation starts
+  scrollToTop();
+
   try {
-    if (isMobile) {
-      // MOBILE: Use simple fade animation (more reliable on iOS)
-      // First, fade out current page
-      currentPage.style.transition = "opacity 0.3s ease-out";
-      currentPage.style.opacity = "0";
-      
-      await new Promise(res => setTimeout(res, 300));
-      
-      // Replace content while faded
-      currentPage.innerHTML = "";
-      currentPage.append(withWatermark(await renderRoute(target)));
-      
-      // Fade in new content
-      currentPage.style.opacity = "1";
-      
-      await new Promise(res => setTimeout(res, 300));
-      
-      // Clean up
-      currentPage.style.transition = "";
-      
-      currentRouteKey = targetKey;
-      currentRouteFull = target;
-      
-      // Scroll to top AFTER animation completes
-      scrollToTop();
-    } else {
-      // DESKTOP: Use 3D flip animation
-      const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
-      incomingPage.append(withWatermark(await renderRoute(target)));
-      
-      pageHost.append(incomingPage);
+    // Always use 3D flip animation (both desktop and mobile)
+    const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
+    incomingPage.append(withWatermark(await renderRoute(target)));
+    
+    pageHost.append(incomingPage);
 
-      currentPage.style.pointerEvents = "none";
-      incomingPage.style.pointerEvents = "none";
+    currentPage.style.pointerEvents = "none";
+    incomingPage.style.pointerEvents = "none";
 
-      // Force reflow
-      void incomingPage.offsetWidth;
-      
-      await new Promise(res => requestAnimationFrame(res));
-      
-      pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
-      
-      // Wait for animation
-      await new Promise(res => setTimeout(res, 2450));
-      
-      pageHost.classList.remove("flipping", "flipping-back");
-      currentPage.style.pointerEvents = "";
-      incomingPage.style.pointerEvents = "";
+    // Force reflow to ensure initial state is rendered
+    void incomingPage.offsetWidth;
+    
+    await new Promise(res => requestAnimationFrame(res));
+    
+    // Add the appropriate flipping class
+    pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
+    
+    // Wait for animation to complete (2.4s)
+    await new Promise(res => setTimeout(res, 2450));
+    
+    // Clean up animation classes
+    pageHost.classList.remove("flipping", "flipping-back");
+    currentPage.style.pointerEvents = "";
+    incomingPage.style.pointerEvents = "";
 
-      currentPage.remove();
-      incomingPage.classList.remove("next", "prev");
-      incomingPage.classList.add("current");
-      currentPage = incomingPage;
+    // Remove old page and promote incoming page
+    currentPage.remove();
+    incomingPage.classList.remove("next", "prev");
+    incomingPage.classList.add("current");
+    currentPage = incomingPage;
 
-      currentRouteKey = targetKey;
-      currentRouteFull = target;
-      
-      scrollToTop();
-    }
+    currentRouteKey = targetKey;
+    currentRouteFull = target;
   } finally {
     isNavigating = false;
   }

@@ -40,7 +40,7 @@ body {
   height: 100%;
   position: fixed;
 }
-.app, .main, .book, .pagehost, .page {
+.app, .main, .book {
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: hidden !important;
@@ -76,12 +76,21 @@ body {
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain;
   }
-  .book, .pagehost {
+  .book {
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
   }
-  .page {
+  .pagehost {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    /* Keep 3D for flip animation */
+    perspective: 1800px;
+    -webkit-perspective: 1800px;
+  }
+  /* Only current page is relative, next/prev stay absolute for flip */
+  .page.current {
     position: relative !important;
     height: auto !important;
     min-height: auto !important;

@@ -421,11 +421,6 @@ a{color: var(--accent)}
   .spine {
     display: none !important;
   }
-  
-  /* Smooth fade transition for page changes on mobile */
-  .page.current {
-    transition: opacity 0.3s ease-out;
-  }
 }
 
 .pagehost{
@@ -2023,14 +2018,16 @@ body::before{
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
-    /* No 3D on mobile - use simple fade instead */
-    perspective: none !important;
-    transform-style: flat !important;
-    -webkit-perspective: none !important;
-    -webkit-transform-style: flat !important;
+    /* Keep 3D for flip animation */
+    perspective: 1800px;
+    perspective-origin: left center;
+    transform-style: preserve-3d;
+    -webkit-perspective: 1800px;
+    -webkit-transform-style: preserve-3d;
   }
   
-  .page {
+  /* Only current page is relative for scroll, next/prev stay absolute for flip */
+  .page.current {
     position: relative !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -2038,27 +2035,33 @@ body::before{
     min-height: auto !important;
     overflow: visible !important;
     padding: 8px 8px 30px 8px !important;
-    /* Simple transforms only */
-    transform: none !important;
-    -webkit-transform: none !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
-  }
-  
-  /* Page states on mobile - simple, no 3D */
-  .page.current {
-    opacity: 1;
+    transform: rotateY(0deg);
     z-index: 3;
   }
-  .page.next,
-  .page.prev {
-    display: none !important;
+  
+  /* Next and prev pages need absolute positioning for flip animation */
+  .page.next {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 8px 30px 8px !important;
+    transform: rotateY(0deg);
+    z-index: 1;
   }
   
-  /* Disable flip animations on mobile */
-  .pagehost.flipping .page,
-  .pagehost.flipping-back .page {
-    animation: none !important;
+  .page.prev {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 8px 30px 8px !important;
+    transform: rotateY(-180deg);
+    z-index: 1;
   }
   
   /* iOS touch action - allow vertical scroll */
@@ -2352,14 +2355,14 @@ body::before{
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;
-    padding-bottom: 150px !important;
+    padding-bottom: 200px !important;
   }
   
   /* Let the page content flow */
   .fillPage {
     height: auto !important;
     min-height: auto !important;
-    padding-bottom: 150px !important;
+    padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
@@ -2403,11 +2406,11 @@ body::before{
     overflow-y: auto;
   }
   
-  /* Dashboard specific */
+  /* Dashboard specific - less padding since it has different layout */
   .dashboard-root {
     height: auto !important;
     width: 100%;
-    padding-bottom: 150px !important;
+    padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
