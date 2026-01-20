@@ -493,6 +493,12 @@ a{color: var(--accent)}
 .page.next{transform: rotateY(0deg); z-index: 1; opacity: 1}
 .page.prev{transform: rotateY(-180deg); z-index: 1; opacity: 1; transition: none}
 
+/* Hide incoming page until animation starts - prevents stacking glitch */
+.page.page-entering {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 /* Flip animation - only apply transition to current page */
 .page.current{transition: box-shadow 2.4s ease}
 
@@ -2023,7 +2029,7 @@ body::before{
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
-    min-height: auto !important;
+    min-height: 100% !important;
     overflow: visible !important;
     /* Keep 3D for flip animation */
     perspective: 1800px;
@@ -2031,44 +2037,62 @@ body::before{
     transform-style: preserve-3d;
     -webkit-perspective: 1800px;
     -webkit-transform-style: preserve-3d;
+    position: relative;
   }
   
-  /* Only current page is relative for scroll, next/prev stay absolute for flip */
-  .page.current {
-    position: relative !important;
+  /* Base page styles - all pages absolute during animation */
+  .page {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
+    min-height: 100vh !important;
     overflow: visible !important;
     padding: 8px 8px 30px 8px !important;
+    transform-origin: left center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+  }
+  
+  /* Current page - relative for scroll, but absolute during flip */
+  .page.current {
+    position: relative !important;
     transform: rotateY(0deg);
     z-index: 3;
   }
   
-  /* Next and prev pages need absolute positioning for flip animation */
-  .page.next {
+  /* During flipping, current page must be absolute */
+  .pagehost.flipping .page.current,
+  .pagehost.flipping-back .page.current {
     position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 8px 8px 30px 8px !important;
-    transform: rotateY(0deg);
-    z-index: 1;
   }
   
+  /* Next page - positioned for forward flip */
+  .page.next {
+    position: absolute !important;
+    transform: rotateY(0deg);
+    z-index: 1;
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  /* Prev page - positioned for backward flip */
   .page.prev {
     position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 8px 8px 30px 8px !important;
     transform: rotateY(-180deg);
     z-index: 1;
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  /* Hide incoming page until animation starts */
+  .page.page-entering {
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
   
   /* iOS touch action - allow vertical scroll */
@@ -2077,21 +2101,22 @@ body::before{
     -webkit-touch-callout: none;
   }
   
-  /* Content containers need generous padding at bottom for scroll */
+  /* Consistent page content height - match Faith page */
   .pagecontent {
-    min-height: auto !important;
+    min-height: calc(100vh - 120px) !important;
     height: auto !important;
     padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
   .fillPage {
+    min-height: calc(100vh - 120px) !important;
     height: auto !important;
-    min-height: auto !important;
     padding-bottom: 200px !important;
     overflow: visible !important;
   }
   
+  /* Dashboard has different layout - don't enforce min-height */
   .dashboard-root {
     height: auto !important;
     min-height: auto !important;
@@ -2358,17 +2383,18 @@ body::before{
     overflow: visible !important;
   }
   
+  /* Consistent height for all non-dashboard pages */
   .pagecontent {
     height: auto !important;
-    min-height: auto !important;
+    min-height: calc(100vh - 120px) !important;
     overflow: visible !important;
     padding-bottom: 200px !important;
   }
   
-  /* Let the page content flow */
+  /* Let the page content flow with consistent height */
   .fillPage {
     height: auto !important;
-    min-height: auto !important;
+    min-height: calc(100vh - 120px) !important;
     padding-bottom: 200px !important;
     overflow: visible !important;
   }
@@ -2413,9 +2439,10 @@ body::before{
     overflow-y: auto;
   }
   
-  /* Dashboard specific - less padding since it has different layout */
+  /* Dashboard specific - different layout, no min-height */
   .dashboard-root {
     height: auto !important;
+    min-height: auto !important;
     width: 100%;
     padding-bottom: 200px !important;
     overflow: visible !important;

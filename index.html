@@ -78,25 +78,42 @@ body {
   }
   .book {
     height: auto !important;
-    min-height: auto !important;
+    min-height: 100% !important;
     overflow: visible !important;
   }
   .pagehost {
     height: auto !important;
-    min-height: auto !important;
+    min-height: 100% !important;
     overflow: visible !important;
-    /* Keep 3D for flip animation */
     perspective: 1800px;
     -webkit-perspective: 1800px;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
   }
-  /* Only current page is relative, next/prev stay absolute for flip */
-  .page.current {
-    position: relative !important;
-    height: auto !important;
-    min-height: auto !important;
+  /* Pages absolute by default for animation */
+  .page {
+    position: absolute !important;
+    min-height: 100vh !important;
     overflow: visible !important;
   }
-  .pagecontent, .dashboard-root, .fillPage {
+  /* Only current page relative when not animating */
+  .page.current {
+    position: relative !important;
+  }
+  /* During flip, current must be absolute */
+  .pagehost.flipping .page.current,
+  .pagehost.flipping-back .page.current {
+    position: absolute !important;
+  }
+  /* Consistent height for content */
+  .pagecontent, .fillPage {
+    min-height: calc(100vh - 120px) !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 200px !important;
+  }
+  /* Dashboard different */
+  .dashboard-root {
     height: auto !important;
     min-height: auto !important;
     overflow: visible !important;

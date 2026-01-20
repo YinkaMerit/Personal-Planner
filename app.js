@@ -726,9 +726,10 @@ async function navigate(r, skipAnim=false){
 
   try {
     // Always use 3D flip animation (both desktop and mobile)
-    const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
+    const incomingPage = el("div", {class: goingBackward ? "page prev page-entering" : "page next page-entering"});
     incomingPage.append(withWatermark(await renderRoute(target)));
     
+    // Add incoming page to DOM (hidden initially via page-entering class)
     pageHost.append(incomingPage);
 
     currentPage.style.pointerEvents = "none";
@@ -737,9 +738,16 @@ async function navigate(r, skipAnim=false){
     // Force reflow to ensure initial state is rendered
     void incomingPage.offsetWidth;
     
+    // Wait for next frame to ensure CSS is applied
     await new Promise(res => requestAnimationFrame(res));
     
-    // Add the appropriate flipping class
+    // Now reveal the incoming page and start animation
+    incomingPage.classList.remove("page-entering");
+    
+    // Another reflow after removing hidden class
+    void incomingPage.offsetWidth;
+    
+    // Add the appropriate flipping class to start animation
     pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
     
     // Wait for animation to complete (2.4s)
