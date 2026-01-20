@@ -1352,7 +1352,7 @@ async function viewDashboard(settings){
   ]);
 
   const overdueCard = (isToday && overdue.length)
-    ? card("Check-ins due", "Based on your rules.", el("div",{class:"scroll-area overdueScroll"},[overdueList(overdue)]), btn("Open", {kind:"ghost", onclick: ()=>{ location.hash="relationships"; }}))
+    ? card("Check-ins due", "Based on your rules.", el("div",{class:"scroll-area overdueScroll", style:"overflow-y:auto; max-height:200px;"},[overdueList(overdue)]), btn("Open", {kind:"ghost", onclick: ()=>{ location.hash="relationships"; }}))
     : null;
 
   const tasksBody = el("div",{class:"stack"},[
@@ -1360,7 +1360,7 @@ async function viewDashboard(settings){
       frogRequired ? badge(hasFrog ? "Top Priority set" : "Pick your Top Priority", hasFrog ? "good":"warn") : badge("Top Priority off"),
       btn("Add Task", { onclick: ()=>openTaskModal({ defaultDate: selectedDay }) })
     ]),
-    el("div",{class: (dayTasks.length>2 ? "scroll-area tasksScroll" : "")},[ frogRequired && !hasFrog ? frogPicker(dayTasks) : taskList(dayTasks, qGoals) ])
+    el("div",{class: (dayTasks.length>2 ? "scroll-area tasksScroll" : ""), style: dayTasks.length>2 ? "overflow-y:auto; max-height:200px;" : ""},[ frogRequired && !hasFrog ? frogPicker(dayTasks) : taskList(dayTasks, qGoals) ])
   ]);
 
   const blocksBody = el("div",{class:"stack"},[
@@ -1980,14 +1980,14 @@ async function viewGoals(){
       el("div",{class:"muted small"},[document.createTextNode("This month's focus")]),
       btn("+ New",{onclick: ()=>openMonthlyModal(null)})
     ]),
-    el("div",{class:"scroll-area goalsScroll flexFill"},[monthlyList(monthly)])
+    el("div",{class:"scroll-area goalsScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[monthlyList(monthly)])
   ]);
 const yBody = el("div",{class:"stack"},[
     el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Big outcomes tied to pillars.")]),
       btn("Add Yearly",{onclick: ()=>openYearlyModal(null)})
     ]),
-    (yearly.length > 2 ? el("div",{class:"scroll-area goalsScroll yearlyClamp"},[goalList(yearly)]) : goalList(yearly))
+    (yearly.length > 2 ? el("div",{class:"scroll-area goalsScroll yearlyClamp", style:"overflow-y:auto; max-height:200px;"},[goalList(yearly)]) : goalList(yearly))
   ]);
 
   const qBody = el("div",{class:"fillCol"},[
@@ -1995,7 +1995,7 @@ el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Each quarter can have a Stop/Start/Continue retrospective.")]),
       btn("Add Quarterly",{onclick: ()=>openQuarterlyModal(yearly, null)})
     ]),
-    el("div",{class:"scroll-area goalsScroll flexFill"},[quarterlyList(quarterly, yearly, retroByQ)])
+    el("div",{class:"scroll-area goalsScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[quarterlyList(quarterly, yearly, retroByQ)])
   ]);
 
   
@@ -2401,7 +2401,7 @@ el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("My circle")]),
       btn("+ Add",{onclick: ()=>openContactModal()})
     ]),
-    el("div",{class:"scroll-area relScroll flexFill"},[contactsList(contacts, ruleByContact, overdueSet)])
+    el("div",{class:"scroll-area relScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[contactsList(contacts, ruleByContact, overdueSet)])
   ]);
 
   const rightBody = el("div",{class:"fillCol"},[
@@ -2409,7 +2409,7 @@ el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Recent moments")]),
       btn("+ Log",{onclick: ()=>openTouchpointModal(contacts)})
     ]),
-    el("div",{class:"scroll-area relScroll flexFill"},[touchpointsList(touchpoints, contacts)])
+    el("div",{class:"scroll-area relScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[touchpointsList(touchpoints, contacts)])
   ]);
 
   const top = overdue.length ? card("Overdue", "People you haven't contacted recently.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
@@ -2613,7 +2613,7 @@ el("div",{class:"row spread"},[
         btn("+ Expense",{onclick: ()=>openTxModal()})
       ])
     ]),
-    el("div",{class:"scroll-area finScroll flexFill"},[budgetVsActual(budget, monthTx)])
+    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[budgetVsActual(budget, monthTx)])
   ]);
 
   const txBody = el("div",{class:"fillCol"},[
@@ -2621,7 +2621,7 @@ el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Transactions")]),
       btn("+ Add",{onclick: ()=>openTxModal()})
     ]),
-    el("div",{class:"scroll-area finScroll flexFill"},[txList(tx)])
+    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[txList(tx)])
   ]);
 
   return el("div",{class:"fillPage"},[
@@ -2894,7 +2894,7 @@ el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Workouts")]),
       btn("+ Log",{onclick: ()=>openWorkoutModal()})
     ]),
-    el("div",{class:"scroll-area fitScroll flexFill"},[workoutsList(workouts, setsByWorkout)])
+    el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[workoutsList(workouts, setsByWorkout)])
   ]);
 
   const bBody = el("div",{class:"stack"},[
@@ -2902,7 +2902,7 @@ el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Body stats")]),
       btn("+ Add",{kind:"ghost", onclick: ()=>openBioModal()})
     ]),
-    el("div",{class:"scroll-area fitScroll flexFill"},[bioList(bio)])
+    el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[bioList(bio)])
   ]);
 
   return el("div",{class:"fillPage"},[
@@ -3665,7 +3665,7 @@ async function viewDiary(settings){
   return el("div",{class:"diaryPage"},[
     header,
     topRow,
-    el("div",{class:"diaryListWrap"},[list])
+    el("div",{class:"diaryListWrap", style:"overflow-y:auto; max-height:400px;"},[list])
   ]);
 }
 
