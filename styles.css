@@ -499,6 +499,26 @@ a{color: var(--accent)}
   opacity: 0 !important;
 }
 
+/* CRITICAL: During flip animation, pagehost needs fixed height context */
+.pagehost.flipping,
+.pagehost.flipping-back {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* During flip, ALL pages must be absolute with same dimensions */
+.pagehost.flipping .page,
+.pagehost.flipping-back .page {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: hidden !important;
+}
+
 /* Flip animation - only apply transition to current page */
 .page.current{transition: box-shadow 2.4s ease}
 
@@ -782,6 +802,7 @@ label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px; font
     8px 0 40px rgba(30,58,95,.12),
     2px 0 8px rgba(74,144,217,.08);
   padding: 16px;
+  padding-top: max(24px, calc(16px + env(safe-area-inset-top, 20px)));
   display:flex;
   flex-direction:column;
   position: relative;
@@ -2028,7 +2049,6 @@ body::before{
   .pagehost {
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
     min-height: 100% !important;
     overflow: visible !important;
     /* Keep 3D for flip animation */
@@ -2040,15 +2060,19 @@ body::before{
     position: relative;
   }
   
-  /* Base page styles - all pages absolute during animation */
+  /* CRITICAL: During flip, pagehost becomes fixed height animation container */
+  .pagehost.flipping,
+  .pagehost.flipping-back {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+  }
+  
+  /* Base page styles */
   .page {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 100vh !important;
     overflow: visible !important;
     padding: 8px 8px 30px 8px !important;
     transform-origin: left center;
@@ -2058,41 +2082,52 @@ body::before{
     -webkit-transform-style: preserve-3d;
   }
   
-  /* Current page - relative for scroll, but absolute during flip */
+  /* Current page - relative for scroll when not animating */
   .page.current {
     position: relative !important;
-    transform: rotateY(0deg);
     z-index: 3;
+    transform: rotateY(0deg);
   }
   
-  /* During flipping, current page must be absolute */
+  /* CRITICAL: During flip, current page becomes absolute */
   .pagehost.flipping .page.current,
   .pagehost.flipping-back .page.current {
     position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
   
-  /* Next page - positioned for forward flip */
+  /* Next page - starts flat, underneath current */
   .page.next {
     position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100% !important;
     transform: rotateY(0deg);
     z-index: 1;
-    visibility: visible;
-    opacity: 1;
+    overflow: hidden !important;
   }
   
-  /* Prev page - positioned for backward flip */
+  /* Prev page - starts flipped back */
   .page.prev {
     position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100% !important;
     transform: rotateY(-180deg);
     z-index: 1;
-    visibility: visible;
-    opacity: 1;
+    overflow: hidden !important;
   }
   
-  /* Hide incoming page until animation starts */
-  .page.page-entering {
-    visibility: hidden !important;
-    opacity: 0 !important;
+  /* During flip, ensure proper heights for animation */
+  .pagehost.flipping .page.next,
+  .pagehost.flipping-back .page.prev {
+    height: 100% !important;
   }
   
   /* iOS touch action - allow vertical scroll */

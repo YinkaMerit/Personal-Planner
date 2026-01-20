@@ -70,40 +70,45 @@ body {
     position: relative !important;
     flex: 1 !important;
     min-height: 0 !important;
-    height: auto !important;
     overflow-y: scroll !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior-y: contain;
   }
   .book {
-    height: auto !important;
     min-height: 100% !important;
     overflow: visible !important;
   }
   .pagehost {
-    height: auto !important;
     min-height: 100% !important;
     overflow: visible !important;
     perspective: 1800px;
     -webkit-perspective: 1800px;
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
+    position: relative;
   }
-  /* Pages absolute by default for animation */
-  .page {
-    position: absolute !important;
-    min-height: 100vh !important;
-    overflow: visible !important;
+  /* During flip animation, lock height */
+  .pagehost.flipping,
+  .pagehost.flipping-back {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
   }
-  /* Only current page relative when not animating */
+  /* Current page relative for scroll */
   .page.current {
     position: relative !important;
   }
-  /* During flip, current must be absolute */
+  /* During flip, current becomes absolute */
   .pagehost.flipping .page.current,
   .pagehost.flipping-back .page.current {
     position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
   /* Consistent height for content */
   .pagecontent, .fillPage {

@@ -725,42 +725,25 @@ async function navigate(r, skipAnim=false){
   if (main) main.classList.add('no-scroll');
 
   try {
-    // CRITICAL: Lock pagehost height to current page height before animation
-    // This ensures both pages can overlay properly during the flip
-    const currentHeight = currentPage.offsetHeight;
-    pageHost.style.height = currentHeight + 'px';
-    pageHost.style.minHeight = currentHeight + 'px';
-    
-    // Force current page to absolute positioning for the animation
-    currentPage.style.position = 'absolute';
-    currentPage.style.top = '0';
-    currentPage.style.left = '0';
-    currentPage.style.right = '0';
-    currentPage.style.width = '100%';
-    
-    // Always use 3D flip animation (both desktop and mobile)
-    const incomingPage = el("div", {class: goingBackward ? "page prev page-entering" : "page next page-entering"});
+    // Create incoming page with appropriate class
+    const incomingClass = goingBackward ? "page prev" : "page next";
+    const incomingPage = el("div", {class: incomingClass});
     incomingPage.append(withWatermark(await renderRoute(target)));
     
-    // Add incoming page to DOM (hidden initially via page-entering class)
+    // Add incoming page to DOM
     pageHost.append(incomingPage);
 
+    // Disable pointer events during animation
     currentPage.style.pointerEvents = "none";
     incomingPage.style.pointerEvents = "none";
 
-    // Force reflow to ensure initial state is rendered
+    // Force reflow to ensure DOM is ready
     void incomingPage.offsetWidth;
     
-    // Wait for next frame to ensure CSS is applied
+    // Wait for next animation frame
     await new Promise(res => requestAnimationFrame(res));
     
-    // Now reveal the incoming page and start animation
-    incomingPage.classList.remove("page-entering");
-    
-    // Another reflow after removing hidden class
-    void incomingPage.offsetWidth;
-    
-    // Add the appropriate flipping class to start animation
+    // Start the flip animation via CSS class
     pageHost.classList.add(goingBackward ? "flipping-back" : "flipping");
     
     // Wait for animation to complete (2.4s)
@@ -768,25 +751,16 @@ async function navigate(r, skipAnim=false){
     
     // Clean up animation classes
     pageHost.classList.remove("flipping", "flipping-back");
-    currentPage.style.pointerEvents = "";
-    incomingPage.style.pointerEvents = "";
-
-    // Remove old page and promote incoming page
+    
+    // Remove old page
     currentPage.remove();
+    
+    // Promote incoming page to current
     incomingPage.classList.remove("next", "prev");
     incomingPage.classList.add("current");
+    incomingPage.style.pointerEvents = "";
+    
     currentPage = incomingPage;
-    
-    // Restore pagehost to auto height
-    pageHost.style.height = '';
-    pageHost.style.minHeight = '';
-    
-    // Restore current page to relative positioning for scroll
-    currentPage.style.position = '';
-    currentPage.style.top = '';
-    currentPage.style.left = '';
-    currentPage.style.right = '';
-    currentPage.style.width = '';
 
     currentRouteKey = targetKey;
     currentRouteFull = target;
