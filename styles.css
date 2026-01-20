@@ -2589,9 +2589,11 @@ body::before{
       max-width: 100% !important;
       height: auto !important;
       overflow: visible !important;
-      /* Disable transforms that break scroll */
-      perspective: none !important;
-      -webkit-perspective: none !important;
+      /* Keep perspective for flip animation */
+      perspective: 1800px;
+      -webkit-perspective: 1800px;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
     }
     
     .page {
@@ -2602,9 +2604,19 @@ body::before{
       overflow: visible !important;
       padding-left: 8px !important;
       padding-right: 8px !important;
-      /* Remove transforms */
-      transform: none !important;
-      -webkit-transform: none !important;
+      /* Keep transform capability for flip animation */
+      transform-origin: left center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    
+    /* During flip animation, pages need absolute positioning */
+    .pagehost.flipping .page,
+    .pagehost.flipping-back .page {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
     }
     
     /* Content needs extra bottom padding */
