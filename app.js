@@ -725,6 +725,19 @@ async function navigate(r, skipAnim=false){
   if (main) main.classList.add('no-scroll');
 
   try {
+    // CRITICAL: Lock pagehost height to current page height before animation
+    // This ensures both pages can overlay properly during the flip
+    const currentHeight = currentPage.offsetHeight;
+    pageHost.style.height = currentHeight + 'px';
+    pageHost.style.minHeight = currentHeight + 'px';
+    
+    // Force current page to absolute positioning for the animation
+    currentPage.style.position = 'absolute';
+    currentPage.style.top = '0';
+    currentPage.style.left = '0';
+    currentPage.style.right = '0';
+    currentPage.style.width = '100%';
+    
     // Always use 3D flip animation (both desktop and mobile)
     const incomingPage = el("div", {class: goingBackward ? "page prev page-entering" : "page next page-entering"});
     incomingPage.append(withWatermark(await renderRoute(target)));
@@ -763,6 +776,17 @@ async function navigate(r, skipAnim=false){
     incomingPage.classList.remove("next", "prev");
     incomingPage.classList.add("current");
     currentPage = incomingPage;
+    
+    // Restore pagehost to auto height
+    pageHost.style.height = '';
+    pageHost.style.minHeight = '';
+    
+    // Restore current page to relative positioning for scroll
+    currentPage.style.position = '';
+    currentPage.style.top = '';
+    currentPage.style.left = '';
+    currentPage.style.right = '';
+    currentPage.style.width = '';
 
     currentRouteKey = targetKey;
     currentRouteFull = target;
