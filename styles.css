@@ -329,6 +329,13 @@ a{color: var(--accent)}
   position: relative;
   min-height: 0;
 }
+
+/* Disable scrolling during page turn animation */
+.main.no-scroll {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
 /* Decorative corner flourish */
 .main::before {
   content: "❀";

@@ -720,6 +720,10 @@ async function navigate(r, skipAnim=false){
   // Scroll to top BEFORE navigation starts
   scrollToTop();
 
+  // Disable scrolling during animation
+  const main = document.querySelector('.main');
+  if (main) main.classList.add('no-scroll');
+
   try {
     // Always use 3D flip animation (both desktop and mobile)
     const incomingPage = el("div", {class: goingBackward ? "page prev" : "page next"});
@@ -756,6 +760,8 @@ async function navigate(r, skipAnim=false){
     currentRouteFull = target;
   } finally {
     isNavigating = false;
+    // Re-enable scrolling after animation completes
+    if (main) main.classList.remove('no-scroll');
   }
   updatePageNavButtons();
 }
