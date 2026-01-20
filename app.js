@@ -2658,6 +2658,9 @@ async function viewFinance(){
     monthNav
   ]);
 
+  // Get budget overview and categories separately
+  const { overview, categories } = budgetVsActual(budget, monthTx, selectedMonth);
+
   const budgetBody = el("div",{class:"fillCol"},[
     el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Budget overview")]),
@@ -2666,7 +2669,8 @@ async function viewFinance(){
         btn("+ Expense",{onclick: ()=>openTxModal(null, selectedMonth)})
       ])
     ]),
-    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[budgetVsActual(budget, monthTx, selectedMonth)])
+    overview,
+    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:220px;"},[categories])
   ]);
 
   const txBody = el("div",{class:"fillCol"},[
@@ -2697,7 +2701,8 @@ function budgetVsActual(budget, monthTx, selectedMonth){
   const totalTx = monthTx.filter(t=>t.direction==="expense").reduce((s,t)=>s+Number(t.amount||0),0);
   const rem = totalBudget ? (totalBudget-totalTx) : null;
 
-  const wrap = el("div",{class:"stack"},[
+  // Overview section (stays fixed)
+  const overview = el("div",{class:"stack", style:"margin-bottom:8px;"},[
     el("div",{class:"row spread"},[
       badge(totalBudget ? `Budget £${totalBudget.toFixed(2)}` : "No total budget", totalBudget ? "" : "warn"),
       badge(`Actual £${totalTx.toFixed(2)}`, "")
@@ -2709,10 +2714,13 @@ function budgetVsActual(budget, monthTx, selectedMonth){
     const pct = (totalTx/totalBudget)*100;
     p.firstChild.style.width = `${clamp(pct, 0, 100)}%`;
     p.firstChild.style.background = pct > 100 ? "rgba(210,90,90,0.8)" : pct > 80 ? "rgba(230,180,80,0.8)" : "rgba(80,180,120,0.8)";
-    wrap.append(p);
-    wrap.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: £${rem.toFixed(2)} (${(100-pct).toFixed(0)}%)`)]));
+    overview.append(p);
+    overview.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: £${rem.toFixed(2)} (${(100-pct).toFixed(0)}%)`)]));
   }
 
+  // Categories section (will scroll)
+  const categories = el("div",{class:"stack"},[]);
+  
   const catTx = {};
   for (const t of monthTx){
     if (t.direction !== "expense") continue;
@@ -2723,12 +2731,11 @@ function budgetVsActual(budget, monthTx, selectedMonth){
   const cats = Object.keys({ ...catBudget, ...catTx }).sort((a,b)=>a.localeCompare(b));
 
   if (!cats.length){
-    wrap.append(el("div",{class:"muted"},[document.createTextNode("No expenses yet.")]));
-    return wrap;
+    categories.append(el("div",{class:"muted"},[document.createTextNode("No expenses yet.")]));
+    return { overview, categories };
   }
 
-  wrap.append(el("div",{class:"hr"}));
-  wrap.append(el("div",{class:"muted small"},[document.createTextNode("Category Budget vs Actual")]));
+  categories.append(el("div",{class:"muted small"},[document.createTextNode("Category Budget vs Actual")]));
 
   for (const c of cats){
     const b = Number(catBudget[c] || 0);
@@ -2746,7 +2753,7 @@ function budgetVsActual(budget, monthTx, selectedMonth){
       ? (a <= b ? badge(`${(100-pct).toFixed(0)}% left`,"good") : badge(`${(pct-100).toFixed(0)}% over`,"bad")) 
       : badge("No budget","warn");
 
-    wrap.append(el("div",{class:"item"},[
+    categories.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{style:"flex:1;"},[
           el("div",{class:"h"},[document.createTextNode(c)]),
@@ -2761,7 +2768,7 @@ function budgetVsActual(budget, monthTx, selectedMonth){
     ]));
   }
 
-  return wrap;
+  return { overview, categories };
 }
 
 function txList(items, selectedMonth){
