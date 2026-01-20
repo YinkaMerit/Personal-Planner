@@ -2412,7 +2412,9 @@ el("div",{class:"row spread"},[
     el("div",{class:"scroll-area relScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[touchpointsList(touchpoints, contacts)])
   ]);
 
-  const top = overdue.length ? card("Overdue", "People you haven't contacted recently.", overdueList(overdue)) : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
+  const top = overdue.length 
+    ? card("Overdue", "People you haven't contacted recently.", el("div",{style:"overflow-y:auto; max-height:200px;"},[overdueList(overdue)])) 
+    : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
 
   return el("div",{class:"fillPage"},[
     el("div",{class:"stack"},[header, top]),
