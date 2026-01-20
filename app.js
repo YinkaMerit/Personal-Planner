@@ -3414,6 +3414,7 @@ async function viewWeekly(settings, baseKey){
   ]);
 
   const inWeek = (isoOrKey)=>{
+    if (!isoOrKey) return false;
     const d = isoOrKey.length===10 ? new Date(isoOrKey+"T00:00:00") : new Date(isoOrKey);
     return d >= ws && d < we;
   };

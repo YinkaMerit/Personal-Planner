@@ -378,53 +378,58 @@ a{color: var(--accent)}
 
 /* Page navigation buttons */
 .page-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 80px;
-  background: rgba(124, 183, 255, 0.1);
-  border: 1px solid rgba(124, 183, 255, 0.25);
-  border-radius: 8px;
-  font-size: 28px;
+  position: fixed;
+  top: 70px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(124, 183, 255, 0.4);
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: bold;
   color: var(--accent);
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 10;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(30,58,95,.15);
 }
 .page-nav-btn:hover {
   background: rgba(124, 183, 255, 0.2);
   border-color: var(--accent);
+  transform: scale(1.05);
 }
 .page-nav-btn.prev {
-  left: 8px;
+  left: 12px;
 }
 .page-nav-btn.next {
-  right: 8px;
+  right: 12px;
 }
 @media (max-width: 720px) {
   .page-nav-btn {
-    width: 32px;
-    height: 60px;
+    top: 60px;
+    width: 40px;
+    height: 40px;
     font-size: 22px;
   }
-  .page-nav-btn.prev { left: 4px; }
-  .page-nav-btn.next { right: 4px; }
+  .page-nav-btn.prev { left: 8px; }
+  .page-nav-btn.next { right: 8px; }
 }
-/* Show nav buttons on mobile - positioned on the right side */
+/* Show nav buttons on mobile - positioned at top corners */
 @media (max-width: 430px) {
   .page-nav-btn {
     display: flex !important;
-    width: 28px;
-    height: 50px;
+    position: fixed !important;
+    top: 55px;
+    width: 36px;
+    height: 36px;
     font-size: 20px;
     z-index: 100;
   }
-  .page-nav-btn.prev { left: 2px; }
-  .page-nav-btn.next { right: 2px; }
+  .page-nav-btn.prev { left: 6px; }
+  .page-nav-btn.next { right: 6px; }
   .spine {
     display: none !important;
   }
@@ -2247,16 +2252,18 @@ body::before{
     border-radius: 6px;
   }
   
-  /* Scroll areas - disable on mobile, let page scroll */
+  /* Scroll areas - keep scrollable with reasonable max-height on mobile */
   .tasksScroll,
   .overdueScroll,
   .relScroll,
   .finScroll,
   .fitScroll,
-  .spiScroll {
+  .spiScroll,
+  .goalsScroll {
     height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
   /* Mini audio player compact */
@@ -2353,18 +2360,19 @@ body::before{
     gap: 4px;
   }
   
-  /* Page nav buttons */
+  /* Page nav buttons - keep circular at top */
   .page-nav-btn {
-    width: 24px;
+    width: 36px;
     height: 36px;
-    font-size: 14px;
-    border-radius: 6px;
+    font-size: 18px;
+    border-radius: 50%;
+    top: 55px;
   }
   .page-nav-btn.prev {
-    left: 0;
+    left: 6px;
   }
   .page-nav-btn.next {
-    right: 0;
+    right: 6px;
   }
   
   /* Row spacing */
@@ -2459,19 +2467,52 @@ body::before{
   .scroll-area {
     max-height: 300px !important;
     overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
   /* Keep individual list containers scrollable with a max height */
   .relScroll, .finScroll, .fitScroll, .spiScroll, .goalsScroll,
-  .overdueWrap, .dashRightScroll, .timelineWrap, .panelScroll {
+  .overdueWrap, .dashRightScroll, .timelineWrap, .panelScroll,
+  .tasksScroll, .overdueScroll, .entryScroll {
     max-height: 250px !important;
     overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
   /* Lists inside cards should be scrollable */
   .card-b .list {
-    max-height: 200px;
-    overflow-y: auto;
+    max-height: 220px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Ensure all .list elements in scroll containers are scrollable */
+  .scroll-area .list,
+  .relScroll .list,
+  .finScroll .list,
+  .fitScroll .list,
+  .spiScroll .list,
+  .goalsScroll .list {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Make the parent scroll container the scrollable element, not the list itself */
+  .fillCol {
+    overflow: visible !important;
+  }
+  
+  .fillCol .scroll-area,
+  .fillCol .relScroll,
+  .fillCol .finScroll,
+  .fillCol .fitScroll,
+  .fillCol .spiScroll,
+  .fillCol .goalsScroll {
+    flex: 1;
+    min-height: 0;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
   /* Dashboard specific - different layout, no min-height */
