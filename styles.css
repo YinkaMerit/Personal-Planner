@@ -379,7 +379,7 @@ a{color: var(--accent)}
 /* Page navigation buttons */
 .page-nav-btn {
   position: fixed;
-  top: 120px;
+  top: calc(env(safe-area-inset-top, 0px) + 95px);
   width: 40px;
   height: 40px;
   background: rgba(255, 255, 255, 0.95);
@@ -414,7 +414,7 @@ a{color: var(--accent)}
 }
 @media (max-width: 720px) {
   .page-nav-btn {
-    top: 115px;
+    top: calc(env(safe-area-inset-top, 0px) + 90px);
     width: 36px;
     height: 36px;
     font-size: 20px;
@@ -427,14 +427,14 @@ a{color: var(--accent)}
   .page-nav-btn {
     display: flex !important;
     position: fixed !important;
-    top: 110px;
-    width: 34px;
-    height: 34px;
-    font-size: 18px;
+    top: calc(env(safe-area-inset-top, 20px) + 75px);
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
     z-index: 100;
   }
-  .page-nav-btn.prev { left: 6px; }
-  .page-nav-btn.next { right: 6px; }
+  .page-nav-btn.prev { left: 4px; }
+  .page-nav-btn.next { right: 4px; }
   .page-nav-btn.hidden {
     display: flex !important;
     opacity: 0.3;
@@ -2384,17 +2384,17 @@ body::before{
   
   /* Page nav buttons - keep circular below navbar */
   .page-nav-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
     border-radius: 50%;
-    top: 110px;
+    top: calc(env(safe-area-inset-top, 20px) + 75px);
   }
   .page-nav-btn.prev {
-    left: 6px;
+    left: 4px;
   }
   .page-nav-btn.next {
-    right: 6px;
+    right: 4px;
   }
   .page-nav-btn.hidden {
     display: flex !important;

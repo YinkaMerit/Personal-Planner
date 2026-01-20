@@ -1092,7 +1092,7 @@ async function renderRoute(r){
   if (r === "dashboard") return await viewDashboard(settings);
   if (r === "goals") return await viewGoals();
   if (r === "relationships") return await viewRelationships();
-  if (r === "finance") return await viewFinance();
+  if (r === "finance" || r.startsWith("finance/")) return await viewFinance();
   if (r === "fitness") return await viewFitness();
   if (r === "spiritual") return await viewSpiritual();
   if (r === "weekly") return await viewWeekly(settings);
@@ -2594,34 +2594,53 @@ async function viewFinance(){
   const [tx, budgets] = await Promise.all([getAll("transactions"), getAll("budgets")]);
   tx.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
 
-  const mk = monthKey(new Date());
-  const monthTx = tx.filter(t => (t.date || "").slice(0,7) === mk);
+  // Get selected month from URL hash or default to current
+  const hashParts = location.hash.split("/");
+  const selectedMonth = hashParts[1] || monthKey(new Date());
+  
+  const monthTx = tx.filter(t => (t.date || "").slice(0,7) === selectedMonth);
   const spent = monthTx.filter(t=>t.direction==="expense").reduce((s,t)=>s+Number(t.amount||0),0);
+  const income = monthTx.filter(t=>t.direction==="income").reduce((s,t)=>s+Number(t.amount||0),0);
 
-  const budget = budgets.find(b => b.monthKey === mk) || null;
+  const budget = budgets.find(b => b.monthKey === selectedMonth) || null;
+  
+  // Month navigation
+  const [y, m] = selectedMonth.split("-").map(Number);
+  const prevMonth = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,"0")}`;
+  const nextMonth = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,"0")}`;
+  const currentMk = monthKey(new Date());
+  const isCurrentMonth = selectedMonth === currentMk;
+  
+  const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
+    btn("◀",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${prevMonth}`; }}),
+    el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
+    btn("▶",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${nextMonth}`; }}),
+    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "finance"; }}) : el("span")
+  ]);
 
   const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode("My Money ✿")]),
-    el("div",{class:"subtle"},[document.createTextNode(`${mk} • £${spent.toFixed(2)} spent`)])
+    el("div",{class:"subtle"},[document.createTextNode(`£${spent.toFixed(2)} spent${income ? ` • £${income.toFixed(2)} income` : ""}`)]),
+    monthNav
   ]);
 
   const budgetBody = el("div",{class:"fillCol"},[
-el("div",{class:"row spread"},[
+    el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode("Budget overview")]),
       el("div",{class:"row"},[
-        btn("Budget",{kind:"ghost", onclick: ()=>openBudgetModal(mk, budget)}),
-        btn("+ Expense",{onclick: ()=>openTxModal()})
+        btn("Set Budget",{kind:"ghost", onclick: ()=>openBudgetModal(selectedMonth, budget)}),
+        btn("+ Expense",{onclick: ()=>openTxModal(null, selectedMonth)})
       ])
     ]),
-    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[budgetVsActual(budget, monthTx)])
+    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[budgetVsActual(budget, monthTx, selectedMonth)])
   ]);
 
   const txBody = el("div",{class:"fillCol"},[
     el("div",{class:"row spread"},[
-      el("div",{class:"muted small"},[document.createTextNode("Transactions")]),
-      btn("+ Add",{onclick: ()=>openTxModal()})
+      el("div",{class:"muted small"},[document.createTextNode(`Transactions (${monthTx.length})`)]),
+      btn("+ Add",{onclick: ()=>openTxModal(null, selectedMonth)})
     ]),
-    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[txList(tx)])
+    el("div",{class:"scroll-area finScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[txList(monthTx, selectedMonth)])
   ]);
 
   return el("div",{class:"fillPage"},[
@@ -2633,7 +2652,13 @@ el("div",{class:"row spread"},[
   ]);
 }
 
-function budgetVsActual(budget, monthTx){
+function formatMonthYear(mk){
+  const [y, m] = mk.split("-").map(Number);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[m-1]} ${y}`;
+}
+
+function budgetVsActual(budget, monthTx, selectedMonth){
   const totalBudget = Number(budget?.totalBudget || 0);
   const totalTx = monthTx.filter(t=>t.direction==="expense").reduce((s,t)=>s+Number(t.amount||0),0);
   const rem = totalBudget ? (totalBudget-totalTx) : null;
@@ -2647,9 +2672,11 @@ function budgetVsActual(budget, monthTx){
 
   if (totalBudget){
     const p = el("div",{class:"progress"},[el("div")]);
-    p.firstChild.style.width = `${clamp((totalTx/totalBudget)*100, 0, 200)}%`;
+    const pct = (totalTx/totalBudget)*100;
+    p.firstChild.style.width = `${clamp(pct, 0, 100)}%`;
+    p.firstChild.style.background = pct > 100 ? "rgba(210,90,90,0.8)" : pct > 80 ? "rgba(230,180,80,0.8)" : "rgba(80,180,120,0.8)";
     wrap.append(p);
-    wrap.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: £${rem.toFixed(2)}`)]));
+    wrap.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: £${rem.toFixed(2)} (${(100-pct).toFixed(0)}%)`)]));
   }
 
   const catTx = {};
@@ -2672,17 +2699,30 @@ function budgetVsActual(budget, monthTx){
   for (const c of cats){
     const b = Number(catBudget[c] || 0);
     const a = Number(catTx[c] || 0);
-    const state = b 
-      ? (a <= b ? badge("On track","good") : badge("Over","bad")) 
-      : btn("Add budget", {kind:"ghost", style:"font-size:11px; padding:4px 8px;", onclick: ()=>openCategoryBudgetModal(c, budget, a)});
+    const pct = b ? (a/b)*100 : 0;
+    
+    // Progress bar for category
+    const catProgress = b ? el("div",{class:"progress", style:"height:4px; margin-top:6px;"},[el("div")]) : null;
+    if (catProgress){
+      catProgress.firstChild.style.width = `${clamp(pct, 0, 100)}%`;
+      catProgress.firstChild.style.background = pct > 100 ? "rgba(210,90,90,0.8)" : pct > 80 ? "rgba(230,180,80,0.8)" : "rgba(80,180,120,0.8)";
+    }
+    
+    const statusBadge = b 
+      ? (a <= b ? badge(`${(100-pct).toFixed(0)}% left`,"good") : badge(`${(pct-100).toFixed(0)}% over`,"bad")) 
+      : badge("No budget","warn");
 
     wrap.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
-        el("div",{},[
+        el("div",{style:"flex:1;"},[
           el("div",{class:"h"},[document.createTextNode(c)]),
-          el("div",{class:"m"},[document.createTextNode(`Budget: ${b?`£${b.toFixed(2)}`:"—"} • Actual: £${a.toFixed(2)}`)])
+          el("div",{class:"m"},[document.createTextNode(`Budget: ${b?`£${b.toFixed(2)}`:"—"} • Spent: £${a.toFixed(2)}`)]),
+          catProgress
         ]),
-        el("div",{class:"actions"},[state])
+        el("div",{class:"actions", style:"flex-direction:column; gap:4px;"},[
+          statusBadge,
+          btn("Edit",{kind:"ghost", style:"font-size:11px; padding:4px 8px;", onclick: ()=>openCategoryBudgetModal(c, budget, a, selectedMonth)})
+        ])
       ])
     ]));
   }
@@ -2690,35 +2730,45 @@ function budgetVsActual(budget, monthTx){
   return wrap;
 }
 
-function txList(items){
+function txList(items, selectedMonth){
   const list = el("div",{class:"list"},[]);
   if (!items.length){
-    list.append(el("div",{class:"muted"},[document.createTextNode("No transactions yet.")]));
+    list.append(el("div",{class:"muted"},[document.createTextNode("No transactions this month.")]));
     return list;
   }
   for (const t of items.slice(0, 60)){
     list.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{},[
-          el("div",{class:"h"},[document.createTextNode(`${t.direction==="income"?"+":"-"}£${Number(t.amount||0).toFixed(2)}`)]),
+          el("div",{class:"h", style: t.direction==="income" ? "color:rgba(80,180,120,0.9);" : ""},[document.createTextNode(`${t.direction==="income"?"+":"-"}£${Number(t.amount||0).toFixed(2)}`)]),
           el("div",{class:"m"},[document.createTextNode(`${t.category || "General"} • ${formatDate(new Date(t.date))}`)])
         ]),
         el("div",{class:"actions"},[
-          btn("Edit",{kind:"ghost", onclick: ()=>openTxModal(t)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
+          btn("Edit",{kind:"ghost", onclick: ()=>openTxModal(t, selectedMonth)}),
+          btn("Del",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
         ])
       ]),
-      t.merchant ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(t.merchant)]) : el("div")
+      t.merchant ? el("div",{class:"m", style:"margin-top:4px"},[document.createTextNode(t.merchant)]) : el("div")
     ]));
   }
   return list;
 }
 
-function openTxModal(existing=null){
+function openTxModal(existing=null, selectedMonth=null){
   const isEdit = !!existing;
   const dt = el("input",{class:"input", type:"datetime-local"});
   const errDt = mkFieldError();
-  const base = existing?.date ? new Date(existing.date) : new Date();
+  
+  // Default to selected month if provided, otherwise use existing date or now
+  let base;
+  if (existing?.date) {
+    base = new Date(existing.date);
+  } else if (selectedMonth) {
+    // Default to first of selected month at noon
+    base = new Date(selectedMonth + "-15T12:00:00");
+  } else {
+    base = new Date();
+  }
   dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
 
   const direction = el("select",{class:"input"},[
@@ -2817,24 +2867,39 @@ function openBudgetModal(mk, existing){
   modal.open({ title:"Monthly Budget", body, footer });
 }
 
-async function openCategoryBudgetModal(categoryName, existingBudget, currentSpend){
-  const today = new Date();
-  const mk = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}`;
+async function openCategoryBudgetModal(categoryName, existingBudget, currentSpend, selectedMonth){
+  const mk = selectedMonth || monthKey(new Date());
   
-  // Suggest a budget based on current spend (rounded up to nearest 50)
-  const suggested = Math.ceil((currentSpend * 1.2) / 50) * 50 || 100;
+  // Get existing category budget if any
+  const existingCatBudget = existingBudget?.categoryBudgets?.[categoryName] || 0;
+  
+  // Suggest a budget based on current spend (rounded up to nearest 50) or existing
+  const suggested = existingCatBudget || Math.ceil((currentSpend * 1.2) / 50) * 50 || 100;
   
   const budgetInput = el("input",{class:"input", type:"number", step:"0.01", placeholder:`e.g., ${suggested}`});
   budgetInput.value = suggested;
   
   const body = el("div",{class:"stack"},[
-    el("div",{class:"muted small"},[document.createTextNode(`Set budget for "${categoryName}" (${mk})`)]),
+    el("div",{class:"muted small"},[document.createTextNode(`Category: "${categoryName}" • ${formatMonthYear(mk)}`)]),
     el("div",{class:"muted small"},[document.createTextNode(`Current spend: £${currentSpend.toFixed(2)}`)]),
-    rowLabel("Budget Amount (£)", budgetInput)
+    rowLabel("Budget Amount (£)", budgetInput),
+    existingCatBudget ? el("div",{class:"muted small", style:"margin-top:8px;"},[document.createTextNode(`Current budget: £${existingCatBudget.toFixed(2)}`)]) : el("span")
   ]);
 
   const footer = el("div",{},[
     btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
+    existingCatBudget ? btn("Remove",{kind:"danger", onclick: async ()=>{
+      // Remove this category budget
+      const budgets = await getAll("budgets");
+      let budget = budgets.find(b => b.monthKey === mk);
+      if (budget && budget.categoryBudgets) {
+        delete budget.categoryBudgets[categoryName];
+        budget.updatedAt = new Date().toISOString();
+        await put("budgets", budget);
+      }
+      modal.close();
+      await navigate(route(), true);
+    }}) : el("span"),
     btn("Save",{onclick: async ()=>{
       const amt = Number(budgetInput.value || 0);
       if (amt <= 0) { alert("Please enter a valid budget amount"); return; }
@@ -2863,7 +2928,7 @@ async function openCategoryBudgetModal(categoryName, existingBudget, currentSpen
     }})
   ]);
 
-  modal.open({ title: `Set ${categoryName} Budget`, body, footer });
+  modal.open({ title: `${existingCatBudget ? "Edit" : "Set"} ${categoryName} Budget`, body, footer });
 }
 
 /* ---------- Fitness: workouts + sets/reps ---------- */
