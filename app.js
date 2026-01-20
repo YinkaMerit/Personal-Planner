@@ -1091,9 +1091,9 @@ async function renderRoute(r){
   if (r === "cover") return await viewCover(settings);
   if (r === "dashboard") return await viewDashboard(settings);
   if (r === "goals") return await viewGoals();
-  if (r === "relationships") return await viewRelationships();
+  if (r === "relationships" || r.startsWith("relationships/")) return await viewRelationships();
   if (r === "finance" || r.startsWith("finance/")) return await viewFinance();
-  if (r === "fitness") return await viewFitness();
+  if (r === "fitness" || r.startsWith("fitness/")) return await viewFitness();
   if (r === "spiritual") return await viewSpiritual();
   if (r === "weekly") return await viewWeekly(settings);
 if (r === "diary") return await viewDiary(settings);
@@ -2384,21 +2384,46 @@ async function viewRelationships(){
     getAll("touchpoints")
   ]);
 
+  // Get selected month from URL hash or default to current
+  const hashParts = location.hash.split("/");
+  const selectedMonth = hashParts[1] || monthKey(new Date());
+  
+  // Filter touchpoints by selected month
+  const monthTouchpoints = touchpoints.filter(t => {
+    const d = t.dateKey || t.datetime || t.date || "";
+    return d.slice(0,7) === selectedMonth;
+  });
+
   contacts.sort((a,b)=>a.name.localeCompare(b.name));
-  touchpoints.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  monthTouchpoints.sort((a,b)=> (b.datetime||b.date||"").localeCompare(a.datetime||a.date||""));
 
   const ruleByContact = new Map(rules.map(r=>[r.contactId, r]));
   const overdue = await computeDueContacts();
   const overdueSet = new Set(overdue.map(x=>x.id));
+  
+  // Month navigation
+  const [y, m] = selectedMonth.split("-").map(Number);
+  const prevMonth = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,"0")}`;
+  const nextMonth = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,"0")}`;
+  const currentMk = monthKey(new Date());
+  const isCurrentMonth = selectedMonth === currentMk;
+  
+  const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
+    btn("◀",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${prevMonth}`; }}),
+    el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
+    btn("▶",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${nextMonth}`; }}),
+    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "relationships"; }}) : el("span")
+  ]);
 
   const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode("People I Love ❀")]),
-    el("div",{class:"subtle"},[document.createTextNode("Nurture your connections")])
+    el("div",{class:"subtle"},[document.createTextNode(`${monthTouchpoints.length} check-ins this month`)]),
+    monthNav
   ]);
 
   const leftBody = el("div",{class:"fillCol"},[
 el("div",{class:"row spread"},[
-      el("div",{class:"muted small"},[document.createTextNode("My circle")]),
+      el("div",{class:"muted small"},[document.createTextNode(`My circle (${contacts.length})`)]),
       btn("+ Add",{onclick: ()=>openContactModal()})
     ]),
     el("div",{class:"scroll-area relScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[contactsList(contacts, ruleByContact, overdueSet)])
@@ -2406,18 +2431,18 @@ el("div",{class:"row spread"},[
 
   const rightBody = el("div",{class:"fillCol"},[
 el("div",{class:"row spread"},[
-      el("div",{class:"muted small"},[document.createTextNode("Recent moments")]),
-      btn("+ Log",{onclick: ()=>openTouchpointModal(contacts)})
+      el("div",{class:"muted small"},[document.createTextNode(`Check-ins (${monthTouchpoints.length})`)]),
+      btn("+ Log",{onclick: ()=>openTouchpointModal(contacts, null, selectedMonth)})
     ]),
-    el("div",{class:"scroll-area relScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[touchpointsList(touchpoints, contacts)])
+    el("div",{class:"scroll-area relScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[touchpointsList(monthTouchpoints, contacts, selectedMonth)])
   ]);
 
-  const top = overdue.length 
+  const top = (isCurrentMonth && overdue.length)
     ? card("Overdue", "People you haven't contacted recently.", el("div",{style:"overflow-y:auto; max-height:200px;"},[overdueList(overdue)])) 
-    : el("div",{class:"muted"},[document.createTextNode("No overdue contacts.")]);
+    : null;
 
   return el("div",{class:"fillPage"},[
-    el("div",{class:"stack"},[header, top]),
+    el("div",{class:"stack"},[header, top].filter(Boolean)),
     el("div",{class:"fillMain"},[
       el("div",{class:"grid fillGrid"},[cardFill("Contacts", "Set how often you want to stay in touch.", leftBody),
       cardFill("Check-ins", "Calls, texts, meets.", rightBody)])
@@ -2459,10 +2484,10 @@ function contactsList(contacts, ruleByContact, overdueSet){
   return list;
 }
 
-function touchpointsList(items, contacts){
+function touchpointsList(items, contacts, selectedMonth){
   const list = el("div",{class:"list"},[]);
   if (!items.length){
-    list.append(el("div",{class:"muted"},[document.createTextNode("No touchpoints yet.")]));
+    list.append(el("div",{class:"muted"},[document.createTextNode("No check-ins this month.")]));
     return list;
   }
   for (const t of items.slice(0, 60)){
@@ -2475,8 +2500,8 @@ function touchpointsList(items, contacts){
           el("div",{class:"m"},[document.createTextNode(`${t.type || "check-in"} • ${dateStr}`)])
         ]),
         el("div",{class:"actions"},[
-          btn("Edit",{kind:"ghost", onclick: ()=>openTouchpointModal(contacts, t)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
+          btn("Edit",{kind:"ghost", onclick: ()=>openTouchpointModal(contacts, t, selectedMonth)}),
+          btn("Del",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
         ])
       ]),
       (t.notes || t.note) ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(t.notes || t.note)]) : el("div")
@@ -2546,7 +2571,7 @@ function openRuleModal(contact, existing){
   modal.open({ title:"Set Contact Reminder", body, footer });
 }
 
-function openTouchpointModal(contacts, existing=null){
+function openTouchpointModal(contacts, existing=null, selectedMonth=null){
   const isEdit = !!existing;
   const who = el("select",{class:"input"},[
     ...contacts.map(c=>el("option",{value:c.id, selected: (existing?.contactId===c.id)},[document.createTextNode(c.name)]))
@@ -2554,8 +2579,15 @@ function openTouchpointModal(contacts, existing=null){
   const dt = el("input",{class:"input", type:"datetime-local"});
   const errWho = mkFieldError();
   const errDt = mkFieldError();
-  const now = new Date();
-  const base = existing?.datetime ? new Date(existing.datetime) : new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  
+  let base;
+  if (existing?.datetime) {
+    base = new Date(existing.datetime);
+  } else if (selectedMonth) {
+    base = new Date(selectedMonth + "-15T12:00:00");
+  } else {
+    base = new Date();
+  }
   dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
 
   const note = el("textarea",{class:"input"});
@@ -2941,8 +2973,16 @@ async function viewFitness(){
     getAll("biometrics")
   ]);
 
-  workouts.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
-  bio.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  // Get selected month from URL hash or default to current
+  const hashParts = location.hash.split("/");
+  const selectedMonth = hashParts[1] || monthKey(new Date());
+  
+  // Filter by selected month
+  const monthWorkouts = workouts.filter(w => (w.date || "").slice(0,7) === selectedMonth);
+  const monthBio = bio.filter(b => (b.date || "").slice(0,7) === selectedMonth);
+  
+  monthWorkouts.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
+  monthBio.sort((a,b)=> (b.date||"").localeCompare(a.date||""));
 
   const setsByWorkout = new Map();
   for (const s of sets){
@@ -2950,26 +2990,45 @@ async function viewFitness(){
     arr.push(s);
     setsByWorkout.set(s.workoutId, arr);
   }
+  
+  // Month navigation
+  const [y, m] = selectedMonth.split("-").map(Number);
+  const prevMonth = m === 1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,"0")}`;
+  const nextMonth = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,"0")}`;
+  const currentMk = monthKey(new Date());
+  const isCurrentMonth = selectedMonth === currentMk;
+  
+  // Stats for selected month
+  const totalWorkouts = monthWorkouts.length;
+  const totalSets = monthWorkouts.reduce((sum, w) => sum + (setsByWorkout.get(w.id)?.length || 0), 0);
+  
+  const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
+    btn("◀",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${prevMonth}`; }}),
+    el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
+    btn("▶",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${nextMonth}`; }}),
+    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "fitness"; }}) : el("span")
+  ]);
 
   const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode("Wellness ❀")]),
-    el("div",{class:"subtle"},[document.createTextNode("Move your body, track progress")])
+    el("div",{class:"subtle"},[document.createTextNode(`${totalWorkouts} workouts • ${totalSets} sets`)]),
+    monthNav
   ]);
 
   const wBody = el("div",{class:"fillCol"},[
 el("div",{class:"row spread"},[
-      el("div",{class:"muted small"},[document.createTextNode("Workouts")]),
-      btn("+ Log",{onclick: ()=>openWorkoutModal()})
+      el("div",{class:"muted small"},[document.createTextNode(`Workouts (${monthWorkouts.length})`)]),
+      btn("+ Log",{onclick: ()=>openWorkoutModal(null, selectedMonth)})
     ]),
-    el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[workoutsList(workouts, setsByWorkout)])
+    el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[workoutsList(monthWorkouts, setsByWorkout, selectedMonth)])
   ]);
 
   const bBody = el("div",{class:"stack"},[
     el("div",{class:"row spread"},[
-      el("div",{class:"muted small"},[document.createTextNode("Body stats")]),
-      btn("+ Add",{kind:"ghost", onclick: ()=>openBioModal()})
+      el("div",{class:"muted small"},[document.createTextNode(`Body stats (${monthBio.length})`)]),
+      btn("+ Add",{kind:"ghost", onclick: ()=>openBioModal(null, selectedMonth)})
     ]),
-    el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[bioList(bio)])
+    el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[bioList(monthBio, selectedMonth)])
   ]);
 
   return el("div",{class:"fillPage"},[
@@ -2981,10 +3040,10 @@ el("div",{class:"row spread"},[
   ]);
 }
 
-function workoutsList(workouts, setsByWorkout){
+function workoutsList(workouts, setsByWorkout, selectedMonth){
   const list = el("div",{class:"list"},[]);
   if (!workouts.length){
-    list.append(el("div",{class:"muted"},[document.createTextNode("No workouts yet.")]));
+    list.append(el("div",{class:"muted"},[document.createTextNode("No workouts this month.")]));
     return list;
   }
   for (const w of workouts.slice(0, 40)){
@@ -2996,9 +3055,9 @@ function workoutsList(workouts, setsByWorkout){
           el("div",{class:"m"},[document.createTextNode(`${formatDate(new Date(w.date))} • Sets: ${ws.length}`)])
         ]),
         el("div",{class:"actions"},[
-          btn("Edit",{kind:"ghost", onclick: ()=>openWorkoutModal(w)}),
+          btn("Edit",{kind:"ghost", onclick: ()=>openWorkoutModal(w, selectedMonth)}),
           btn("Open",{kind:"ghost", onclick: ()=>openWorkoutDetailModal(w, ws)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{
+          btn("Del",{kind:"danger", onclick: async ()=>{
             for (const s of ws) await del("workoutSets", s.id);
             await del("workouts", w.id);
             await navigate(route(), true);
@@ -3011,11 +3070,19 @@ function workoutsList(workouts, setsByWorkout){
   return list;
 }
 
-function openWorkoutModal(existing=null){
+function openWorkoutModal(existing=null, selectedMonth=null){
   const isEdit = !!existing;
   const dt = el("input",{class:"input", type:"datetime-local"});
   const errDt = mkFieldError();
-  const base = existing?.date ? new Date(existing.date) : new Date();
+  
+  let base;
+  if (existing?.date) {
+    base = new Date(existing.date);
+  } else if (selectedMonth) {
+    base = new Date(selectedMonth + "-15T12:00:00");
+  } else {
+    base = new Date();
+  }
   dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
 
   const title = el("input",{class:"input", placeholder:"e.g., Push Day", value: existing?.title || ""});
@@ -3188,10 +3255,17 @@ async function openSetModal(workout, existing=null){
   modal.open({ title: isEdit ? "Edit Set" : "Add Set", body, footer });
 }
 
-function openBioModal(existing=null){
+function openBioModal(existing=null, selectedMonth=null){
   const isEdit = !!existing;
   const dt = el("input",{class:"input", type:"date"});
-  dt.value = existing?.date ? String(existing.date).slice(0,10) : dayKey(new Date());
+  
+  if (existing?.date) {
+    dt.value = String(existing.date).slice(0,10);
+  } else if (selectedMonth) {
+    dt.value = selectedMonth + "-15";
+  } else {
+    dt.value = dayKey(new Date());
+  }
 
   const weight = el("input",{class:"input", type:"number", step:"0.1", value: existing ? Number(existing.weight||0) : ""});
   const bf = el("input",{class:"input", type:"number", step:"0.1", value: existing ? Number(existing.bodyFat||0) : ""});
@@ -3230,18 +3304,18 @@ function openBioModal(existing=null){
   modal.open({ title: isEdit ? "Edit Biometrics" : "New Biometrics", body, footer });
 }
 
-function bioList(items){
+function bioList(items, selectedMonth){
   const list = el("div",{class:"list"},[]);
   if (!items.length){
-    list.append(el("div",{class:"muted"},[document.createTextNode("No biometrics yet.")]));
+    list.append(el("div",{class:"muted"},[document.createTextNode("No biometrics this month.")]));
     return list;
   }
   for (const b of items.slice(0, 30)){
     const meta = [
-      b.weightKg!=null ? `${b.weightKg}kg` : null,
-      b.bodyFatPct!=null ? `${b.bodyFatPct}% BF` : null,
-      b.sleepHours!=null ? `${b.sleepHours}h sleep` : null,
-      b.energyLevel!=null ? `Energy ${b.energyLevel}/10` : null
+      b.weight ? `${b.weight}kg` : null,
+      b.bodyFat ? `${b.bodyFat}% BF` : null,
+      b.sleepHours ? `${b.sleepHours}h sleep` : null,
+      b.energy ? `Energy ${b.energy}/10` : null
     ].filter(Boolean).join(" • ");
 
     list.append(el("div",{class:"item"},[
@@ -3251,8 +3325,8 @@ function bioList(items){
           el("div",{class:"m"},[document.createTextNode(meta || "—")])
         ]),
         el("div",{class:"actions"},[
-          btn("Edit",{kind:"ghost", onclick: ()=>openBioModal(b)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
+          btn("Edit",{kind:"ghost", onclick: ()=>openBioModal(b, selectedMonth)}),
+          btn("Del",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
         ])
       ])
     ]));
