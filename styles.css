@@ -379,7 +379,7 @@ a{color: var(--accent)}
 /* Page navigation buttons */
 .page-nav-btn {
   position: fixed;
-  top: 58px;
+  top: 120px;
   width: 40px;
   height: 40px;
   background: rgba(255, 255, 255, 0.95);
@@ -414,7 +414,7 @@ a{color: var(--accent)}
 }
 @media (max-width: 720px) {
   .page-nav-btn {
-    top: 54px;
+    top: 115px;
     width: 36px;
     height: 36px;
     font-size: 20px;
@@ -427,7 +427,7 @@ a{color: var(--accent)}
   .page-nav-btn {
     display: flex !important;
     position: fixed !important;
-    top: 52px;
+    top: 110px;
     width: 34px;
     height: 34px;
     font-size: 18px;
@@ -2382,13 +2382,13 @@ body::before{
     gap: 4px;
   }
   
-  /* Page nav buttons - keep circular at top */
+  /* Page nav buttons - keep circular below navbar */
   .page-nav-btn {
     width: 36px;
     height: 36px;
     font-size: 18px;
     border-radius: 50%;
-    top: 52px;
+    top: 110px;
   }
   .page-nav-btn.prev {
     left: 6px;
