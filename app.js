@@ -788,13 +788,11 @@ function updatePageNavButtons() {
   const nextBtn = document.getElementById("btnNextPage");
   if (prevBtn) {
     const hasPrev = getPrevPage(currentRouteKey);
-    prevBtn.style.opacity = hasPrev ? "1" : "0.3";
-    prevBtn.style.pointerEvents = hasPrev ? "auto" : "none";
+    prevBtn.classList.toggle("hidden", !hasPrev);
   }
   if (nextBtn) {
     const hasNext = getNextPage(currentRouteKey);
-    nextBtn.style.opacity = hasNext ? "1" : "0.3";
-    nextBtn.style.pointerEvents = hasNext ? "auto" : "none";
+    nextBtn.classList.toggle("hidden", !hasNext);
   }
 }
 
