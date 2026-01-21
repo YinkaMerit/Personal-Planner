@@ -30,12 +30,12 @@
 /* System preference dark mode */
 @media (prefers-color-scheme: dark) {
   :root:not(.light-mode) {
-    --bg: #121820;
-    --paper: #1c2530;
-    --paper2: #242f3d;
-    --ink: #f0f4f8;
+    --bg: #0f172a;
+    --paper: #1e293b;
+    --paper2: #334155;
+    --ink: #e2e8f0;
     --muted: #94a3b8;
-    --border: rgba(148,163,184,.15);
+    --border: rgba(71,85,105,.6);
     --shadow: 0 14px 40px rgba(0,0,0,.5);
     --shadow2: 0 8px 18px rgba(0,0,0,.35);
     --accent: #60a5fa;
@@ -51,12 +51,12 @@
 
 /* Manual dark mode class */
 .dark-mode {
-  --bg: #121820;
-  --paper: #1c2530;
-  --paper2: #242f3d;
-  --ink: #f0f4f8;
+  --bg: #0f172a;
+  --paper: #1e293b;
+  --paper2: #334155;
+  --ink: #e2e8f0;
   --muted: #94a3b8;
-  --border: rgba(148,163,184,.15);
+  --border: rgba(71,85,105,.6);
   --shadow: 0 14px 40px rgba(0,0,0,.5);
   --shadow2: 0 8px 18px rgba(0,0,0,.35);
   --accent: #60a5fa;
@@ -71,6 +71,10 @@
 
 /* Dark mode specific adjustments */
 @media (prefers-color-scheme: dark) {
+  :root:not(.light-mode) .app {
+    background: var(--bg);
+  }
+  
   :root:not(.light-mode) .card,
   :root:not(.light-mode) .modal {
     border: 1px solid var(--border);
@@ -79,15 +83,18 @@
   
   :root:not(.light-mode) .card-h {
     background: var(--paper2);
+    border-bottom: 1px solid var(--border);
   }
   
   :root:not(.light-mode) .btn {
     border-color: var(--border);
+    background: var(--paper2);
   }
   
   :root:not(.light-mode) .btn.primary {
     background: var(--accent);
     color: #fff;
+    border-color: var(--accent);
   }
   
   :root:not(.light-mode) .input,
@@ -126,8 +133,25 @@
   
   :root:not(.light-mode) .item {
     background: var(--paper2);
+    border: 1px solid var(--border);
+  }
+  
+  :root:not(.light-mode) .verseCard {
+    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  }
+  
+  :root:not(.light-mode) .songCard {
+    background: var(--paper2);
+    border: 1px solid var(--border);
+  }
+  
+  :root:not(.light-mode) .hr {
     border-color: var(--border);
   }
+}
+
+.dark-mode .app {
+  background: var(--bg);
 }
 
 .dark-mode .card,
@@ -138,15 +162,18 @@
 
 .dark-mode .card-h {
   background: var(--paper2);
+  border-bottom: 1px solid var(--border);
 }
 
 .dark-mode .btn {
   border-color: var(--border);
+  background: var(--paper2);
 }
 
 .dark-mode .btn.primary {
   background: var(--accent);
   color: #fff;
+  border-color: var(--accent);
 }
 
 .dark-mode .input,
@@ -185,6 +212,19 @@
 
 .dark-mode .item {
   background: var(--paper2);
+  border: 1px solid var(--border);
+}
+
+.dark-mode .verseCard {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+}
+
+.dark-mode .songCard {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+}
+
+.dark-mode .hr {
   border-color: var(--border);
 }
 
@@ -2879,145 +2919,16 @@ body::before{
   }
 }
 
-/* ========== LANDSCAPE ORIENTATION - MOBILE ONLY ========== */
-@media screen and (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
-  /* Make the entire page area scrollable */
-  .main {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
+/* ========== PORTRAIT ORIENTATION LOCK - MOBILE ========== */
+@media screen and (max-width: 950px) {
+  /* Lock to portrait via CSS as fallback */
+  html {
+    -webkit-text-size-adjust: 100%;
   }
   
-  .book {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    height: 100% !important;
-  }
-  
-  .pagehost {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  
-  .page {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    height: auto !important;
-    min-height: 100% !important;
-  }
-  
-  .fillPage {
-    overflow-y: visible !important;
-    height: auto !important;
-    min-height: auto !important;
-  }
-  
-  .fillMain {
-    overflow: visible !important;
-    height: auto !important;
-    flex: none !important;
-  }
-  
-  .fillGrid {
-    height: auto !important;
-    overflow: visible !important;
-    gap: 10px !important;
-  }
-  
-  /* Cards should expand naturally */
-  .card, .cardFill {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-  
-  .card-b {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-  
-  /* Scroll areas inside cards still scroll but with smaller max-height */
-  .scroll-area,
-  .relScroll, 
-  .finScroll, 
-  .fitScroll, 
-  .spiScroll, 
-  .goalsScroll,
-  .tasksScroll, 
-  .overdueScroll, 
-  .entryScroll,
-  .yearlyClamp {
-    max-height: 150px !important;
-    height: auto !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain;
-  }
-  
-  /* Lists inside scroll containers should NOT have their own scroll */
-  .scroll-area .list,
-  .relScroll .list,
-  .finScroll .list,
-  .fitScroll .list,
-  .spiScroll .list,
-  .goalsScroll .list,
-  .tasksScroll .list,
-  .overdueScroll .list,
-  .yearlyClamp .list {
-    max-height: none !important;
-    overflow: visible !important;
-  }
-  
-  /* Page nav buttons - adjust for landscape */
-  .page-nav-btn {
-    top: calc(env(safe-area-inset-top, 0px) + 50px) !important;
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 14px !important;
-  }
-  
-  /* Diary list */
-  .diaryListWrap {
-    max-height: 180px !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  
-  /* Smaller headers in landscape */
-  .h1 {
-    font-size: 1.3rem !important;
-  }
-  
-  /* Stack layout for goals page */
-  .goalsGrid {
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  .goalsRightStack {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 10px !important;
-  }
-}
-
-/* Landscape for very short mobile screens */
-@media screen and (orientation: landscape) and (max-height: 400px) and (max-width: 950px) {
-  .scroll-area,
-  .relScroll, 
-  .finScroll, 
-  .fitScroll, 
-  .spiScroll, 
-  .goalsScroll,
-  .tasksScroll, 
-  .overdueScroll, 
-  .entryScroll,
-  .yearlyClamp {
-    max-height: 120px !important;
-  }
-  
-  .diaryListWrap {
-    max-height: 140px !important;
+  @supports (orientation: portrait) {
+    :root {
+      orientation: portrait;
+    }
   }
 }
