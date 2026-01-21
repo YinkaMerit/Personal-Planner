@@ -30,12 +30,12 @@
 /* System preference dark mode */
 @media (prefers-color-scheme: dark) {
   :root:not(.light-mode) {
-    --bg: #0f172a;
-    --paper: #1e293b;
-    --paper2: #334155;
-    --ink: #e2e8f0;
-    --muted: #94a3b8;
-    --border: rgba(71,85,105,.6);
+    --bg: #0c1221;
+    --paper: #162032;
+    --paper2: #1e2d42;
+    --ink: #d4e0ed;
+    --muted: #8899ab;
+    --border: rgba(59,130,246,.35);
     --shadow: 0 14px 40px rgba(0,0,0,.5);
     --shadow2: 0 8px 18px rgba(0,0,0,.35);
     --accent: #60a5fa;
@@ -44,19 +44,19 @@
     --good: #4ade80;
     --warn: #fbbf24;
     --bad: #f87171;
-    --petal: rgba(96,165,250,.15);
-    --bloom: rgba(59,130,246,.2);
+    --petal: rgba(96,165,250,.1);
+    --bloom: rgba(59,130,246,.15);
   }
 }
 
 /* Manual dark mode class */
 .dark-mode {
-  --bg: #0f172a;
-  --paper: #1e293b;
-  --paper2: #334155;
-  --ink: #e2e8f0;
-  --muted: #94a3b8;
-  --border: rgba(71,85,105,.6);
+  --bg: #0c1221;
+  --paper: #162032;
+  --paper2: #1e2d42;
+  --ink: #d4e0ed;
+  --muted: #8899ab;
+  --border: rgba(59,130,246,.35);
   --shadow: 0 14px 40px rgba(0,0,0,.5);
   --shadow2: 0 8px 18px rgba(0,0,0,.35);
   --accent: #60a5fa;
@@ -65,8 +65,8 @@
   --good: #4ade80;
   --warn: #fbbf24;
   --bad: #f87171;
-  --petal: rgba(96,165,250,.15);
-  --bloom: rgba(59,130,246,.2);
+  --petal: rgba(96,165,250,.1);
+  --bloom: rgba(59,130,246,.15);
 }
 
 /* Dark mode specific adjustments */
@@ -75,10 +75,36 @@
     background: var(--bg);
   }
   
+  :root:not(.light-mode) .navbar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  :root:not(.light-mode) .navbar .btn {
+    background: var(--paper2);
+    border-color: var(--border);
+  }
+  
+  :root:not(.light-mode) .sidebar {
+    background: var(--bg);
+  }
+  
+  :root:not(.light-mode) .sidebar .navItem {
+    border: 1px solid transparent;
+    color: var(--ink);
+  }
+  
+  :root:not(.light-mode) .sidebar .navItem:hover,
+  :root:not(.light-mode) .sidebar .navItem.active {
+    background: rgba(59,130,246,.15);
+    border: 1px solid var(--border);
+  }
+  
   :root:not(.light-mode) .card,
   :root:not(.light-mode) .modal {
     border: 1px solid var(--border);
     background: var(--paper);
+    box-shadow: 0 0 20px rgba(59,130,246,.1);
   }
   
   :root:not(.light-mode) .card-h {
@@ -89,6 +115,11 @@
   :root:not(.light-mode) .btn {
     border-color: var(--border);
     background: var(--paper2);
+    color: var(--ink);
+  }
+  
+  :root:not(.light-mode) .btn:hover {
+    background: rgba(59,130,246,.2);
   }
   
   :root:not(.light-mode) .btn.primary {
@@ -106,7 +137,7 @@
   }
   
   :root:not(.light-mode) .progress {
-    background: rgba(255,255,255,.1);
+    background: rgba(255,255,255,.08);
   }
   
   :root:not(.light-mode) .badge {
@@ -116,19 +147,16 @@
   
   :root:not(.light-mode) .page {
     background: var(--paper);
+    border: 1px solid var(--border);
+    box-shadow: 0 0 30px rgba(59,130,246,.15);
   }
   
   :root:not(.light-mode) .book {
     background: var(--bg);
   }
   
-  :root:not(.light-mode) .navbar {
-    background: var(--paper);
-    border-color: var(--border);
-  }
-  
-  :root:not(.light-mode) .sidebar {
-    background: var(--paper);
+  :root:not(.light-mode) .main {
+    background: var(--bg);
   }
   
   :root:not(.light-mode) .item {
@@ -138,6 +166,7 @@
   
   :root:not(.light-mode) .verseCard {
     background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+    border: 1px solid rgba(239,68,68,.3);
   }
   
   :root:not(.light-mode) .songCard {
@@ -148,16 +177,56 @@
   :root:not(.light-mode) .hr {
     border-color: var(--border);
   }
+  
+  :root:not(.light-mode) .spine {
+    background: linear-gradient(to right, #0a0f1a, #162032);
+  }
+  
+  :root:not(.light-mode) input[type="checkbox"] {
+    accent-color: var(--accent);
+  }
+  
+  :root:not(.light-mode) .page-nav-btn {
+    background: var(--paper);
+    border-color: var(--border);
+    color: var(--accent);
+  }
 }
 
 .dark-mode .app {
   background: var(--bg);
 }
 
+.dark-mode .navbar {
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+}
+
+.dark-mode .navbar .btn {
+  background: var(--paper2);
+  border-color: var(--border);
+}
+
+.dark-mode .sidebar {
+  background: var(--bg);
+}
+
+.dark-mode .sidebar .navItem {
+  border: 1px solid transparent;
+  color: var(--ink);
+}
+
+.dark-mode .sidebar .navItem:hover,
+.dark-mode .sidebar .navItem.active {
+  background: rgba(59,130,246,.15);
+  border: 1px solid var(--border);
+}
+
 .dark-mode .card,
 .dark-mode .modal {
   border: 1px solid var(--border);
   background: var(--paper);
+  box-shadow: 0 0 20px rgba(59,130,246,.1);
 }
 
 .dark-mode .card-h {
@@ -168,6 +237,11 @@
 .dark-mode .btn {
   border-color: var(--border);
   background: var(--paper2);
+  color: var(--ink);
+}
+
+.dark-mode .btn:hover {
+  background: rgba(59,130,246,.2);
 }
 
 .dark-mode .btn.primary {
@@ -185,7 +259,7 @@
 }
 
 .dark-mode .progress {
-  background: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.08);
 }
 
 .dark-mode .badge {
@@ -195,19 +269,16 @@
 
 .dark-mode .page {
   background: var(--paper);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 30px rgba(59,130,246,.15);
 }
 
 .dark-mode .book {
   background: var(--bg);
 }
 
-.dark-mode .navbar {
-  background: var(--paper);
-  border-color: var(--border);
-}
-
-.dark-mode .sidebar {
-  background: var(--paper);
+.dark-mode .main {
+  background: var(--bg);
 }
 
 .dark-mode .item {
@@ -217,6 +288,7 @@
 
 .dark-mode .verseCard {
   background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  border: 1px solid rgba(239,68,68,.3);
 }
 
 .dark-mode .songCard {
@@ -226,6 +298,20 @@
 
 .dark-mode .hr {
   border-color: var(--border);
+}
+
+.dark-mode .spine {
+  background: linear-gradient(to right, #0a0f1a, #162032);
+}
+
+.dark-mode input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.dark-mode .page-nav-btn {
+  background: var(--paper);
+  border-color: var(--border);
+  color: var(--accent);
 }
 
 /* ==================== BIRTHDAY THEME (January 24th) ==================== */
