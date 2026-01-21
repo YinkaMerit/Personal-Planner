@@ -2716,3 +2716,93 @@ body::before{
     max-width: 100% !important;
   }
 }
+
+/* ========== LANDSCAPE ORIENTATION - MOBILE ONLY ========== */
+@media screen and (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
+  /* Make the main page scrollable in landscape */
+  .page {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 60px) !important;
+  }
+  
+  .fillPage {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    min-height: 100% !important;
+  }
+  
+  /* Reduce scroll area heights in landscape to fit better */
+  .scroll-area,
+  .relScroll, 
+  .finScroll, 
+  .fitScroll, 
+  .spiScroll, 
+  .goalsScroll,
+  .tasksScroll, 
+  .overdueScroll, 
+  .entryScroll,
+  .yearlyClamp {
+    max-height: 150px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Cards should not have fixed height in landscape */
+  .card, .card-b, .cardFill {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  /* Grid should stack or be more compact */
+  .fillGrid {
+    gap: 10px !important;
+  }
+  
+  /* Smaller headers in landscape */
+  .h1 {
+    font-size: 1.3rem !important;
+  }
+  
+  /* Page nav buttons - adjust for landscape */
+  .page-nav-btn {
+    top: calc(env(safe-area-inset-top, 0px) + 50px) !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+  
+  /* fillMain needs to allow scrolling */
+  .fillMain {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+  }
+  
+  /* Diary list */
+  .diaryListWrap {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Landscape for very short mobile screens */
+@media screen and (orientation: landscape) and (max-height: 450px) and (max-width: 950px) {
+  .scroll-area,
+  .relScroll, 
+  .finScroll, 
+  .fitScroll, 
+  .spiScroll, 
+  .goalsScroll {
+    max-height: 120px !important;
+  }
+  
+  /* Stack cards vertically in very short landscape */
+  .fillGrid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
