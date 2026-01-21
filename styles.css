@@ -32,42 +32,81 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%);
   z-index: 999999;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  color: white;
+  color: #1e3a5f;
   text-align: center;
   padding: 40px;
 }
 
 .landscape-blocker .rotate-icon {
-  font-size: 80px;
+  width: 100px;
+  height: 100px;
   margin-bottom: 24px;
+  background: #4a90d9;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 50px;
   animation: rotate-phone 2s ease-in-out infinite;
+  box-shadow: 0 8px 24px rgba(74,144,217,0.3);
 }
 
 @keyframes rotate-phone {
   0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-20deg); }
-  75% { transform: rotate(20deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
 }
 
 .landscape-blocker h2 {
+  font-family: 'Playfair Display', serif;
   font-size: 24px;
   margin-bottom: 12px;
   font-weight: 700;
+  color: #1e3a5f;
 }
 
 .landscape-blocker p {
   font-size: 16px;
-  opacity: 0.85;
+  color: #5a7a9a;
 }
 
-@media screen and (orientation: landscape) and (max-height: 500px) {
+.landscape-blocker .brand-flower {
+  margin-top: 30px;
+  font-size: 32px;
+  opacity: 0.6;
+}
+
+/* Landscape detection - multiple approaches for PWA compatibility */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .landscape-blocker {
+    display: flex !important;
+  }
+  
+  .app {
+    display: none !important;
+  }
+}
+
+/* Also catch based on aspect ratio for PWA */
+@media screen and (min-aspect-ratio: 13/9) and (max-width: 950px) {
+  .landscape-blocker {
+    display: flex !important;
+  }
+  
+  .app {
+    display: none !important;
+  }
+}
+
+/* Width > Height detection for mobile */
+@media screen and (min-width: 500px) and (max-height: 500px) {
   .landscape-blocker {
     display: flex !important;
   }

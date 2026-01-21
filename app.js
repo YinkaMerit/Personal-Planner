@@ -1,4 +1,28 @@
 
+/* ---------- Landscape Detection for PWA ---------- */
+function checkOrientation() {
+  const isLandscape = window.innerWidth > window.innerHeight && window.innerWidth < 1024;
+  const blocker = document.querySelector('.landscape-blocker');
+  const app = document.querySelector('.app');
+  
+  if (blocker && app) {
+    if (isLandscape) {
+      blocker.style.display = 'flex';
+      app.style.display = 'none';
+    } else {
+      blocker.style.display = 'none';
+      app.style.display = '';
+    }
+  }
+}
+
+// Check on load and resize
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', () => {
+  setTimeout(checkOrientation, 100);
+});
+document.addEventListener('DOMContentLoaded', checkOrientation);
+
 function verseOfDay(dateKeyStr){
   // Offline, simple rotating set (KJV-style wording). Not a substitute for a full Bible integration.
   const verses = [
