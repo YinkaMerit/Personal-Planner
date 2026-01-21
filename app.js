@@ -1,4 +1,14 @@
 
+/* ---------- Lock to Portrait Mode ---------- */
+(function lockPortrait() {
+  // Try to lock screen orientation via API
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait').catch(() => {
+      // Silently fail - not all browsers support this
+    });
+  }
+})();
+
 function verseOfDay(dateKeyStr){
   // Offline, simple rotating set (KJV-style wording). Not a substitute for a full Bible integration.
   const verses = [
@@ -539,6 +549,24 @@ document.getElementById("btnToday").addEventListener("click", async () => {
 if ("serviceWorker" in navigator){
   navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
+
+/* ---------- Lock to Portrait Mode ---------- */
+(function lockPortrait() {
+  // Try Screen Orientation API
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock("portrait").catch(() => {
+      // Silently fail - not all browsers support this
+    });
+  }
+  // Fallback for older iOS
+  if (window.orientation !== undefined) {
+    window.addEventListener("orientationchange", () => {
+      if (window.orientation === 90 || window.orientation === -90) {
+        // Could show a message, but CSS handles the rotation
+      }
+    });
+  }
+})();
 
 /* ---------- Data defaults ---------- */
 async function ensureSettings(){
