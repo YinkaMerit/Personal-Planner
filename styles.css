@@ -26,6 +26,118 @@
   --bloom: rgba(168,212,255,.3);
 }
 
+/* ==================== DARK THEME ==================== */
+/* System preference dark mode */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-mode) {
+    --bg: #0d1520;
+    --paper: #1a2635;
+    --paper2: #1e2d40;
+    --ink: #e8f0f8;
+    --muted: #8aa4bf;
+    --border: rgba(200,220,240,.12);
+    --shadow: 0 14px 40px rgba(0,0,0,.4);
+    --shadow2: 0 8px 18px rgba(0,0,0,.3);
+    --accent: #5a9fe6;
+    --accent2: #3d7cc4;
+    --accent3: #1e3a5f;
+    --good: #4ecf9a;
+    --warn: #f0b866;
+    --bad: #e8899a;
+    --petal: rgba(90,159,230,.2);
+    --bloom: rgba(61,124,196,.25);
+  }
+}
+
+/* Manual dark mode class */
+.dark-mode {
+  --bg: #0d1520;
+  --paper: #1a2635;
+  --paper2: #1e2d40;
+  --ink: #e8f0f8;
+  --muted: #8aa4bf;
+  --border: rgba(200,220,240,.12);
+  --shadow: 0 14px 40px rgba(0,0,0,.4);
+  --shadow2: 0 8px 18px rgba(0,0,0,.3);
+  --accent: #5a9fe6;
+  --accent2: #3d7cc4;
+  --accent3: #1e3a5f;
+  --good: #4ecf9a;
+  --warn: #f0b866;
+  --bad: #e8899a;
+  --petal: rgba(90,159,230,.2);
+  --bloom: rgba(61,124,196,.25);
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light-mode) .card,
+  :root:not(.light-mode) .modal {
+    border: 1px solid var(--border);
+  }
+  
+  :root:not(.light-mode) .btn {
+    border-color: var(--border);
+  }
+  
+  :root:not(.light-mode) .input,
+  :root:not(.light-mode) select.input,
+  :root:not(.light-mode) textarea.input {
+    background: var(--paper2);
+    border-color: var(--border);
+    color: var(--ink);
+  }
+  
+  :root:not(.light-mode) .progress {
+    background: rgba(255,255,255,.1);
+  }
+  
+  :root:not(.light-mode) .badge {
+    border-color: var(--border);
+  }
+  
+  :root:not(.light-mode) .page {
+    background: var(--paper);
+  }
+  
+  :root:not(.light-mode) .book {
+    background: var(--bg);
+  }
+}
+
+.dark-mode .card,
+.dark-mode .modal {
+  border: 1px solid var(--border);
+}
+
+.dark-mode .btn {
+  border-color: var(--border);
+}
+
+.dark-mode .input,
+.dark-mode select.input,
+.dark-mode textarea.input {
+  background: var(--paper2);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.dark-mode .progress {
+  background: rgba(255,255,255,.1);
+}
+
+.dark-mode .badge {
+  border-color: var(--border);
+}
+
+.dark-mode .page {
+  background: var(--paper);
+}
+
+.dark-mode .book {
+  background: var(--bg);
+}
+
 /* ==================== BIRTHDAY THEME (January 24th) ==================== */
 .birthday-mode {
   --birthday-pink: #ff69b4;
@@ -2719,21 +2831,7 @@ body::before{
 
 /* ========== LANDSCAPE ORIENTATION - MOBILE ONLY ========== */
 @media screen and (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
-  /* Make the main page scrollable in landscape */
-  .page {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 60px) !important;
-  }
-  
-  .fillPage {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    height: auto !important;
-    min-height: 100% !important;
-  }
-  
-  /* Reduce scroll area heights in landscape to fit better */
+  /* Same scroll approach as portrait - inline styles on scroll containers */
   .scroll-area,
   .relScroll, 
   .finScroll, 
@@ -2745,25 +2843,25 @@ body::before{
   .entryScroll,
   .yearlyClamp {
     max-height: 150px !important;
+    height: auto !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain;
   }
   
-  /* Cards should not have fixed height in landscape */
-  .card, .card-b, .cardFill {
-    height: auto !important;
+  /* Lists inside scroll containers should NOT have their own scroll */
+  .scroll-area .list,
+  .relScroll .list,
+  .finScroll .list,
+  .fitScroll .list,
+  .spiScroll .list,
+  .goalsScroll .list,
+  .tasksScroll .list,
+  .overdueScroll .list,
+  .yearlyClamp .list {
     max-height: none !important;
     overflow: visible !important;
-  }
-  
-  /* Grid should stack or be more compact */
-  .fillGrid {
-    gap: 10px !important;
-  }
-  
-  /* Smaller headers in landscape */
-  .h1 {
-    font-size: 1.3rem !important;
   }
   
   /* Page nav buttons - adjust for landscape */
@@ -2774,35 +2872,40 @@ body::before{
     font-size: 14px !important;
   }
   
-  /* fillMain needs to allow scrolling */
-  .fillMain {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    flex: 1 1 auto !important;
-    height: auto !important;
-  }
-  
   /* Diary list */
   .diaryListWrap {
-    max-height: 200px !important;
+    max-height: 180px !important;
     overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Smaller headers in landscape */
+  .h1 {
+    font-size: 1.3rem !important;
+  }
+  
+  /* Grid gap adjustment */
+  .fillGrid {
+    gap: 10px !important;
   }
 }
 
 /* Landscape for very short mobile screens */
-@media screen and (orientation: landscape) and (max-height: 450px) and (max-width: 950px) {
+@media screen and (orientation: landscape) and (max-height: 400px) and (max-width: 950px) {
   .scroll-area,
   .relScroll, 
   .finScroll, 
   .fitScroll, 
   .spiScroll, 
-  .goalsScroll {
+  .goalsScroll,
+  .tasksScroll, 
+  .overdueScroll, 
+  .entryScroll,
+  .yearlyClamp {
     max-height: 120px !important;
   }
   
-  /* Stack cards vertically in very short landscape */
-  .fillGrid {
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
+  .diaryListWrap {
+    max-height: 140px !important;
   }
 }

@@ -553,10 +553,24 @@ async function ensureSettings(){
     overdueNotifyHour: 10,
     weekStartsMonday: true,
     diaryPinSalt: null,
-    diaryPinHash: null
+    diaryPinHash: null,
+    theme: "system"
   };
   await put("settings", s);
   return s;
+}
+
+/* ---------- Theme ---------- */
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.classList.remove("dark-mode", "light-mode");
+  
+  if (theme === "dark") {
+    root.classList.add("dark-mode");
+  } else if (theme === "light") {
+    root.classList.add("light-mode");
+  }
+  // "system" uses CSS prefers-color-scheme, no class needed
 }
 
 
@@ -1087,6 +1101,9 @@ function spotifyOpenLink(artist, title){
 
 async function renderRoute(r){
   const settings = await ensureSettings();
+  
+  // Apply theme on each navigation
+  applyTheme(settings.theme || "system");
 
   if (r === "cover") return await viewCover(settings);
   if (r === "dashboard") return await viewDashboard(settings);
@@ -3905,6 +3922,19 @@ async function viewSettings(settings){
 
   const monday = el("input",{type:"checkbox"});
   monday.checked = !!settings.weekStartsMonday;
+  
+  // Theme selector
+  const themeSelect = el("select",{class:"input"},[
+    el("option",{value:"system"},[document.createTextNode("System Default")]),
+    el("option",{value:"light"},[document.createTextNode("Light")]),
+    el("option",{value:"dark"},[document.createTextNode("Dark")])
+  ]);
+  themeSelect.value = settings.theme || "system";
+  themeSelect.onchange = async () => {
+    settings.theme = themeSelect.value;
+    await put("settings", settings);
+    applyTheme(settings.theme);
+  };
 
   const perm = ("Notification" in window) ? Notification.permission : "unsupported";
 
@@ -3914,6 +3944,14 @@ async function viewSettings(settings){
   ]);
 
   const prefs = el("div",{class:"stack"},[
+    el("div",{class:"row spread"},[
+      el("div",{},[
+        el("div",{style:"font-weight:800"},[document.createTextNode("Theme")]),
+        el("div",{class:"muted small"},[document.createTextNode("Choose light, dark, or system")])
+      ]),
+      themeSelect
+    ]),
+    el("hr"),
     el("div",{class:"row spread"},[
       el("div",{},[
         el("div",{style:"font-weight:800"},[document.createTextNode("Daily focus task")]),
@@ -3955,6 +3993,7 @@ async function viewSettings(settings){
         settings.notificationsEnabled = notif.checked;
         settings.overdueNotifyHour = clamp(Number(hour.value || 10), 0, 23);
         settings.weekStartsMonday = monday.checked;
+        settings.theme = themeSelect.value;
         await put("settings", settings);
         await navigate(route(), true);
       }})
