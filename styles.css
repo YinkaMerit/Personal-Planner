@@ -26,17 +26,54 @@
   --bloom: rgba(168,212,255,.3);
 }
 
-/* ==================== FORCE PORTRAIT MODE ==================== */
-@media screen and (orientation: landscape) and (max-width: 1024px) {
-  html {
-    transform: rotate(-90deg);
-    transform-origin: left top;
-    width: 100vh;
-    height: 100vw;
-    overflow-x: hidden;
-    position: absolute;
-    top: 100%;
-    left: 0;
+/* ==================== LANDSCAPE BLOCKER ==================== */
+.landscape-blocker {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  z-index: 999999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  text-align: center;
+  padding: 40px;
+}
+
+.landscape-blocker .rotate-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  animation: rotate-phone 2s ease-in-out infinite;
+}
+
+@keyframes rotate-phone {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-20deg); }
+  75% { transform: rotate(20deg); }
+}
+
+.landscape-blocker h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.landscape-blocker p {
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .landscape-blocker {
+    display: flex !important;
+  }
+  
+  .app {
+    display: none !important;
   }
 }
 

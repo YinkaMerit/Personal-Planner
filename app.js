@@ -1,14 +1,4 @@
 
-/* ---------- Lock to Portrait Mode ---------- */
-(function lockPortrait() {
-  // Try to lock screen orientation via API
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('portrait').catch(() => {
-      // Silently fail - not all browsers support this
-    });
-  }
-})();
-
 function verseOfDay(dateKeyStr){
   // Offline, simple rotating set (KJV-style wording). Not a substitute for a full Bible integration.
   const verses = [
