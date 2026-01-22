@@ -1558,13 +1558,38 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
   const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play")]);
   const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("")]);
   
-  // Album art from YouTube thumbnail
+  // Album art - start with placeholder, will update with iTunes artwork
   const art = el("div",{class:"songArt"});
-  if (ytId) {
-    art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
-  } else {
-    art.style.background = "linear-gradient(135deg, #4a90d9 0%, #a8d4ff 100%)";
-  }
+  art.style.background = "linear-gradient(135deg, #4a90d9 0%, #a8d4ff 100%)";
+  
+  // Immediately fetch iTunes artwork
+  (async () => {
+    try {
+      const q = encodeURIComponent(`${artist} ${title}`);
+      const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=10`);
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        // Find best match
+        const norm = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+        const aN = norm(artist);
+        const tN = norm(title);
+        let best = null;
+        for (const r of data.results) {
+          if (!r.artworkUrl100) continue;
+          const ra = norm(r.artistName);
+          const rt = norm(r.trackName);
+          const score = (ra.includes(aN)?3:0) + (aN.includes(ra)?2:0) + (rt.includes(tN)?3:0) + (tN.includes(rt)?2:0);
+          if (!best || score > best.score) best = { score, r };
+        }
+        if (best && best.r.artworkUrl100) {
+          art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
+          art.style.background = "";
+        }
+      }
+    } catch (e) {
+      // Keep placeholder on error
+    }
+  })();
   
   // Play button
   const playBtn = el("button",{class:"playBtn"},[document.createTextNode("▶")]);
@@ -2543,7 +2568,7 @@ function touchpointsList(items, contacts, selectedMonth){
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openTouchpointModal(contacts, t, selectedMonth)}),
-          btn("Del",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
         ])
       ]),
       (t.notes || t.note) ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(t.notes || t.note)]) : el("div")
@@ -2828,7 +2853,7 @@ function txList(items, selectedMonth){
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openTxModal(t, selectedMonth)}),
-          btn("Del",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
         ])
       ]),
       t.merchant ? el("div",{class:"m", style:"margin-top:4px"},[document.createTextNode(t.merchant)]) : el("div")
@@ -3106,7 +3131,7 @@ function workoutsList(workouts, setsByWorkout, selectedMonth){
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openWorkoutModal(w, selectedMonth)}),
           btn("Open",{kind:"ghost", onclick: ()=>openWorkoutDetailModal(w, ws)}),
-          btn("Del",{kind:"danger", onclick: async ()=>{
+          btn("Delete",{kind:"danger", onclick: async ()=>{
             for (const s of ws) await del("workoutSets", s.id);
             await del("workouts", w.id);
             await navigate(route(), true);
@@ -3375,7 +3400,7 @@ function bioList(items, selectedMonth){
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openBioModal(b, selectedMonth)}),
-          btn("Del",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
+          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
         ])
       ])
     ]));
