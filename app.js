@@ -1558,18 +1558,29 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
   const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play")]);
   const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("")]);
   
-  // Album art - start with placeholder, will update with iTunes artwork
+  // Album art - first image to load wins
   const art = el("div",{class:"songArt"});
-  art.style.background = "linear-gradient(135deg, #4a90d9 0%, #a8d4ff 100%)";
+  let artworkLocked = false;
   
-  // Immediately fetch iTunes artwork
+  // Race: YouTube thumbnail vs iTunes artwork - first to load wins
+  if (ytId) {
+    const ytImg = new Image();
+    ytImg.onload = () => {
+      if (!artworkLocked) {
+        art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
+        artworkLocked = true;
+      }
+    };
+    ytImg.src = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+  }
+  
+  // Try iTunes artwork
   (async () => {
     try {
       const q = encodeURIComponent(`${artist} ${title}`);
       const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=10`);
       const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        // Find best match
+      if (data.results && data.results.length > 0 && !artworkLocked) {
         const norm = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
         const aN = norm(artist);
         const tN = norm(title);
@@ -1581,13 +1592,13 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
           const score = (ra.includes(aN)?3:0) + (aN.includes(ra)?2:0) + (rt.includes(tN)?3:0) + (tN.includes(rt)?2:0);
           if (!best || score > best.score) best = { score, r };
         }
-        if (best && best.r.artworkUrl100) {
+        if (best && best.r.artworkUrl100 && !artworkLocked) {
           art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
-          art.style.background = "";
+          artworkLocked = true;
         }
       }
     } catch (e) {
-      // Keep placeholder on error
+      // Ignore errors
     }
   })();
   
@@ -1649,10 +1660,7 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
           }
           
           if (best && best.r.previewUrl) {
-            // Update artwork
-            if (best.r.artworkUrl100) {
-              art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
-            }
+            // Don't update artwork here - keep whatever was set on load
             
             statusEl.textContent = "Downloading...";
             
