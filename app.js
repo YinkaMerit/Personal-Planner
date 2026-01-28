@@ -1,28 +1,4 @@
 
-/* ---------- Landscape Detection for PWA ---------- */
-function checkOrientation() {
-  const isLandscape = window.innerWidth > window.innerHeight && window.innerWidth < 1024;
-  const blocker = document.querySelector('.landscape-blocker');
-  const app = document.querySelector('.app');
-  
-  if (blocker && app) {
-    if (isLandscape) {
-      blocker.style.display = 'flex';
-      app.style.display = 'none';
-    } else {
-      blocker.style.display = 'none';
-      app.style.display = '';
-    }
-  }
-}
-
-// Check on load and resize
-window.addEventListener('resize', checkOrientation);
-window.addEventListener('orientationchange', () => {
-  setTimeout(checkOrientation, 100);
-});
-document.addEventListener('DOMContentLoaded', checkOrientation);
-
 function verseOfDay(dateKeyStr){
   // Offline, simple rotating set (KJV-style wording). Not a substitute for a full Bible integration.
   const verses = [
@@ -43,6 +19,10 @@ function verseOfDay(dateKeyStr){
 
 import { getAll, put, del, exportAll, importAll } from "./db.js";
 import { uuid, dayKey, monthKey, startOfDay, addDays, clamp, formatDate, formatShort, minsToHHMM, hhmmToMins, weekStart } from "./utils.js";
+import * as sync from "./sync.js";
+
+// Global partner data cache
+let partnerScheduleData = null;
 
 /* ---------- Toast notification ---------- */
 function toast(message, duration = 3000) {
@@ -563,24 +543,6 @@ document.getElementById("btnToday").addEventListener("click", async () => {
 if ("serviceWorker" in navigator){
   navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
-
-/* ---------- Lock to Portrait Mode ---------- */
-(function lockPortrait() {
-  // Try Screen Orientation API
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock("portrait").catch(() => {
-      // Silently fail - not all browsers support this
-    });
-  }
-  // Fallback for older iOS
-  if (window.orientation !== undefined) {
-    window.addEventListener("orientationchange", () => {
-      if (window.orientation === 90 || window.orientation === -90) {
-        // Could show a message, but CSS handles the rotation
-      }
-    });
-  }
-})();
 
 /* ---------- Data defaults ---------- */
 async function ensureSettings(){
@@ -1129,6 +1091,32 @@ function spotifyOpenLink(artist, title){
 
 async function renderRoute(r){
   const settings = await ensureSettings();
+  
+  // Initialize sync if configured
+  if (settings.firebaseApiKey && settings.firebaseDatabaseUrl && !sync.isSyncEnabled()) {
+    try {
+      const ok = await sync.initFirebase({
+        apiKey: settings.firebaseApiKey,
+        databaseURL: settings.firebaseDatabaseUrl
+      });
+      if (ok) {
+        const myUserId = sync.getOrCreateUserId();
+        sync.enableSync(myUserId);
+        
+        // Subscribe to partner if configured
+        if (settings.partnerCode) {
+          const partnerId = await sync.getUserIdFromCode(settings.partnerCode);
+          if (partnerId) {
+            sync.subscribeToPartner(partnerId, (data) => {
+              partnerScheduleData = data;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.log("Sync init error:", e);
+    }
+  }
 
   if (r === "cover") return await viewCover(settings);
   if (r === "dashboard") return await viewDashboard(settings);
@@ -1142,6 +1130,7 @@ if (r === "diary") return await viewDiary(settings);
 if (r.startsWith("diary/")) return await viewDiaryEntry(settings, r.split("/")[1]);
 if (r.startsWith("weekly/")) return await viewWeekly(settings, r.split("/")[1]);
 if (r.startsWith("day/")) return await viewDay(settings, r.split("/")[1]);
+  if (r === "partner") return await viewPartnerSchedule(settings);
   if (r === "settings") return await viewSettings(settings);
 
   return el("div", {}, [el("div",{class:"h1"},[document.createTextNode("Not found")])]);
@@ -1558,49 +1547,13 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
   const statusEl = el("div",{class:"songStatus muted small"},[document.createTextNode("Tap play")]);
   const timeEl = el("div",{class:"songTime muted"},[document.createTextNode("")]);
   
-  // Album art - first image to load wins
+  // Album art from YouTube thumbnail
   const art = el("div",{class:"songArt"});
-  let artworkLocked = false;
-  
-  // Race: YouTube thumbnail vs iTunes artwork - first to load wins
   if (ytId) {
-    const ytImg = new Image();
-    ytImg.onload = () => {
-      if (!artworkLocked) {
-        art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
-        artworkLocked = true;
-      }
-    };
-    ytImg.src = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+    art.style.backgroundImage = `url('https://img.youtube.com/vi/${ytId}/mqdefault.jpg')`;
+  } else {
+    art.style.background = "linear-gradient(135deg, #4a90d9 0%, #a8d4ff 100%)";
   }
-  
-  // Try iTunes artwork
-  (async () => {
-    try {
-      const q = encodeURIComponent(`${artist} ${title}`);
-      const res = await fetch(`https://itunes.apple.com/search?term=${q}&media=music&limit=10`);
-      const data = await res.json();
-      if (data.results && data.results.length > 0 && !artworkLocked) {
-        const norm = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
-        const aN = norm(artist);
-        const tN = norm(title);
-        let best = null;
-        for (const r of data.results) {
-          if (!r.artworkUrl100) continue;
-          const ra = norm(r.artistName);
-          const rt = norm(r.trackName);
-          const score = (ra.includes(aN)?3:0) + (aN.includes(ra)?2:0) + (rt.includes(tN)?3:0) + (tN.includes(rt)?2:0);
-          if (!best || score > best.score) best = { score, r };
-        }
-        if (best && best.r.artworkUrl100 && !artworkLocked) {
-          art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
-          artworkLocked = true;
-        }
-      }
-    } catch (e) {
-      // Ignore errors
-    }
-  })();
   
   // Play button
   const playBtn = el("button",{class:"playBtn"},[document.createTextNode("▶")]);
@@ -1660,7 +1613,10 @@ function miniAudioPlayer({artist, title, ytId, spotifyId, todayKey}){
           }
           
           if (best && best.r.previewUrl) {
-            // Don't update artwork here - keep whatever was set on load
+            // Update artwork
+            if (best.r.artworkUrl100) {
+              art.style.backgroundImage = `url('${best.r.artworkUrl100}')`;
+            }
             
             statusEl.textContent = "Downloading...";
             
@@ -2576,7 +2532,7 @@ function touchpointsList(items, contacts, selectedMonth){
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openTouchpointModal(contacts, t, selectedMonth)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
+          btn("Del",{kind:"danger", onclick: async ()=>{ await del("touchpoints", t.id); await navigate(route(), true); }})
         ])
       ]),
       (t.notes || t.note) ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(t.notes || t.note)]) : el("div")
@@ -2658,9 +2614,8 @@ function openTouchpointModal(contacts, existing=null, selectedMonth=null){
   let base;
   if (existing?.datetime) {
     base = new Date(existing.datetime);
-  } else if (selectedMonth) {
-    base = new Date(selectedMonth + "-15T12:00:00");
   } else {
+    // Always use current date/time for new entries
     base = new Date();
   }
   dt.value = new Date(base.getTime() - base.getTimezoneOffset()*60000).toISOString().slice(0,16);
@@ -2861,7 +2816,7 @@ function txList(items, selectedMonth){
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openTxModal(t, selectedMonth)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
+          btn("Del",{kind:"danger", onclick: async ()=>{ await del("transactions", t.id); await navigate(route(), true); }})
         ])
       ]),
       t.merchant ? el("div",{class:"m", style:"margin-top:4px"},[document.createTextNode(t.merchant)]) : el("div")
@@ -2875,13 +2830,10 @@ function openTxModal(existing=null, selectedMonth=null){
   const dt = el("input",{class:"input", type:"datetime-local"});
   const errDt = mkFieldError();
   
-  // Default to selected month if provided, otherwise use existing date or now
+  // Always use current date/time for new entries, existing date for edits
   let base;
   if (existing?.date) {
     base = new Date(existing.date);
-  } else if (selectedMonth) {
-    // Default to first of selected month at noon
-    base = new Date(selectedMonth + "-15T12:00:00");
   } else {
     base = new Date();
   }
@@ -3139,7 +3091,7 @@ function workoutsList(workouts, setsByWorkout, selectedMonth){
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openWorkoutModal(w, selectedMonth)}),
           btn("Open",{kind:"ghost", onclick: ()=>openWorkoutDetailModal(w, ws)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{
+          btn("Del",{kind:"danger", onclick: async ()=>{
             for (const s of ws) await del("workoutSets", s.id);
             await del("workouts", w.id);
             await navigate(route(), true);
@@ -3341,10 +3293,9 @@ function openBioModal(existing=null, selectedMonth=null){
   const isEdit = !!existing;
   const dt = el("input",{class:"input", type:"date"});
   
+  // Always use current date for new entries, existing date for edits
   if (existing?.date) {
     dt.value = String(existing.date).slice(0,10);
-  } else if (selectedMonth) {
-    dt.value = selectedMonth + "-15";
   } else {
     dt.value = dayKey(new Date());
   }
@@ -3408,7 +3359,7 @@ function bioList(items, selectedMonth){
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openBioModal(b, selectedMonth)}),
-          btn("Delete",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
+          btn("Del",{kind:"danger", onclick: async ()=>{ await del("biometrics", b.id); await navigate(route(), true); }})
         ])
       ])
     ]));
@@ -3965,6 +3916,106 @@ async function viewDiaryEntry(settings, id){
 }
 
 
+/* ---------- Partner Schedule View ---------- */
+async function viewPartnerSchedule(settings) {
+  const partnerData = sync.getPartnerData();
+  const syncStatus = sync.getSyncStatus();
+  
+  const header = el("div",{},[
+    el("div",{class:"h1"},[document.createTextNode(`${partnerData?.displayName || "Partner"}'s Schedule ♥`)]),
+    el("div",{class:"subtle"},[document.createTextNode(
+      partnerData?.lastUpdated 
+        ? `Last updated: ${new Date(partnerData.lastUpdated).toLocaleString()}`
+        : "View your partner's schedule"
+    )])
+  ]);
+  
+  if (!syncStatus.enabled || !partnerData) {
+    return el("div",{class:"stack"},[
+      header,
+      card("Not Connected", "", el("div",{class:"stack"},[
+        el("div",{class:"muted"},[document.createTextNode("You haven't connected to a partner yet.")]),
+        el("div",{class:"muted small"},[document.createTextNode("Go to Settings → Partner Sync to set up sharing.")]),
+        btn("Go to Settings",{onclick:()=>{ location.hash = "settings"; }})
+      ]))
+    ]);
+  }
+  
+  const today = dayKey(selectedDate);
+  
+  // Partner's tasks for selected date
+  const partnerTasks = (partnerData.tasks || []).filter(t => t.scheduledDate === today);
+  const partnerBlocks = (partnerData.timeBlocks || []).filter(b => b.date === today);
+  
+  // Tasks card
+  const tasksBody = el("div",{class:"list"},[]);
+  if (partnerTasks.length === 0) {
+    tasksBody.append(el("div",{class:"muted"},[document.createTextNode("No tasks scheduled")]));
+  } else {
+    for (const t of partnerTasks) {
+      const statusIcon = t.status === "done" ? "✓" : t.status === "wontdo" ? "✗" : "○";
+      tasksBody.append(el("div",{class:"item"},[
+        el("div",{class:"top"},[
+          el("div",{},[
+            el("div",{class:"h"},[document.createTextNode(`${statusIcon} ${t.title}`)]),
+            t.notes ? el("div",{class:"m"},[document.createTextNode(t.notes)]) : el("span")
+          ])
+        ])
+      ]));
+    }
+  }
+  
+  // Time blocks card
+  const blocksBody = el("div",{class:"list"},[]);
+  if (partnerBlocks.length === 0) {
+    blocksBody.append(el("div",{class:"muted"},[document.createTextNode("No schedule blocks")]));
+  } else {
+    partnerBlocks.sort((a,b) => (a.startMins||0) - (b.startMins||0));
+    for (const b of partnerBlocks) {
+      const startTime = minsToHHMM(b.startMins || 0);
+      const endTime = minsToHHMM(b.endMins || 0);
+      blocksBody.append(el("div",{class:"item"},[
+        el("div",{class:"top"},[
+          el("div",{},[
+            el("div",{class:"h"},[document.createTextNode(b.title || "Busy")]),
+            el("div",{class:"m"},[document.createTextNode(`${startTime} - ${endTime}`)])
+          ])
+        ])
+      ]));
+    }
+  }
+  
+  // Goals overview
+  const partnerYearlyGoals = partnerData.yearlyGoals || [];
+  const partnerQuarterlyGoals = partnerData.quarterlyGoals || [];
+  const partnerMonthlyGoals = partnerData.monthlyGoals || [];
+  
+  const goalsBody = el("div",{class:"stack"},[
+    el("div",{style:"font-weight:700"},[document.createTextNode(`Yearly Goals (${partnerYearlyGoals.length})`)]),
+    ...partnerYearlyGoals.slice(0,3).map(g => 
+      el("div",{class:"muted small"},[document.createTextNode(`• ${g.title}`)])
+    ),
+    partnerYearlyGoals.length > 3 ? el("div",{class:"muted small"},[document.createTextNode(`...and ${partnerYearlyGoals.length - 3} more`)]) : el("span"),
+    el("hr"),
+    el("div",{style:"font-weight:700"},[document.createTextNode(`This Month's Goals (${partnerMonthlyGoals.filter(m=>m.monthKey===monthKey(new Date())).length})`)]),
+    ...partnerMonthlyGoals.filter(m=>m.monthKey===monthKey(new Date())).slice(0,3).map(g => 
+      el("div",{class:"muted small"},[document.createTextNode(`• ${g.title}`)])
+    )
+  ]);
+  
+  return el("div",{class:"stack"},[
+    header,
+    card(`Tasks for ${formatDate(selectedDate)}`, "", tasksBody),
+    card("Schedule", "", blocksBody),
+    card("Goals Overview", "", goalsBody),
+    el("div",{class:"row",style:"justify-content:center;"},[
+      btn("Refresh",{kind:"ghost", onclick: async ()=>{
+        toast("Checking for updates...");
+        await navigate(route(), true);
+      }})
+    ])
+  ]);
+}
 
 
 async function viewSettings(settings){
@@ -4098,9 +4149,112 @@ async function viewSettings(settings){
     el("div",{class:"muted small"},[document.createTextNode("Click 'Play Full Video' to open the full song on YouTube.")])
   ]));
 
+  // Partner Sync Card
+  const syncStatus = sync.getSyncStatus();
+  const myUserId = sync.getOrCreateUserId();
+  const myShareCode = sync.generateShareCode(myUserId);
+  
+  const displayNameInput = el("input",{class:"input", placeholder:"Your name", value: settings.syncDisplayName || ""});
+  const partnerCodeInput = el("input",{class:"input", placeholder:"Partner's code", value: settings.partnerCode || ""});
+  const firebaseApiKey = el("input",{class:"input", placeholder:"Firebase API Key", value: settings.firebaseApiKey || ""});
+  const firebaseDatabaseUrl = el("input",{class:"input", placeholder:"Firebase Database URL", value: settings.firebaseDatabaseUrl || ""});
+  const syncStatusEl = el("div",{class:"muted small"},[document.createTextNode(
+    syncStatus.hasPartnerData 
+      ? `Connected to ${syncStatus.partnerName || 'Partner'} • Last updated: ${syncStatus.partnerLastUpdated ? new Date(syncStatus.partnerLastUpdated).toLocaleString() : 'Unknown'}`
+      : "Not connected to partner"
+  )]);
+  
+  const syncCard = card("Partner Sync ♥", "Share schedules with your partner", el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode("Share your schedule with a partner or family member in real-time.")]),
+    el("hr"),
+    el("div",{style:"font-weight:700"},[document.createTextNode("Your Share Code")]),
+    el("div",{class:"row",style:"gap:8px;align-items:center;"},[
+      el("code",{style:"background:var(--accent3);padding:8px 16px;border-radius:8px;font-size:18px;letter-spacing:2px;font-weight:bold;"},[document.createTextNode(myShareCode)]),
+      btn("Copy",{kind:"ghost", onclick:()=>{
+        navigator.clipboard.writeText(myShareCode);
+        toast("Code copied!");
+      }})
+    ]),
+    el("div",{class:"muted small"},[document.createTextNode("Give this code to your partner")]),
+    el("hr"),
+    el("div",{style:"font-weight:700"},[document.createTextNode("Your Display Name")]),
+    displayNameInput,
+    el("hr"),
+    el("div",{style:"font-weight:700"},[document.createTextNode("Partner's Code")]),
+    partnerCodeInput,
+    el("hr"),
+    el("div",{style:"font-weight:700"},[document.createTextNode("Firebase Setup")]),
+    el("div",{class:"muted small"},[document.createTextNode("Create a free Firebase project at firebase.google.com")]),
+    el("label",{class:"label"},[document.createTextNode("API Key")]),
+    firebaseApiKey,
+    el("label",{class:"label"},[document.createTextNode("Database URL")]),
+    firebaseDatabaseUrl,
+    el("hr"),
+    syncStatusEl,
+    el("div",{class:"row"},[
+      btn("Save & Connect",{onclick: async ()=>{
+        settings.syncDisplayName = displayNameInput.value.trim() || "Partner";
+        settings.partnerCode = partnerCodeInput.value.trim().toUpperCase();
+        settings.firebaseApiKey = firebaseApiKey.value.trim();
+        settings.firebaseDatabaseUrl = firebaseDatabaseUrl.value.trim();
+        await put("settings", settings);
+        
+        if (settings.firebaseApiKey && settings.firebaseDatabaseUrl) {
+          const ok = await sync.initFirebase({
+            apiKey: settings.firebaseApiKey,
+            databaseURL: settings.firebaseDatabaseUrl
+          });
+          
+          if (ok) {
+            sync.enableSync(myUserId);
+            await sync.registerShareCode(myUserId);
+            
+            // Upload my data
+            const allData = await exportAll();
+            allData.displayName = settings.syncDisplayName;
+            await sync.uploadMyData(myUserId, allData);
+            
+            // Subscribe to partner if code entered
+            if (settings.partnerCode) {
+              const partnerId = await sync.getUserIdFromCode(settings.partnerCode);
+              if (partnerId) {
+                sync.subscribeToPartner(partnerId, (data) => {
+                  partnerScheduleData = data;
+                  toast(`${data.displayName || 'Partner'}'s schedule updated!`);
+                });
+                toast("Connected to partner!");
+              } else {
+                toast("Partner code not found");
+              }
+            } else {
+              toast("Sync enabled! Share your code with your partner.");
+            }
+          } else {
+            toast("Firebase connection failed. Check your credentials.");
+          }
+        } else {
+          toast("Settings saved");
+        }
+        
+        await navigate(route(), true);
+      }}),
+      btn("Sync Now",{kind:"ghost", onclick: async ()=>{
+        if (!sync.isSyncEnabled()) {
+          toast("Set up Firebase first");
+          return;
+        }
+        const allData = await exportAll();
+        allData.displayName = settings.syncDisplayName || "Partner";
+        await sync.uploadMyData(myUserId, allData);
+        toast("Schedule uploaded!");
+      }})
+    ])
+  ]));
+
   return el("div",{class:"stack"},[
     header,
     card("Preferences", "", prefs),
+    syncCard,
     spCard ? spCard : el("div"),
     musicCard
   ]);
