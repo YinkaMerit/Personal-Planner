@@ -24,7 +24,7 @@
   --warn: #8b5e1a;
   --bad: #a8384a;
   --radius: 4px;
-  --flip: 900ms;
+  --flip: 620ms;
   --tabbar: 46px;
   --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --sans: "Karla", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -152,14 +152,19 @@ a{ color: var(--accent-text); }
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-.pagehost.flipping .page.current{ z-index: 5; animation: pageTurn var(--flip) cubic-bezier(.6,.05,.3,1) forwards; }
+/* The page is hinged on its left edge, so it is edge-on (and gone) at 90 degrees. The whole
+   animation is spent on that visible quarter turn, eased at both ends, rather than half of it
+   happening out of sight. The turning page darkens as it lifts; the page under it brightens. */
+.pagehost.flipping .page.current{ z-index: 5; animation: pageTurn var(--flip) cubic-bezier(.45,0,.4,1) forwards; }
+.pagehost.flipping .page.current::after{ animation: castIn var(--flip) ease-in both; }
 .pagehost.flipping .page.next{ z-index: 2; }
 .pagehost.flipping .page.next::after{ animation: castOut var(--flip) ease-out both; }
 .pagehost.flipping-back .page.current{ z-index: 2; }
 .pagehost.flipping-back .page.current::after{ animation: castIn var(--flip) ease-in both; }
-.pagehost.flipping-back .page.prev{ z-index: 5; animation: pageTurnBack var(--flip) cubic-bezier(.6,.05,.3,1) forwards; }
-@keyframes pageTurn{ from{ transform: rotateY(0deg); } to{ transform: rotateY(-180deg); } }
-@keyframes pageTurnBack{ from{ transform: rotateY(-180deg); } to{ transform: rotateY(0deg); } }
+.pagehost.flipping-back .page.prev{ z-index: 5; animation: pageTurnBack var(--flip) cubic-bezier(.45,0,.4,1) forwards; }
+.pagehost.flipping-back .page.prev::after{ animation: castOut var(--flip) ease-out both; }
+@keyframes pageTurn{ from{ transform: rotateY(0deg); } to{ transform: rotateY(-90deg); } }
+@keyframes pageTurnBack{ from{ transform: rotateY(-90deg); } to{ transform: rotateY(0deg); } }
 @keyframes castOut{ from{ opacity: 1; } to{ opacity: 0; } }
 @keyframes castIn{ from{ opacity: 0; } to{ opacity: 1; } }
 
@@ -194,7 +199,9 @@ a{ color: var(--accent-text); }
 .tabbar{
   flex: 0 0 auto;
   display: flex;
+  align-items: flex-start;
   gap: 3px;
+  min-height: calc(var(--tabbar) + var(--sab));
   width: 100%;
   max-width: 904px;
   margin: 0 auto;
@@ -203,9 +210,10 @@ a{ color: var(--accent-text); }
 .tab{
   flex: 1 1 0;
   min-width: 0;
-  height: var(--tabbar);
-  padding: 0 2px 4px;
+  height: calc(var(--tabbar) - 6px);
+  padding: 0 2px 2px;
   background: var(--navy-deep);
+  transition: height .28s cubic-bezier(.3,.7,.2,1), background-color .28s ease, color .28s ease;
   border: none;
   border-radius: 0 0 8px 8px;
   color: var(--sky);
@@ -219,7 +227,8 @@ a{ color: var(--accent-text); }
   cursor: pointer;
 }
 /* the open section's tab is paper, joined to the page above it */
-.tab.active{ background: var(--paper); color: var(--ink); }
+.tab.active{ height: var(--tabbar); background: var(--paper); color: var(--ink); }
+.tab:active{ opacity: .75; }
 
 /* ---------- Type ---------- */
 .kicker{
@@ -632,6 +641,7 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   background: rgba(10,22,38,.5);
   padding: calc(var(--sat) + 10px) 0 0;
 }
+/* A sheet is a card slipped into the book: cloth header with a foil title, ruled paper, small-caps labels */
 .modal{
   width: 100%;
   max-width: 560px;
@@ -639,14 +649,47 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   display: flex;
   flex-direction: column;
   background: var(--paper);
-  border-radius: 12px 12px 0 0;
+  border-radius: 3px 10px 0 0;
   overflow: hidden;
 }
-.modal-header{ flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 4px 16px; border-bottom: 1px solid var(--rule); }
-.modal-header .iconbtn{ color: var(--muted); }
-.modal-title{ font-family: var(--serif); font-size: 18px; font-weight: 500; }
-.modal-body{ flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px; }
-.modal-footer{ flex: 0 0 auto; display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px calc(var(--sab) + 10px); border-top: 1px solid var(--rule); }
+.modal-header{
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 16px;
+  background-color: var(--navy);
+  background-image: var(--cloth);
+  border-bottom: 1px solid var(--sky);
+}
+.modal-header .iconbtn{ color: var(--sky); }
+.modal-title{ font-family: var(--serif); font-style: italic; font-size: 18px; font-weight: 400; color: var(--foil); }
+.modal-body{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 16px;
+  background-image: repeating-linear-gradient(180deg, transparent 0 27px, var(--line) 27px 28px);
+  background-attachment: local;
+}
+.modal-body label, .modal-body .label{
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.modal-body .h2{ font-size: 16px; }
+
+/* Sheets and the contents drawer slide in rather than appearing */
+.modal-backdrop:not(.hidden){ animation: fadeIn .2s ease both; }
+.modal-backdrop:not(.hidden) .modal{ animation: sheetUp .32s cubic-bezier(.2,.8,.2,1) both; }
+.drawer:not(.hidden){ animation: fadeIn .2s ease both; }
+.drawer:not(.hidden) .drawer-panel{ animation: drawerIn .3s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes fadeIn{ from{ opacity: 0; } to{ opacity: 1; } }
+@keyframes sheetUp{ from{ transform: translateY(40%); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
+@keyframes drawerIn{ from{ transform: translateX(-100%); } to{ transform: translateX(0); } }
+.modal-footer{ flex: 0 0 auto; display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px calc(var(--sab) + 10px); border-top: 1px solid var(--sky); background: var(--card); }
 .modal-footer > div{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; width: 100%; }
 .modal-footer span:empty{ display: none; }
 /* destructive action sits apart from Cancel / Save, on the left */
@@ -834,7 +877,8 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 
 @media (prefers-reduced-motion: reduce){
   :root{ --flip: 0ms; }
-  .ribbon{ transition: none; }
+  .ribbon, .tab{ transition: none; }
+  .modal-backdrop *, .modal-backdrop, .drawer, .drawer *{ animation: none !important; }
   #bookCover.opening *, #bookCover.closing *{ animation-duration: .01s !important; animation-delay: 0s !important; }
 }
 

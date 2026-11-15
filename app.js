@@ -831,6 +831,8 @@ async function navigate(r, skipAnim=false){
   if (isNavigating){ pendingRoute = target; return; }
 
   document.querySelectorAll(".navitem[data-route]").forEach(b => b.classList.toggle("active", b.dataset.route === targetKey));
+  // Move the tab straight away so it answers the tap, rather than after the page has turned
+  updatePageNavButtons(targetKey);
 
   const fromKey = currentRouteKey;
   const ms = flipMs();
@@ -897,10 +899,10 @@ function scrollToTop() {
 }
 
 // Highlight the edge tab for the open section
-function updatePageNavButtons() {
+function updatePageNavButtons(key = currentRouteKey) {
   document.querySelectorAll("#edgeTabs .tab").forEach(t=>{
     const r = t.dataset.route;
-    const on = r === "more" ? !TAB_ROUTES.includes(currentRouteKey) : r === currentRouteKey;
+    const on = r === "more" ? !TAB_ROUTES.includes(key) : r === key;
     t.classList.toggle("active", on);
     if (on) t.setAttribute("aria-current","page"); else t.removeAttribute("aria-current");
   });

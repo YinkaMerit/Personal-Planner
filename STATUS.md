@@ -60,6 +60,14 @@ Reviewed against Apple's Human Interface Guidelines after feedback that the app 
 
 Still to check on the phone: what happens to sheets when the keyboard opens (left to iOS's default behaviour).
 
+## Motion and sheets (15 Nov, sixth release)
+
+From a frame-by-frame look at a screen recording on the phone:
+
+- Page turn: half of the old 0.9s animation happened out of sight (the page is edge-on at 90 degrees), so the turn looked abrupt and was followed by dead time. It now spends the whole 0.62s on the visible quarter turn, eased at both ends, with the turning page darkening and the page beneath brightening.
+- Tabs: the open tab only changed after the turn had finished. It now changes on the tap, stands 6pt taller than the others, and animates.
+- Sheets (add and edit forms): cloth header with a foil italic title, ruled paper body, small-caps labels, matching corners. Sheets and the contents drawer slide in.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
