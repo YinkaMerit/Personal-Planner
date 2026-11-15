@@ -1,17 +1,14 @@
-// Firebase Realtime Database Sync Module
-// Enables sharing your planner with another person (partner/family)
+// Partner sync: share your schedule with one other planner.
+// Both planners enter the same pairing code. Each uploads a copy of its schedule to a small
+// Cloudflare Worker (cloudflare/partner-sync) and reads the other's. Only a hash of the code
+// leaves the phone, and only the stores listed below are shared.
 
-let firebaseApp = null;
-let firebaseDb = null;
-let syncEnabled = false;
-let myUserId = null;
-let partnerId = null;
-let partnerListener = null;
-let partnerData = null;
-let onPartnerUpdate = null;
+const SYNC_URL = "https://tees-planner-sync.yinkadev.workers.dev";
+const CFG_KEY = "tpp_sync";
+const PARTNER_KEY = "tpp_sync_partner";
 
 // Stores to sync (schedule-related only for privacy)
-const SYNC_STORES = [
+export const SYNC_STORES = [
   "tasks",
   "timeBlocks",
   "yearlyGoals",
@@ -19,184 +16,130 @@ const SYNC_STORES = [
   "monthlyGoals"
 ];
 
-// Initialize Firebase with user's config
-export async function initFirebase(config) {
-  if (!config || !config.apiKey || !config.databaseURL) {
-    console.log("Firebase config incomplete");
-    return false;
-  }
-  
-  try {
-    // Dynamically load Firebase SDK
-    if (!window.firebase) {
-      await loadFirebaseSDK();
-    }
-    
-    // Initialize app if not already
-    if (!firebaseApp) {
-      firebaseApp = firebase.initializeApp(config, 'tee-planner-sync');
-      firebaseDb = firebase.database(firebaseApp);
-    }
-    
-    return true;
-  } catch (e) {
-    console.error("Firebase init error:", e);
-    return false;
+let partnerData = null;
+let lastUploaded = "";   // JSON of the last copy sent, to skip uploads when nothing changed
+let lastError = "";
+
+try{ partnerData = JSON.parse(localStorage.getItem(PARTNER_KEY) || "null"); }catch(_){}
+
+// { code, name, at } - the pairing code is kept out of the planner's database so it never ends up in a backup file
+export function syncConfig(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CFG_KEY) || "null") || {};
+    return { code: c.code || "", name: c.name || "", at: c.at || 0 };
+  }catch(_){
+    return { code: "", name: "", at: 0 };
   }
 }
 
-// Load Firebase SDK dynamically
-function loadFirebaseSDK() {
-  return new Promise((resolve, reject) => {
-    if (window.firebase) {
-      resolve();
-      return;
-    }
-    
-    const script1 = document.createElement('script');
-    script1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
-    script1.onload = () => {
-      const script2 = document.createElement('script');
-      script2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
-      script2.onload = resolve;
-      script2.onerror = reject;
-      document.head.appendChild(script2);
-    };
-    script1.onerror = reject;
-    document.head.appendChild(script1);
-  });
+export function setSyncConfig(cfg){
+  try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }catch(_){}
 }
 
-// Generate a unique user ID or get existing one
-export function getOrCreateUserId() {
-  let id = localStorage.getItem('tee_planner_user_id');
-  if (!id) {
-    id = 'user_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
-    localStorage.setItem('tee_planner_user_id', id);
+// Switch sync off and remove this planner's copy from the sync service
+export async function disconnect(){
+  const cfg = syncConfig();
+  if (cfg.code){
+    try{ await fetch(`${SYNC_URL}/v1/pair/${await pairHash(cfg.code)}/${getOrCreateUserId()}`, { method: "DELETE" }); }catch(_){}
+  }
+  try{ localStorage.removeItem(CFG_KEY); localStorage.removeItem(PARTNER_KEY); }catch(_){}
+  partnerData = null;
+  lastUploaded = "";
+  lastError = "";
+}
+
+export function isSyncEnabled(){
+  return !!syncConfig().code;
+}
+
+// Generate a unique id for this planner or get the existing one
+export function getOrCreateUserId(){
+  let id = localStorage.getItem("tee_planner_user_id");
+  if (!id || !/^[A-Za-z0-9_-]{8,64}$/.test(id)){
+    const bytes = crypto.getRandomValues(new Uint8Array(12));
+    id = "user_" + [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
+    localStorage.setItem("tee_planner_user_id", id);
   }
   return id;
 }
 
-// Generate a simple shareable code from user ID
-export function generateShareCode(userId) {
-  // Create a short, easy to share code
-  const hash = userId.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0);
-  return Math.abs(hash).toString(36).toUpperCase().slice(0, 6);
+// A new pairing code, e.g. K7QM-3XWD-9FHT. No 0/O or 1/I so it is easy to read out.
+export function newPairCode(){
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  const chars = [...bytes].map(b => alphabet[b % alphabet.length]);
+  return [chars.slice(0,4), chars.slice(4,8), chars.slice(8,12)].map(g => g.join("")).join("-");
 }
 
-// Get user ID from share code (stored mapping in Firebase)
-export async function getUserIdFromCode(code) {
-  if (!firebaseDb) return null;
-  
-  try {
-    const snapshot = await firebaseDb.ref(`shareCodes/${code.toUpperCase()}`).once('value');
-    return snapshot.val();
-  } catch (e) {
-    console.error("Error getting user from code:", e);
-    return null;
+export function normalizeCode(code){
+  return String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+async function pairHash(code){
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("tees-planner:" + normalizeCode(code)));
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Upload this planner's copy. `data` is the output of exportAll(). Returns { ok, error? }.
+export async function upload(data, { force = false, keepalive = false } = {}){
+  const cfg = syncConfig();
+  if (!cfg.code) return { ok: false, error: "not_set_up" };
+
+  const copy = { displayName: cfg.name || "Partner" };
+  for (const store of SYNC_STORES) copy[store] = Array.isArray(data[store]) ? data[store] : [];
+  const fingerprint = JSON.stringify(copy);
+  if (!force && fingerprint === lastUploaded) return { ok: true, skipped: true };
+  copy.lastUpdated = Date.now();
+
+  try{
+    const res = await fetch(`${SYNC_URL}/v1/pair/${await pairHash(cfg.code)}/${getOrCreateUserId()}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(copy),
+      keepalive
+    });
+    if (res.status === 409){ lastError = "That code is already used by two other planners. Create a new one."; return { ok: false, error: "pair_full" }; }
+    if (!res.ok){ lastError = "Couldn't reach the sync service."; return { ok: false, error: "http_" + res.status }; }
+    lastUploaded = fingerprint;
+    lastError = "";
+    setSyncConfig({ ...cfg, at: Date.now() });
+    return { ok: true, ...(await res.json()) };
+  }catch(_){
+    lastError = navigator.onLine === false ? "Offline. Your changes will be shared when you're back online." : "Couldn't reach the sync service.";
+    return { ok: false, error: "network" };
   }
 }
 
-// Register your share code
-export async function registerShareCode(userId) {
-  if (!firebaseDb) return null;
-  
-  const code = generateShareCode(userId);
-  try {
-    await firebaseDb.ref(`shareCodes/${code}`).set(userId);
-    return code;
-  } catch (e) {
-    console.error("Error registering share code:", e);
-    return null;
-  }
-}
-
-// Upload your data to Firebase
-export async function uploadMyData(userId, data) {
-  if (!firebaseDb || !userId) return false;
-  
-  try {
-    const syncData = {};
-    for (const store of SYNC_STORES) {
-      if (data[store]) {
-        syncData[store] = data[store];
-      }
-    }
-    syncData.lastUpdated = Date.now();
-    syncData.displayName = data.displayName || 'Partner';
-    
-    await firebaseDb.ref(`users/${userId}`).set(syncData);
-    return true;
-  } catch (e) {
-    console.error("Upload error:", e);
+// Fetch the partner's latest copy. Returns true when it changed.
+export async function fetchPartner(){
+  const cfg = syncConfig();
+  if (!cfg.code) return false;
+  try{
+    const res = await fetch(`${SYNC_URL}/v1/pair/${await pairHash(cfg.code)}?me=${getOrCreateUserId()}`);
+    if (!res.ok) return false;
+    const { partner } = await res.json();
+    const changed = JSON.stringify(partner) !== JSON.stringify(partnerData);
+    partnerData = partner || null;
+    try{ localStorage.setItem(PARTNER_KEY, JSON.stringify(partnerData)); }catch(_){}
+    return changed;
+  }catch(_){
     return false;
   }
 }
 
-// Subscribe to partner's data
-export function subscribeToPartner(partnerUserId, callback) {
-  if (!firebaseDb || !partnerUserId) return false;
-  
-  // Unsubscribe from previous partner
-  if (partnerListener) {
-    firebaseDb.ref(`users/${partnerId}`).off('value', partnerListener);
-  }
-  
-  partnerId = partnerUserId;
-  onPartnerUpdate = callback;
-  
-  partnerListener = firebaseDb.ref(`users/${partnerUserId}`).on('value', (snapshot) => {
-    partnerData = snapshot.val();
-    if (onPartnerUpdate && partnerData) {
-      onPartnerUpdate(partnerData);
-    }
-  });
-  
-  return true;
-}
-
-// Unsubscribe from partner
-export function unsubscribeFromPartner() {
-  if (firebaseDb && partnerId && partnerListener) {
-    firebaseDb.ref(`users/${partnerId}`).off('value', partnerListener);
-  }
-  partnerId = null;
-  partnerListener = null;
-  partnerData = null;
-  onPartnerUpdate = null;
-}
-
-// Get partner's current data
-export function getPartnerData() {
+// Partner's current data (last fetched copy; kept for offline)
+export function getPartnerData(){
   return partnerData;
 }
 
-// Check if sync is active
-export function isSyncEnabled() {
-  return syncEnabled && firebaseDb !== null;
-}
-
-// Enable sync
-export function enableSync(userId) {
-  myUserId = userId;
-  syncEnabled = true;
-}
-
-// Disable sync
-export function disableSync() {
-  unsubscribeFromPartner();
-  syncEnabled = false;
-  myUserId = null;
-}
-
-// Get sync status
-export function getSyncStatus() {
+export function getSyncStatus(){
+  const cfg = syncConfig();
   return {
-    enabled: syncEnabled,
-    myUserId,
-    partnerId,
+    enabled: !!cfg.code,
+    lastUploadedAt: cfg.at || null,
     hasPartnerData: partnerData !== null,
     partnerName: partnerData?.displayName || null,
-    partnerLastUpdated: partnerData?.lastUpdated || null
+    partnerLastUpdated: partnerData?.lastUpdated || null,
+    error: lastError
   };
 }

@@ -1,10 +1,8 @@
-import { getAll, put, del, exportAll, importAll } from "./db.js";
+import { getAll, put, del, exportAll, importAll, onDataChange } from "./db.js";
 import { uuid, dayKey, monthKey, localDayKey, startOfDay, addDays, clamp, formatDate, formatShort, minsToHHMM, hhmmToMins, weekStart } from "./utils.js";
 import * as sync from "./sync.js";
 import { parseICS, eventsOnDay } from "./calendar.js";
 
-// Global partner data cache
-let partnerScheduleData = null;
 
 /* ---------- Toast notification ---------- */
 function toast(message, duration = 3000) {
@@ -1053,32 +1051,6 @@ async function computeDueContacts(){
 async function renderRoute(r){
   const settings = await ensureSettings();
   
-  // Initialize sync if configured
-  if (settings.firebaseApiKey && settings.firebaseDatabaseUrl && !sync.isSyncEnabled()) {
-    try {
-      const ok = await sync.initFirebase({
-        apiKey: settings.firebaseApiKey,
-        databaseURL: settings.firebaseDatabaseUrl
-      });
-      if (ok) {
-        const myUserId = sync.getOrCreateUserId();
-        sync.enableSync(myUserId);
-        
-        // Subscribe to partner if configured
-        if (settings.partnerCode) {
-          const partnerId = await sync.getUserIdFromCode(settings.partnerCode);
-          if (partnerId) {
-            sync.subscribeToPartner(partnerId, (data) => {
-              partnerScheduleData = data;
-            });
-          }
-        }
-      }
-    } catch (e) {
-      console.log("Sync init error:", e);
-    }
-  }
-
   if (r === "cover") return await viewDashboard(settings);
   if (r === "dashboard") return await viewDashboard(settings);
   if (r === "goals") return await viewGoals();
@@ -3702,10 +3674,42 @@ async function viewDiaryEntry(settings, id){
 }
 
 
+/* ---------- Partner sync ---------- */
+let syncTimer = null;
+let lastPartnerFetch = 0;
+
+async function syncUploadNow(opts){
+  if (!sync.isSyncEnabled()) return { ok: false };
+  return sync.upload(await exportAll(), opts);
+}
+
+async function refreshPartner(){
+  if (!sync.isSyncEnabled()) return;
+  lastPartnerFetch = Date.now();
+  if (await sync.fetchPartner() && currentRouteKey === "partner") await navigate(route(), true);
+}
+
+// Share changes a few seconds after the last edit, so a burst of edits becomes one upload
+onDataChange((store)=>{
+  if (!sync.isSyncEnabled() || !sync.SYNC_STORES.includes(store)) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>{ syncTimer = null; syncUploadNow(); }, 6000);
+});
+document.addEventListener("visibilitychange", ()=>{
+  if (document.hidden){
+    // Leaving the app with an upload still waiting: send it now
+    if (syncTimer){ clearTimeout(syncTimer); syncTimer = null; syncUploadNow(); }
+  } else {
+    refreshPartner();
+  }
+});
+setInterval(()=>{ if (currentRouteKey === "partner" && !document.hidden) refreshPartner(); }, 60000);
+
 /* ---------- Partner Schedule View ---------- */
 async function viewPartnerSchedule(settings) {
   const partnerData = sync.getPartnerData();
   const syncStatus = sync.getSyncStatus();
+  if (syncStatus.enabled && Date.now() - lastPartnerFetch > 20000) refreshPartner();
   
   const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode(`${partnerData?.displayName || "Partner"}'s Schedule`)]),
@@ -3717,13 +3721,21 @@ async function viewPartnerSchedule(settings) {
     dateStepper()
   ]);
   
-  if (!syncStatus.enabled || !partnerData) {
+  if (!syncStatus.enabled) {
     return el("div",{class:"stack"},[
       header,
-      card("Not Connected", "", el("div",{class:"stack"},[
-        el("div",{class:"muted"},[document.createTextNode("You haven't connected to a partner yet.")]),
-        el("div",{class:"muted small"},[document.createTextNode("Go to Settings → Partner Sync to set up sharing.")]),
-        btn("Go to Settings",{onclick:()=>{ location.hash = "settings"; }})
+      card("Not connected", "", el("div",{class:"stack"},[
+        el("div",{class:"muted"},[document.createTextNode("You haven't connected to a partner yet. Set it up in Settings, under Partner Sync.")]),
+        el("div",{class:"row"},[btn("Go to Settings",{onclick:()=>{ location.hash = "settings"; }})])
+      ]))
+    ]);
+  }
+  if (!partnerData) {
+    return el("div",{class:"stack"},[
+      header,
+      card("Waiting for your partner", "", el("div",{class:"stack"},[
+        el("div",{class:"muted"},[document.createTextNode("Your planner is sharing. Once your partner enters the same pairing code in their planner, their schedule appears here.")]),
+        el("div",{class:"row"},[btn("Check again",{kind:"ghost", onclick: async ()=>{ await sync.fetchPartner(); await navigate(route(), true); }})])
       ]))
     ]);
   }
@@ -3797,7 +3809,8 @@ async function viewPartnerSchedule(settings) {
     card("Goals Overview", "", goalsBody),
     el("div",{class:"row",style:"justify-content:center;"},[
       btn("Refresh",{kind:"ghost", onclick: async ()=>{
-        toast("Checking for updates...");
+        toast("Checking for updates");
+        await sync.fetchPartner();
         await navigate(route(), true);
       }})
     ])
@@ -3895,104 +3908,41 @@ async function viewSettings(settings){
   ]));
 
   // Partner Sync Card
+  const syncCfg = sync.syncConfig();
   const syncStatus = sync.getSyncStatus();
-  const myUserId = sync.getOrCreateUserId();
-  const myShareCode = sync.generateShareCode(myUserId);
-  
-  const displayNameInput = el("input",{class:"input", placeholder:"Your name", value: settings.syncDisplayName || ""});
-  const partnerCodeInput = el("input",{class:"input", placeholder:"Partner's code", value: settings.partnerCode || ""});
-  const firebaseApiKey = el("input",{class:"input", placeholder:"Firebase API Key", value: settings.firebaseApiKey || ""});
-  const firebaseDatabaseUrl = el("input",{class:"input", placeholder:"Firebase Database URL", value: settings.firebaseDatabaseUrl || ""});
-  const syncStatusEl = el("div",{class:"muted small"},[document.createTextNode(
-    syncStatus.hasPartnerData 
-      ? `Connected to ${syncStatus.partnerName || 'Partner'} • Last updated: ${syncStatus.partnerLastUpdated ? new Date(syncStatus.partnerLastUpdated).toLocaleString() : 'Unknown'}`
-      : "Not connected to partner"
-  )]);
-  
-  const syncCard = card("Partner Sync", "Share schedules with your partner", el("div",{class:"stack"},[
-    el("div",{class:"muted small"},[document.createTextNode("Share your schedule with a partner or family member in real-time.")]),
-    el("hr"),
-    el("div",{style:"font-weight:700"},[document.createTextNode("Your Share Code")]),
-    el("div",{class:"row",style:"gap:8px;align-items:center;"},[
-      el("code",{style:"background:var(--accent3);padding:8px 16px;border-radius:8px;font-size:18px;letter-spacing:2px;font-weight:bold;"},[document.createTextNode(myShareCode)]),
-      btn("Copy",{kind:"ghost", onclick:()=>{
-        navigator.clipboard.writeText(myShareCode);
-        toast("Code copied!");
-      }})
-    ]),
-    el("div",{class:"muted small"},[document.createTextNode("Give this code to your partner")]),
-    el("hr"),
-    el("div",{style:"font-weight:700"},[document.createTextNode("Your Display Name")]),
-    displayNameInput,
-    el("hr"),
-    el("div",{style:"font-weight:700"},[document.createTextNode("Partner's Code")]),
-    partnerCodeInput,
-    el("hr"),
-    el("div",{style:"font-weight:700"},[document.createTextNode("Firebase Setup")]),
-    el("div",{class:"muted small"},[document.createTextNode("Create a free Firebase project at firebase.google.com")]),
-    el("label",{class:"label"},[document.createTextNode("API Key")]),
-    firebaseApiKey,
-    el("label",{class:"label"},[document.createTextNode("Database URL")]),
-    firebaseDatabaseUrl,
-    el("hr"),
-    syncStatusEl,
+  const nameInput = el("input",{class:"input", placeholder:"Your name", value: syncCfg.name || settings.syncDisplayName || ""});
+  const codeInput = el("input",{class:"input", placeholder:"XXXX-XXXX-XXXX", value: syncCfg.code, autocapitalize:"characters", autocorrect:"off", spellcheck:"false"});
+  const when = (ms)=>new Date(ms).toLocaleString("en-GB",{ day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+  const syncStatusText = !syncStatus.enabled ? "Not connected."
+    : syncStatus.error ? syncStatus.error
+    : syncStatus.hasPartnerData ? `Connected to ${syncStatus.partnerName || "your partner"}. Their last update: ${when(syncStatus.partnerLastUpdated)}.`
+    : "Sharing your schedule. Waiting for your partner to enter the same code.";
+
+  const syncCard = card("Partner Sync", "See each other's tasks, schedule and goals. Nothing else is shared.", el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode("One of you taps Create a code and sends it to the other privately. Both of you enter it here and tap Save and connect. The code works like a password, so keep it between the two of you.")]),
+    rowLabel("Your name", nameInput),
+    rowLabel("Pairing code", codeInput),
+    el("div",{class:"muted small"},[document.createTextNode(syncStatusText)]),
     el("div",{class:"row"},[
-      btn("Save & Connect",{onclick: async ()=>{
-        settings.syncDisplayName = displayNameInput.value.trim() || "Partner";
-        settings.partnerCode = partnerCodeInput.value.trim().toUpperCase();
-        settings.firebaseApiKey = firebaseApiKey.value.trim();
-        settings.firebaseDatabaseUrl = firebaseDatabaseUrl.value.trim();
-        await put("settings", settings);
-        
-        if (settings.firebaseApiKey && settings.firebaseDatabaseUrl) {
-          const ok = await sync.initFirebase({
-            apiKey: settings.firebaseApiKey,
-            databaseURL: settings.firebaseDatabaseUrl
-          });
-          
-          if (ok) {
-            sync.enableSync(myUserId);
-            await sync.registerShareCode(myUserId);
-            
-            // Upload my data
-            const allData = await exportAll();
-            allData.displayName = settings.syncDisplayName;
-            await sync.uploadMyData(myUserId, allData);
-            
-            // Subscribe to partner if code entered
-            if (settings.partnerCode) {
-              const partnerId = await sync.getUserIdFromCode(settings.partnerCode);
-              if (partnerId) {
-                sync.subscribeToPartner(partnerId, (data) => {
-                  partnerScheduleData = data;
-                  toast(`${data.displayName || 'Partner'}'s schedule updated!`);
-                });
-                toast("Connected to partner!");
-              } else {
-                toast("Partner code not found");
-              }
-            } else {
-              toast("Sync enabled! Share your code with your partner.");
-            }
-          } else {
-            toast("Firebase connection failed. Check your credentials.");
-          }
-        } else {
-          toast("Settings saved");
-        }
-        
+      btn("Save and connect",{onclick: async ()=>{
+        if (sync.normalizeCode(codeInput.value).length < 8) return toast("Enter the pairing code, or tap Create a code.");
+        sync.setSyncConfig({ code: codeInput.value.trim().toUpperCase(), name: nameInput.value.trim() || "Partner", at: 0 });
+        toast("Connecting");
+        const result = await sync.upload(await exportAll(), { force: true });
+        if (result.ok) await sync.fetchPartner();
+        toast(result.ok
+          ? (sync.getPartnerData() ? "Connected to your partner" : "Sharing. Waiting for your partner to join.")
+          : sync.getSyncStatus().error, 5000);
         await navigate(route(), true);
       }}),
-      btn("Sync Now",{kind:"ghost", onclick: async ()=>{
-        if (!sync.isSyncEnabled()) {
-          toast("Set up Firebase first");
-          return;
-        }
-        const allData = await exportAll();
-        allData.displayName = settings.syncDisplayName || "Partner";
-        await sync.uploadMyData(myUserId, allData);
-        toast("Schedule uploaded!");
-      }})
+      btn("Create a code",{kind:"ghost", onclick: ()=>{ codeInput.value = sync.newPairCode(); }}),
+      syncStatus.enabled ? btn("Disconnect",{kind:"danger", onclick: async ()=>{
+        const ok = await confirmModal("Stop sharing?", el("div",{class:"muted"},[document.createTextNode("Your shared copy is removed and you'll no longer see your partner's schedule. Nothing in your own planner is deleted.")]), "Stop sharing");
+        if (!ok) return;
+        await sync.disconnect();
+        toast("Partner sync switched off");
+        await navigate(route(), true);
+      }}) : el("span")
     ])
   ]));
 
@@ -4178,4 +4128,4 @@ function prettyDateRange(start, end){
 
 // First render, once everything above is defined
 applyBirthdayTheme();
-navigate(route(), true).then(refreshCalendarIfStale);
+navigate(route(), true).then(()=>{ refreshCalendarIfStale(); syncUploadNow(); refreshPartner(); });

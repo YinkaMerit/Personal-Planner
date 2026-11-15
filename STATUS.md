@@ -72,11 +72,23 @@ From a frame-by-frame look at a screen recording on the phone:
 
 On 24 January (or whenever that date is being viewed) the whole book turns rose pink: `html.birthday` in `styles.css` swaps the colour variables, and the Today page gets a rose garland header (`ROSE_GARLAND` in `app.js`). Chosen from three mockups ("Rose garden"). The old emoji-based birthday styles were removed; they clashed with the new design and hid the song title.
 
+## Partner Sync on Cloudflare (15 Nov, eighth release)
+
+Firebase is gone. Sync now runs through a Cloudflare Worker with a Durable Object per pairing (`cloudflare/partner-sync`, deployed to https://tees-planner-sync.yinkadev.workers.dev, account yinkz.yim@gmail.com).
+
+- Both planners enter the same pairing code in Settings, Partner Sync. One of them makes it with "Create a code".
+- Only a SHA-256 hash of the code is sent; it names the storage for that pair. A code accepts two planners and turns away a third.
+- Shared: tasks, time blocks, yearly, quarterly and monthly goals, plus the display name. Nothing else.
+- Uploads happen about 6 seconds after a change (`onDataChange` in `db.js`), on launch, and when leaving the app. The Partner page fetches on open and every minute while it is showing.
+- Disconnect deletes that planner's copy from the service. Untouched pairings are deleted after 120 days.
+- The pairing code lives in localStorage, not the database, so it is never in a backup file.
+- Tested with two separate browser profiles on this Mac: connect, see each other, change appears on the other side, disconnect. Not yet tried on two phones.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
 - Entries saved during summer 2026 (if any) were stored a day early by the old date bug and stay where they are.
-- Partner Sync uploads only when "Save & Connect" or "Sync Now" is tapped, and the Firebase database has no sign-in, so anyone with its address could read shared schedules.
+- Partner Sync is as private as its pairing code: anyone who has the code can read both shared schedules.
 - The verses were typed from memory in King James wording and deserve a proofread.
 - Song previews and artwork need an internet connection. Everything else works offline.
 

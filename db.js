@@ -56,6 +56,13 @@ function openDB(){
   });
 }
 
+// Listeners are told which store changed after every write (partner sync uses this)
+const listeners = [];
+export function onDataChange(fn){ listeners.push(fn); }
+function changed(store){
+  for (const fn of listeners){ try{ fn(store); }catch(_){} }
+}
+
 function storeTx(db, store, mode="readonly"){
   return db.transaction(store, mode).objectStore(store);
 }
@@ -73,7 +80,7 @@ export async function put(store, obj){
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const r = storeTx(db, store, "readwrite").put(obj);
-    r.onsuccess = () => resolve(true);
+    r.onsuccess = () => { changed(store); resolve(true); };
     r.onerror = () => reject(r.error);
   });
 }
@@ -82,7 +89,7 @@ export async function del(store, id){
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const r = storeTx(db, store, "readwrite").delete(id);
-    r.onsuccess = () => resolve(true);
+    r.onsuccess = () => { changed(store); resolve(true); };
     r.onerror = () => reject(r.error);
   });
 }
@@ -91,7 +98,7 @@ export async function clear(store){
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const r = storeTx(db, store, "readwrite").clear();
-    r.onsuccess = () => resolve(true);
+    r.onsuccess = () => { changed(store); resolve(true); };
     r.onerror = () => reject(r.error);
   });
 }
