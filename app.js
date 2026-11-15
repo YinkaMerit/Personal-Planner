@@ -2774,7 +2774,7 @@ async function viewFitness(){
   const wBody = el("div",{class:"fillCol"},[
 el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode(`Workouts (${monthWorkouts.length})`)]),
-      btn("+ Log",{onclick: ()=>openWorkoutModal(null, selectedMonth)})
+      btn("Start workout",{onclick: ()=>openWorkoutModal(null, selectedMonth)})
     ]),
     el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[workoutsList(monthWorkouts, setsByWorkout, selectedMonth)])
   ]);
@@ -2790,10 +2790,65 @@ el("div",{class:"row spread"},[
   return el("div",{class:"fillPage"},[
     header,
     el("div",{class:"fillMain"},[
-      el("div",{class:"grid fillGrid"},[cardFill("Workouts", "Open a workout to add sets.", wBody),
-      cardFill("Biometrics", "Weight, BF%, sleep, energy.", bBody)])
+      el("div",{class:"grid fillGrid"},[
+        el("div",{class:"stack"},[
+          cardFill("Workouts", "Open a workout to add sets.", wBody),
+          cardFill("Personal bests", "Heaviest set for each exercise.", personalBestsList(personalBests(sets, workouts)))
+        ]),
+        cardFill("Biometrics", "Weight, BF%, sleep, energy.", bBody)
+      ])
     ])
   ]);
+}
+
+// "40 kg × 8" or "8 reps" for a bodyweight set
+function setLabel(s){
+  const w = Number(s.weight) || 0;
+  return w ? `${w} kg × ${s.reps}` : `${s.reps} reps`;
+}
+const setVolume = (sets)=>sets.reduce((sum, s)=>sum + (Number(s.weight) || 0) * (Number(s.reps) || 0), 0);
+const exerciseKey = (name)=>String(name || "").trim().toLowerCase();
+
+// Heaviest set per exercise across every workout, most recently trained first
+function personalBests(sets, workouts){
+  const dateOf = new Map(workouts.map(w => [w.id, w.date]));
+  const best = new Map();
+  for (const s of sets){
+    const key = exerciseKey(s.exercise);
+    const w = Number(s.weight) || 0;
+    if (!key || !w) continue;
+    const when = dateOf.get(s.workoutId) || s.createdAt || "";
+    const cur = best.get(key);
+    const beats = !cur || w > cur.weight || (w === cur.weight && Number(s.reps) > cur.reps);
+    best.set(key, {
+      name: cur?.name || String(s.exercise).trim(),
+      weight: beats ? w : cur.weight,
+      reps: beats ? Number(s.reps) : cur.reps,
+      setOn: beats ? when : cur.setOn,
+      lastTrained: !cur || when > cur.lastTrained ? when : cur.lastTrained
+    });
+  }
+  return [...best.values()].sort((a,b)=>String(b.lastTrained).localeCompare(String(a.lastTrained)));
+}
+
+function personalBestsList(bests){
+  const list = el("div",{class:"list"},[]);
+  if (!bests.length){
+    list.append(el("div",{class:"muted"},[document.createTextNode("Log sets with a weight and your best lift for each exercise shows here.")]));
+    return list;
+  }
+  for (const b of bests.slice(0, 8)){
+    list.append(el("div",{class:"item"},[
+      el("div",{class:"top"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(b.name)]),
+          el("div",{class:"m"},[document.createTextNode(b.setOn ? `Set on ${formatShort(new Date(b.setOn))}` : "")])
+        ]),
+        el("div",{class:"actions"},[badge(`${b.weight} kg × ${b.reps}`, "good")])
+      ])
+    ]));
+  }
+  return list;
 }
 
 function workoutsList(workouts, setsByWorkout, selectedMonth){
@@ -2803,25 +2858,27 @@ function workoutsList(workouts, setsByWorkout, selectedMonth){
     return list;
   }
   for (const w of workouts.slice(0, 40)){
-    const ws = (setsByWorkout.get(w.id) || []).sort((a,b)=> (a.createdAt||"").localeCompare(b.createdAt||""));
+    const ws = setsByWorkout.get(w.id) || [];
+    const exercises = new Set(ws.map(s => exerciseKey(s.exercise)).filter(Boolean)).size;
+    const volume = setVolume(ws);
+    const meta = [
+      formatDate(new Date(w.date)),
+      ws.length ? `${exercises} exercise${exercises === 1 ? "" : "s"}` : null,
+      `${ws.length} set${ws.length === 1 ? "" : "s"}`,
+      volume ? `${Math.round(volume).toLocaleString("en-GB")} kg lifted` : null
+    ].filter(Boolean).join(" • ");
+
     list.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{},[
           el("div",{class:"h"},[document.createTextNode(w.title || "Workout")]),
-          el("div",{class:"m"},[document.createTextNode(`${formatDate(new Date(w.date))} • Sets: ${ws.length}`)])
+          el("div",{class:"m"},[document.createTextNode(meta)])
         ]),
         el("div",{class:"actions"},[
-          btn("Edit",{kind:"ghost", onclick: ()=>openWorkoutModal(w, selectedMonth)}),
-          btn("Open",{kind:"ghost", onclick: ()=>openWorkoutDetailModal(w, ws)}),
-          btn("Del",{kind:"danger", onclick: async ()=>{
-            if(!(await confirmDelete("this workout"))) return;
-            for (const s of ws) await del("workoutSets", s.id);
-            await del("workouts", w.id);
-            await navigate(route(), true);
-          }})
+          btn("Open",{kind:"ghost", onclick: ()=>openWorkoutDetailModal(w)})
         ])
       ]),
-      w.notes ? el("div",{class:"m", style:"margin-top:8px"},[document.createTextNode(w.notes)]) : el("div")
+      w.notes ? el("div",{class:"m", style:"margin-top:6px"},[document.createTextNode(w.notes)]) : el("div")
     ]));
   }
   return list;
@@ -2853,164 +2910,196 @@ function openWorkoutModal(existing=null, selectedMonth=null){
   ]);
 
   const footer = el("div",{},[
-    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
-    btn("Save",{onclick: async ()=>{
+    btn("Cancel",{kind:"ghost", onclick: ()=>{ if (isEdit) openWorkoutDetailModal(existing); else modal.close(); }}),
+    btn(isEdit ? "Save" : "Start workout",{onclick: async ()=>{
       setFieldError(errDt,"");
       setFieldError(errTitle,"");
       if(!dt.value){ setFieldError(errDt,"Date/Time is required"); return; }
       if(!title.value.trim()){ setFieldError(errTitle,"Title is required"); return; }
-      await put("workouts", {
+      const workout = {
         id: existing?.id || uuid(),
         createdAt: existing?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         date: new Date(dt.value).toISOString(),
         title: title.value.trim() || "Workout",
         notes: notes.value.trim()
-      });
-      modal.close();
+      };
+      await put("workouts", workout);
       await navigate(route(), true);
+      // Straight into the workout so sets can be logged
+      await openWorkoutDetailModal(workout);
     }})
   ]);
 
   modal.open({ title: isEdit ? "Edit Workout" : "New Workout", body, footer });
 }
 
-function openWorkoutDetailModal(workout, workoutSets){
-  const body = el("div",{class:"stack"},[]);
-  body.append(el("div",{class:"muted small"},[document.createTextNode(`${workout.title} • ${formatDate(new Date(workout.date))}`)]));
+// The workout sheet: log sets one after another without leaving it.
+// `draft` carries the exercise, weight and reps just used, so the next set is one tap.
+async function openWorkoutDetailModal(workout, draft=null){
+  const [allSets, workouts] = await Promise.all([getAll("workoutSets"), getAll("workouts")]);
+  const mine = allSets.filter(s => s.workoutId === workout.id)
+    .sort((a,b)=> String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+  const refresh = (next)=>openWorkoutDetailModal(workout, next);
 
-  // Group sets by exercise name
-  const groups = new Map();
-  for (const s of (workoutSets||[])){
-    const key = String(s.exercise||"").trim() || "Exercise";
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(s);
+  // Every exercise ever logged, most recent first, for the suggestions list
+  const dateOf = new Map(workouts.map(w => [w.id, w.date]));
+  const known = new Map();
+  for (const s of [...allSets].sort((a,b)=> String(b.createdAt||"").localeCompare(String(a.createdAt||"")))){
+    const key = exerciseKey(s.exercise);
+    if (key && !known.has(key)) known.set(key, String(s.exercise).trim());
   }
+  const dlId = `exerciseSuggestions-${workout.id}`;
+  const dl = el("datalist",{id: dlId}, [...known.values()].map(v => el("option",{value: v},[])));
 
-  // Keep a stable order: by exercise name, then by createdAt/updatedAt
-  const exerciseNames = Array.from(groups.keys()).sort((a,b)=>a.localeCompare(b));
-  for (const k of exerciseNames){
-    groups.get(k).sort((a,b)=> String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
-  }
+  const exercise = el("input",{class:"input", list: dlId, placeholder:"e.g., Bench press", value: draft?.exercise || "", autocomplete:"off"});
+  const weight = el("input",{class:"input", type:"number", inputmode:"decimal", step:"0.5", min:"0", placeholder:"kg", value: draft?.weight ?? ""});
+  const reps = el("input",{class:"input", type:"number", inputmode:"numeric", step:"1", min:"1", placeholder:"reps", value: draft?.reps ?? ""});
+  const hint = el("div",{class:"muted small"},[]);
 
-  body.append(btn("Add Set",{onclick: ()=>openSetModal(workout)}));
+  // What you did last time for the exercise being typed
+  const showHint = ()=>{
+    const key = exerciseKey(exercise.value);
+    const earlier = key ? allSets.filter(s => exerciseKey(s.exercise) === key && s.workoutId !== workout.id) : [];
+    if (!earlier.length){ hint.textContent = key && known.has(key) ? "" : (key ? "New exercise." : ""); return; }
+    const lastWorkout = earlier.map(s => s.workoutId).sort((a,b)=> String(dateOf.get(b)||"").localeCompare(String(dateOf.get(a)||"")))[0];
+    const last = earlier.filter(s => s.workoutId === lastWorkout).sort((a,b)=> String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+    const when = dateOf.get(lastWorkout) ? formatShort(new Date(dateOf.get(lastWorkout))) : "last time";
+    hint.textContent = `Last time (${when}): ${last.map(setLabel).join(", ")}`;
+  };
+  exercise.addEventListener("input", showHint);
+  showHint();
 
-  const wrap = el("div",{class:"list"},[]);
-  if (!workoutSets || !workoutSets.length){
-    wrap.append(el("div",{class:"muted"},[document.createTextNode("No sets yet. Add your first set.")]));
-  } else {
-    for (const ex of exerciseNames){
-      const sets = groups.get(ex) || [];
+  const addSet = async (values)=>{
+    const ex = String(values.exercise || "").trim();
+    const r = Number(values.reps);
+    const w = String(values.weight ?? "").trim() === "" ? null : Number(values.weight);
+    if (!ex) return toast("Type the exercise first");
+    if (!r || r <= 0) return toast("Enter the reps");
+    if (w !== null && (!isFinite(w) || w < 0)) return toast("Check the weight");
+    await put("workoutSets", {
+      id: uuid(), workoutId: workout.id,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      exercise: ex, reps: r, weight: w
+    });
+    await refresh({ exercise: ex, weight: w ?? "", reps: r });
+  };
 
-      const section = el("div",{class:"exerciseGroup"},[
-        el("div",{class:"exerciseHeader"},[
-          el("div",{class:"h"},[document.createTextNode(ex)]),
-          el("div",{class:"m"},[document.createTextNode(`${sets.length} set${sets.length===1?"":"s"}`)])
-        ])
-      ]);
-
-      const list = el("div",{class:"exerciseList"},[]);
-      for (let i=0;i<sets.length;i++){
-        const s = sets[i];
-        const setNo = i+1;
-        const w = (s.weight === null || s.weight === undefined || s.weight === "" || Number(s.weight) === 0) ? null : Number(s.weight);
-        const line = `${s.reps} reps${w ? ` @ ${w}kg` : ""}`;
-
-        list.append(el("div",{class:"item compact"},[
-          el("div",{class:"top"},[
-            el("div",{},[
-              el("div",{class:"h"},[document.createTextNode(line)]),
-              el("div",{class:"m"},[document.createTextNode(`Set ${setNo}`)])
-            ]),
-            el("div",{class:"actions"},[
-              btn("Edit",{kind:"ghost", onclick: ()=>openSetModal(workout, s)}),
-              btn("Delete",{kind:"danger", onclick: async ()=>{
-                if(!(await confirmDelete("this set"))) return;
-                await del("workoutSets", s.id);
-                modal.close();
-                await navigate(route(), true);
-              }})
-            ])
-          ])
-        ]));
-      }
-
-      section.append(list);
-      wrap.append(section);
-    }
-  }
-
-  body.append(wrap);
-
-  const footer = el("div",{},[
-    btn("Close",{kind:"ghost", onclick: ()=>modal.close()})
+  const quickAdd = el("div",{class:"stack"},[
+    dl,
+    rowLabel("Exercise", exercise),
+    el("div",{class:"set-entry"},[
+      rowLabel("Weight (kg)", weight),
+      rowLabel("Reps", reps),
+      btn("Add set",{onclick: ()=>addSet({ exercise: exercise.value, weight: weight.value, reps: reps.value })})
+    ]),
+    hint
   ]);
 
-  modal.open({ title:"Workout Details", body, footer });
-}
+  // Sets grouped by exercise, in the order the exercises were first done
+  const groups = new Map();
+  for (const s of mine){
+    const key = exerciseKey(s.exercise) || "exercise";
+    if (!groups.has(key)) groups.set(key, { name: String(s.exercise || "Exercise").trim(), sets: [] });
+    groups.get(key).sets.push(s);
+  }
 
-async function openSetModal(workout, existing=null){
-  const isEdit = !!existing;
+  const log = el("div",{},[]);
+  if (!mine.length){
+    log.append(el("div",{class:"muted"},[document.createTextNode("No sets yet. Add your first one above.")]));
+  }
+  for (const g of groups.values()){
+    const top = Math.max(...g.sets.map(s => Number(s.weight) || 0));
+    const lastSet = g.sets[g.sets.length - 1];
+    const section = el("div",{class:"exerciseGroup"},[
+      el("div",{class:"exerciseHeader"},[
+        el("div",{},[
+          el("div",{class:"h"},[document.createTextNode(g.name)]),
+          el("div",{class:"muted small"},[document.createTextNode(`${g.sets.length} set${g.sets.length === 1 ? "" : "s"}${top ? ` • top ${top} kg` : ""}`)])
+        ]),
+        btn("Repeat set",{kind:"ghost", onclick: ()=>addSet({ exercise: g.name, weight: lastSet.weight ?? "", reps: lastSet.reps })})
+      ])
+    ]);
+    const rows = el("div",{class:"set-rows"},[]);
+    g.sets.forEach((s, i)=>{
+      rows.append(el("button",{class:"set-row", "aria-label":`Edit set ${i + 1} of ${g.name}`, onclick: ()=>openSetModal(workout, s)},[
+        el("span",{class:"set-no"},[document.createTextNode(String(i + 1))]),
+        el("span",{class:"set-val"},[document.createTextNode(setLabel(s))])
+      ]));
+    });
+    section.append(rows);
+    log.append(section);
+  }
 
-  // Suggest existing exercises in this workout (keeps names consistent for grouping)
-  let exerciseOptions = [];
-  try{
-    const allSets = await getAll("workoutSets");
-    exerciseOptions = allSets
-      .filter(x=>x.workoutId===workout.id)
-      .map(x=>String(x.exercise||"").trim())
-      .filter(Boolean);
-    exerciseOptions = Array.from(new Set(exerciseOptions)).sort((a,b)=>a.localeCompare(b));
-  }catch(e){ exerciseOptions = []; }
-
-  const dlId = `exerciseSuggestions-${workout.id}`;
-  const dl = el("datalist",{id: dlId}, exerciseOptions.map(v=>el("option",{value:v},[])));
-
-  const exercise = el("input",{class:"input", list: dlId, placeholder:"Exercise", value: existing?.exercise || ""});
-  const errExercise = mkFieldError();
-
-  const reps = el("input",{class:"input", type:"number", step:"1", value: existing ? String(existing.reps ?? "") : ""});
-  const errReps = mkFieldError();
-
-  const weight = el("input",{class:"input", type:"number", step:"0.5", value: (existing && existing.weight!=null && Number(existing.weight)!==0) ? String(existing.weight) : ""});
+  const volume = setVolume(mine);
+  const summary = [
+    formatDate(new Date(workout.date)),
+    `${mine.length} set${mine.length === 1 ? "" : "s"}`,
+    volume ? `${Math.round(volume).toLocaleString("en-GB")} kg lifted` : null
+  ].filter(Boolean).join(" • ");
 
   const body = el("div",{class:"stack"},[
-    dl,
-    el("div",{class:"muted small"},[document.createTextNode(isEdit ? "Edit Set" : "Add Set")]),
-    rowLabel("Exercise", exercise),
-    errExercise,
-    rowLabel("Reps", reps),
-    errReps,
-    rowLabel("Weight (kg, optional)", weight)
+    el("div",{class:"muted small"},[document.createTextNode(summary)]),
+    quickAdd,
+    log
   ]);
 
+  const done = async ()=>{ modal.close(); await navigate(route(), true); };
   const footer = el("div",{},[
-    btn("Cancel",{kind:"ghost", onclick: ()=>modal.close()}),
-    btn(isEdit ? "Save" : "Add",{onclick: async ()=>{
-      const ex = String(exercise.value||"").trim();
-      const repsVal = String(reps.value||"").trim();
+    btn("Delete",{kind:"danger", onclick: async ()=>{
+      if(!(await confirmDelete("this workout"))) return refresh();
+      for (const s of mine) await del("workoutSets", s.id);
+      await del("workouts", workout.id);
+      await done();
+    }}),
+    btn("Edit details",{kind:"ghost", onclick: ()=>openWorkoutModal(workout)}),
+    btn("Done",{onclick: done})
+  ]);
 
+  modal.open({ title: workout.title || "Workout", body, footer, onDismiss: ()=>navigate(route(), true) });
+}
+
+// Edit or remove one set, then return to the workout sheet
+function openSetModal(workout, existing){
+  const exercise = el("input",{class:"input", placeholder:"Exercise", value: existing.exercise || ""});
+  const errExercise = mkFieldError();
+  const reps = el("input",{class:"input", type:"number", inputmode:"numeric", step:"1", min:"1", value: String(existing.reps ?? "")});
+  const errReps = mkFieldError();
+  const weight = el("input",{class:"input", type:"number", inputmode:"decimal", step:"0.5", min:"0", value: (existing.weight != null && Number(existing.weight) !== 0) ? String(existing.weight) : ""});
+
+  const body = el("div",{class:"stack"},[
+    rowLabel("Exercise", exercise, errExercise),
+    el("div",{class:"form2"},[
+      rowLabel("Weight (kg, optional)", weight),
+      rowLabel("Reps", reps, errReps)
+    ])
+  ]);
+
+  const back = ()=>openWorkoutDetailModal(workout);
+  const footer = el("div",{},[
+    btn("Delete",{kind:"danger", onclick: async ()=>{ await del("workoutSets", existing.id); await back(); }}),
+    btn("Cancel",{kind:"ghost", onclick: back}),
+    btn("Save",{onclick: async ()=>{
+      const ex = String(exercise.value||"").trim();
+      const repsVal = Number(reps.value);
       setFieldError(errExercise, "");
       setFieldError(errReps, "");
-
       let ok = true;
       if(!ex){ setFieldError(errExercise, "Exercise is required"); ok = false; }
-      if(!repsVal || Number(repsVal) <= 0){ setFieldError(errReps, "Reps must be greater than 0"); ok = false; }
+      if(!repsVal || repsVal <= 0){ setFieldError(errReps, "Reps must be greater than 0"); ok = false; }
       if(!ok) return;
-
-      const obj = existing ? {...existing} : { id: uuid(), workoutId: workout.id, createdAt: new Date().toISOString() };
-      obj.exercise = ex;
-      obj.reps = Number(repsVal);
-      obj.weight = (String(weight.value).trim()==="" ? null : Number(weight.value));
-      obj.updatedAt = new Date().toISOString();
-
-      await put("workoutSets", obj);
-      modal.close();
-      await navigate(route(), true);
+      await put("workoutSets", {
+        ...existing,
+        exercise: ex,
+        reps: repsVal,
+        weight: (String(weight.value).trim()==="" ? null : Number(weight.value)),
+        updatedAt: new Date().toISOString()
+      });
+      await back();
     }})
   ]);
 
-  modal.open({ title: isEdit ? "Edit Set" : "Add Set", body, footer });
+  modal.open({ title: "Edit Set", body, footer, onDismiss: back });
 }
 
 function openBioModal(existing=null, selectedMonth=null){

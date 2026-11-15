@@ -84,6 +84,17 @@ Firebase is gone. Sync now runs through a Cloudflare Worker with a Durable Objec
 - The pairing code lives in localStorage, not the database, so it is never in a backup file.
 - Tested with two separate browser profiles on this Mac: connect, see each other, change appears on the other side, disconnect. Not yet tried on two phones.
 
+## Workout logging (15 Nov, ninth release)
+
+The Wellness page could already store sets, but each one took several taps through separate sheets. Now:
+
+- "Start workout" asks for a title and goes straight into the workout sheet.
+- The sheet has exercise, weight and reps on one line with "Add set"; it stays open and keeps the values, so the next set is one tap. "Repeat set" copies the last set of an exercise.
+- Typing an exercise shows what was done last time, and suggests names used before.
+- Sets are grouped by exercise in the order done; tap a set to edit or delete it.
+- The workout list shows exercises, sets and total kg lifted. A new Personal bests card lists the heaviest set per exercise.
+- Stored data is unchanged (`workouts`, `workoutSets`), so old backups still load.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
