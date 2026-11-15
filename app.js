@@ -1097,7 +1097,7 @@ if (r.startsWith("day/")) return await viewDay(settings, r.split("/")[1]);
 // The phone's calendar can't be read by a web app, so this reads iCloud "Public Calendar" links.
 // iCloud doesn't allow web pages to fetch those directly; a small Cloudflare Worker relays them
 // (see cloudflare/calendar-relay).
-const CAL_RELAY_DEFAULT = "";
+const CAL_RELAY_DEFAULT = "https://tees-planner-calendar.yinkadev.workers.dev";
 const CAL_REFRESH_MS = 30 * 60000;
 let calEvents = [];
 
