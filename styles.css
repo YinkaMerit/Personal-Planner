@@ -294,7 +294,7 @@ a{ color: var(--accent-text); }
 .grid, .grid2{ display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
 .fillPage, .fillCol, .goalsRightStack, .diaryPage{ display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .fillPage{ gap: 16px; }
-.form2, .form3{ display: grid; grid-template-columns: 1fr; gap: 12px; }
+.form2, .form3{ display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
 .hr, hr{ height: 1px; border: none; background: var(--rule); margin: 4px 0; width: 100%; }
 .desktop-only, .mobile-only, .mobile-top-section{ display: contents; }
 
@@ -617,7 +617,8 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   left: 50%;
   bottom: calc(var(--sab) + 28px);
   z-index: 10000;
-  max-width: calc(100vw - 40px);
+  width: max-content;
+  max-width: calc(100% - 40px);
   padding: 12px 18px;
   border-radius: var(--radius);
   background: var(--navy-dark);
@@ -773,8 +774,8 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 
 /* ---------- Wider screens ---------- */
 @media (min-width: 560px){
-  .form2{ grid-template-columns: 1fr 1fr; }
-  .form3{ grid-template-columns: 1fr 1fr 1fr; }
+  .form2{ grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .form3{ grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); }
 }
 @media (max-width: 559px){
   .brand{ display: none; }
@@ -910,6 +911,31 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 /* Section cards repeat their purpose in the row under the title, so the description line is dropped there */
 .card.fill > .card-h .d, .yearlyCard > .card-h .d, .quarterlyCard > .card-h .d{ display: none; }
 
-/* Standalone iPhone: --app-h is set from the real screen height in index.html (see the note there) */
-.app, #bookCover, .drawer, .modal-backdrop{ height: var(--app-h, auto); }
+/* Standalone iPhone: --app-h is the real screen height, set in index.html (see the note there).
+   The document itself is made that tall and the full-screen layers sit inside it, because
+   position: fixed is measured against a viewport that iOS reports too short. */
+html.standalone{ height: var(--app-h); overflow: visible; }
+html.standalone body{ position: relative; inset: auto; width: 100%; height: var(--app-h); overflow: hidden; }
+html.standalone .app,
+html.standalone #bookCover,
+html.standalone .drawer,
+html.standalone .modal-backdrop{ position: absolute; top: 0; right: 0; bottom: auto; left: 0; height: var(--app-h); }
+html.standalone .toast-notification{ position: absolute; }
 .narrow .brand{ display: none; }
+
+/* iOS date and time fields have their own minimum width and centre their text; keep them inside the form */
+input[type="date"], input[type="time"], input[type="month"], input[type="datetime-local"]{
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 46px;
+  text-align: left;
+}
+input::-webkit-date-and-time-value{ text-align: left; }
+.date-input{ min-height: 36px !important; }
+
+/* The ribbon tucks away once the page is scrolled so it never sits on top of the content */
+.ribbon{ transition: transform .25s ease; }
+.book.scrolled .ribbon{ transform: translateY(-100%); }

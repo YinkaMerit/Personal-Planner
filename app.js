@@ -833,6 +833,7 @@ async function navigate(r, skipAnim=false){
     isNavigating = false;
   }
   updatePageNavButtons();
+  syncRibbon();
 
   if (pendingRoute){
     const next = pendingRoute;
@@ -840,6 +841,15 @@ async function navigate(r, skipAnim=false){
     navigate(next, next.split("/")[0] === currentRouteKey);
   }
 }
+
+// Tuck the ribbon away while the open page is scrolled down
+const bookEl = document.querySelector(".book");
+function syncRibbon(){
+  bookEl.classList.toggle("scrolled", (currentPage?.firstElementChild?.scrollTop || 0) > 8);
+}
+pageHost.addEventListener("scroll", (e)=>{
+  if (e.target === currentPage?.firstElementChild) syncRibbon();
+}, true);
 
 // Scroll the open page back to the top
 function scrollToTop() {

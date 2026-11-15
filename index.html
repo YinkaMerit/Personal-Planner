@@ -19,14 +19,16 @@
 <link rel="stylesheet" href="./styles.css">
 <script>
 // Home-screen (standalone) sizing on iPhone.
-// 1. iOS reports a viewport that stops short of the bottom of the screen, leaving a dead band,
-//    so the full height is worked out from the screen size instead.
+// 1. iOS reports a viewport that stops short of the bottom of the screen, leaving a dead band.
+//    The full height is worked out from the screen size and the whole document is made that tall
+//    (styles.css, "html.standalone"); anything positioned against the short viewport gets cut off.
 // 2. If the page is being shown zoomed out (text looks small), scale it back to real size.
 (function(){
   var root = document.documentElement;
   function fit(){
     var standalone = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
     if (!standalone || !window.screen) return;
+    root.classList.add("standalone");
     var portrait = window.innerHeight >= window.innerWidth;
     var shortSide = Math.min(screen.width, screen.height), longSide = Math.max(screen.width, screen.height);
     var screenW = portrait ? shortSide : longSide, screenH = portrait ? longSide : shortSide;

@@ -38,7 +38,7 @@ Fixes
 
 ## iPhone sizing (15 Nov, second release)
 
-First screenshots from an iPhone 17 Pro Max showed two problems: everything drawn at about 75% size, and an empty navy band along the bottom. `index.html` now has a small script in the head that, for the home-screen app only, works out the real screen height and scales the page back up if it is being shown zoomed out. The viewport also no longer allows zooming. Settings has an "About this device" line with the measured sizes for diagnosing this. Not yet confirmed on the phone.
+First screenshots from an iPhone 17 Pro Max showed two problems: everything drawn at about 75% size, and an empty navy band along the bottom. `index.html` now has a small script in the head that, for the home-screen app only, works out the real screen height and scales the page back up if it is being shown zoomed out. The viewport also no longer allows zooming. Settings has an "About this device" line with the measured sizes for diagnosing this. Second screenshots confirmed the size is now right, but the band remained and sheets were cut off at the bottom, so the third release makes the whole document the full screen height in home-screen mode instead of relying on `position: fixed`. Also fixed: date and time fields spilling off the right edge of forms, and the ribbon sitting on top of content when scrolled. Third release not yet confirmed on the phone.
 
 ## Known limits
 
