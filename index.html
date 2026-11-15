@@ -2,198 +2,140 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tee's Planner">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#4a90d9">
+<meta name="theme-color" content="#1e3a5f">
 <meta name="format-detection" content="telephone=no">
 <title>Tee's Planner</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M18%2022h28v4H18zM18%2030h22v4H18zM18%2038h28v4H18z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20rx%3D%2236%22%20fill%3D%22%234a90d9%22/%3E%3Cpath%20d%3D%22M45%2060h90v12H45zM45%2084h70v12H45zM45%20108h90v12H45z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-/* CRITICAL iOS Safari fix - must be before external CSS */
-*, *::before, *::after {
-  box-sizing: border-box !important;
-  max-width: 100vw;
-}
-html {
-  width: 100% !important;
-  max-width: 100vw !important;
-  overflow-x: hidden !important;
-  overflow-y: hidden !important;
-  -webkit-text-size-adjust: 100%;
-  height: 100%;
-  position: fixed;
-}
-body {
-  width: 100% !important;
-  max-width: 100vw !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 100%;
-  position: fixed;
-}
-.app, .main, .book {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-}
-/* iOS PWA scroll fix */
-@media (max-width: 980px) {
-  html, body {
-    position: fixed !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
-  }
-  .app {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-  }
-  .topbar {
-    flex-shrink: 0 !important;
-  }
-  .main {
-    position: relative !important;
-    flex: 1 !important;
-    min-height: 0 !important;
-    overflow-y: scroll !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: contain;
-  }
-  .book {
-    min-height: 100% !important;
-    overflow: visible !important;
-  }
-  .pagehost {
-    min-height: 100% !important;
-    overflow: visible !important;
-    perspective: 1800px;
-    -webkit-perspective: 1800px;
-    transform-style: preserve-3d;
-    -webkit-transform-style: preserve-3d;
-    position: relative;
-  }
-  /* During flip animation, lock height */
-  .pagehost.flipping,
-  .pagehost.flipping-back {
-    height: calc(100vh - 80px) !important;
-    min-height: calc(100vh - 80px) !important;
-    max-height: calc(100vh - 80px) !important;
-    overflow: hidden !important;
-  }
-  /* Current page relative for scroll */
-  .page.current {
-    position: relative !important;
-  }
-  /* During flip, current becomes absolute */
-  .pagehost.flipping .page.current,
-  .pagehost.flipping-back .page.current {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: 100% !important;
-    overflow: hidden !important;
-  }
-  /* Consistent height for content */
-  .pagecontent, .fillPage {
-    min-height: calc(100vh - 120px) !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding-bottom: 200px !important;
-  }
-  /* Dashboard different */
-  .dashboard-root {
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
-    padding-bottom: 200px !important;
-  }
-}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <button class="iconbtn" id="btnMenu" aria-label="Open menu">☰</button>
+    <button class="iconbtn" id="btnMenu" aria-label="Open contents">
+      <svg aria-hidden="true" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 6h16M3 11h16M3 16h10"/></svg>
+    </button>
     <div class="brand">
-      <div class="brand-mark"></div>
-      <div class="brand-text">
-        <div class="brand-title">Tee's Planner</div>
-        <div class="brand-sub">Bloom where you're planted ✿</div>
-      </div>
+      <div class="brand-title">Tee's Planner</div>
     </div>
     <div class="top-actions">
       <div class="date-selector">
-        <button class="btn ghost small" id="btnPrevDay" title="Previous day">◀</button>
-        <input type="date" id="globalDatePicker" class="date-input" />
-        <button class="btn ghost small" id="btnNextDay" title="Next day">▶</button>
-        <button class="btn ghost small" id="btnToday" title="Go to today">Today</button>
+        <button class="btn small" id="btnPrevDay" aria-label="Previous day">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2L4 7l5 5"/></svg>
+        </button>
+        <input type="date" id="globalDatePicker" class="date-input" aria-label="Date being viewed">
+        <button class="btn small" id="btnNextDay" aria-label="Next day">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg>
+        </button>
       </div>
-      <button class="btn ghost" id="btnExport">Export</button>
-      <label class="btn ghost filebtn"> Import <input type="file" id="fileImport" accept="application/json" /> </label>
+      <button class="btn small today" id="btnToday">Today</button>
     </div>
   </header>
 
   <aside class="drawer hidden" id="drawer" aria-hidden="true">
     <div class="drawer-panel">
       <div class="drawer-head">
-        <div class="drawer-title">✿ Menu</div>
-        <button class="iconbtn" id="btnCloseMenu" aria-label="Close menu">✕</button>
+        <div class="drawer-title">Contents</div>
+        <button class="iconbtn" id="btnCloseMenu" aria-label="Close contents">
+          <svg aria-hidden="true" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5 5l12 12M17 5L5 17"/></svg>
+        </button>
       </div>
       <nav class="nav">
-        <button class="navitem" data-route="cover">❀ Cover</button>
-        <button class="navitem" data-route="dashboard">✦ Today</button>
-        <button class="navitem" data-route="goals">✿ Goals</button>
-        <button class="navitem" data-route="relationships">❀ People</button>
-        <button class="navitem" data-route="finance">✿ Money</button>
-        <button class="navitem" data-route="fitness">❀ Wellness</button>
-        <button class="navitem" data-route="spiritual">✿ Faith</button>
-        <button class="navitem" data-route="weekly">❀ History</button>
-        <button class="navitem" data-route="diary">✿ Diary</button>
-        <button class="navitem" data-route="partner">♥ Partner</button>
-        <button class="navitem" data-route="settings">❀ Settings</button>
+        <button class="navitem" data-route="dashboard">Today</button>
+        <button class="navitem" data-route="goals">Goals</button>
+        <button class="navitem" data-route="relationships">People</button>
+        <button class="navitem" data-route="finance">Money</button>
+        <button class="navitem" data-route="fitness">Wellness</button>
+        <button class="navitem" data-route="spiritual">Faith</button>
+        <button class="navitem" data-route="weekly">History</button>
+        <button class="navitem" data-route="diary">Diary</button>
+        <button class="navitem" data-route="partner">Partner</button>
+        <button class="navitem" data-route="settings">Settings</button>
+        <button class="navitem" id="btnCloseBook">Close the book</button>
       </nav>
       <div class="drawer-foot">
-        <div class="drawer-tip">✿ Add to home screen for the best experience</div>
+        <div class="drawer-tip">Add to your home screen for the best experience.</div>
       </div>
     </div>
   </aside>
 
   <main class="main">
     <div class="book">
-      <div class="spine"></div>
       <div class="pagehost" id="pageHost"></div>
+      <button class="ribbon" id="btnRibbon" aria-label="Go to today"></button>
+      <nav class="tabs" id="edgeTabs" aria-label="Sections">
+        <button class="tab" data-route="dashboard">Today</button>
+        <button class="tab" data-route="goals">Goals</button>
+        <button class="tab" data-route="relationships">People</button>
+        <button class="tab" data-route="finance">Money</button>
+        <button class="tab" data-route="spiritual">Faith</button>
+        <button class="tab" data-route="more">More</button>
+      </nav>
     </div>
   </main>
-  
-  <!-- Page navigation buttons - outside main for proper fixed positioning -->
-  <button class="page-nav-btn prev" id="btnPrevPage" aria-label="Previous page">&#8249;</button>
-  <button class="page-nav-btn next" id="btnNextPage" aria-label="Next page">&#8250;</button>
 </div>
+
+<!-- The cover. It swings open on the spine, then the title page follows. -->
+<div id="bookCover">
+  <div class="cover-cast" aria-hidden="true"></div>
+  <div class="cover-leaf cover-fly" aria-hidden="true">
+    <div class="cover-face front">
+      <div class="fly-kicker">THIS PLANNER BELONGS TO</div>
+      <div class="fly-name" id="flyName">Tee</div>
+      <div class="fly-rule"></div>
+      <div class="fly-motto">Bloom where you're planted</div>
+      <div class="cover-shade"></div>
+    </div>
+    <div class="cover-face back"><div class="cover-shade"></div></div>
+  </div>
+  <div class="cover-leaf cover-board">
+    <div class="cover-face front">
+      <div class="cover-cloth">
+        <div class="cover-spine" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="cover-band" aria-hidden="true"></div>
+        <div class="cover-plate">
+          <div>
+            <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="#a8d4ff" stroke-width="1"><path d="M22 40V14"/><path d="M22 22c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M22 28c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M22 14c-3-3-3-7 0-10 3 3 3 7 0 10z"/></svg>
+            <div class="cover-name" id="coverName">Tee's</div>
+            <div class="cover-word">PLANNER</div>
+            <div class="cover-rule"></div>
+            <div class="cover-year" id="coverYear"></div>
+          </div>
+        </div>
+        <div class="cover-open">
+          <div class="cover-date" id="coverDate"></div>
+          <button id="btnOpenBook">OPEN PLANNER</button>
+        </div>
+        <div class="cover-ribbon" aria-hidden="true"></div>
+      </div>
+      <div class="cover-shade"></div>
+    </div>
+    <div class="cover-edge" aria-hidden="true"></div>
+    <div class="cover-face back" aria-hidden="true"><div class="cover-shade"></div></div>
+  </div>
+</div>
+<script>
+  // Skip the cover on a reload within the same visit
+  try{ if (sessionStorage.getItem("book_open") === "1") document.getElementById("bookCover").classList.add("gone"); }catch(_){}
+</script>
 
 <!-- Modal -->
 <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-header">
       <div class="modal-title" id="modalTitle"></div>
-      <button class="iconbtn" id="modalClose" aria-label="Close modal">✕</button>
+      <button class="iconbtn" id="modalClose" aria-label="Close">
+        <svg aria-hidden="true" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5 5l12 12M17 5L5 17"/></svg>
+      </button>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer" id="modalFooter"></div>

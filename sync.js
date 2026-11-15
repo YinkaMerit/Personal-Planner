@@ -71,7 +71,7 @@ function loadFirebaseSDK() {
 export function getOrCreateUserId() {
   let id = localStorage.getItem('tee_planner_user_id');
   if (!id) {
-    id = 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    id = 'user_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
     localStorage.setItem('tee_planner_user_id', id);
   }
   return id;
@@ -81,7 +81,7 @@ export function getOrCreateUserId() {
 export function generateShareCode(userId) {
   // Create a short, easy to share code
   const hash = userId.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0);
-  return Math.abs(hash).toString(36).toUpperCase().substr(0, 6);
+  return Math.abs(hash).toString(36).toUpperCase().slice(0, 6);
 }
 
 // Get user ID from share code (stored mapping in Firebase)

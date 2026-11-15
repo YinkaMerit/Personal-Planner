@@ -12,12 +12,24 @@ export function startOfDay(d){
   return x;
 }
 
+// Keys are built from the local calendar date. (toISOString() is UTC, which is a day
+// behind local midnight during British Summer Time.)
 export function dayKey(d){
-  return startOfDay(d).toISOString().slice(0,10);
+  const x = new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
 }
 
 export function monthKey(d){
-  return startOfDay(d).toISOString().slice(0,7);
+  return dayKey(d).slice(0,7);
+}
+
+// Local calendar day of a stored value: YYYY-MM-DD keys pass through, ISO timestamps are converted
+export function localDayKey(v){
+  if (!v) return "";
+  const s = String(v);
+  if (s.length === 10) return s;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? s.slice(0,10) : dayKey(d);
 }
 
 export function addDays(d, n){
