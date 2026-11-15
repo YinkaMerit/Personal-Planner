@@ -105,6 +105,16 @@ Loaded the bulk test data (`generate-test-data.js`: 313 tasks, 187 transactions,
 - Money is written with thousands separators (£2,643.00). Dates in prayer, sermon, body stat and diary lists read "15 Nov 2026" instead of 2026-11-15.
 - Fixed the word "null" appearing under a spending category with no budget: `el()` now skips empty children.
 
+## Second bulk-data pass (15 Nov, eleventh release)
+
+Added the kinds of data the first pass lacked (monthly goals, 24 check-ins, contact reminders, 240 workout sets, 20 days of body stats, long titles and notes, overlapping time blocks, 27 diary entries) and opened every page including Diary, a diary entry, History and a History day. No page overflowed sideways. Fixed:
+
+- Schedule: blocks and calendar events that overlap now sit side by side in columns instead of on top of each other, with titles cut off cleanly.
+- Today: unfinished tasks are listed before finished ones, so the five shown before "Show all" are the ones still to do.
+- History day page: long task names no longer push their label onto a new line, pillar names are written properly, and the raw date line is gone.
+- Goals: the extra "Completed" line under ticked goals is removed (the strike-through already says it).
+- Small consistency fixes: the body stats Add button matches the others, check-in rows show just the date.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.

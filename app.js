@@ -1226,7 +1226,8 @@ async function viewDashboard(settings){
     computeDueContacts()
   ]);
 
-  const dayTasks = tasks.filter(t => t.scheduledDate === selectedDay).sort((a,b)=> (b.isFrog?1:0) - (a.isFrog?1:0));
+  const dayTasks = tasks.filter(t => t.scheduledDate === selectedDay)
+    .sort((a,b)=> ((b.isFrog?1:0) - (a.isFrog?1:0)) || ((a.status==="done"?1:0) - (b.status==="done"?1:0)));
   const dayBlocks = blocks.filter(b => b.date === selectedDay).sort((a,b)=>a.startMins-b.startMins);
   const review = reviews.find(r => r.date === selectedDay) || null;
 
@@ -1555,11 +1556,35 @@ function scheduler(dateKeyStr, blocks, tasks, calItems=[]){
     ]));
   }
 
-  // Calendar events sit behind your own blocks and can't be moved from here
+  // Things that overlap in time sit side by side in columns rather than on top of each other
+  const lanes = new Map();
+  {
+    const all = [...calItems, ...blocks]
+      .map(x => ({ ref: x, s: x.startMins, e: Math.max(x.endMins, x.startMins + 20) }))
+      .sort((p, q) => p.s - q.s || q.e - p.e);
+    let cluster = [], ends = [], clusterEnd = -1;
+    const close = ()=>{ for (const it of cluster) lanes.set(it.ref, { col: it.col, cols: ends.length }); cluster = []; ends = []; };
+    for (const it of all){
+      if (cluster.length && it.s >= clusterEnd) close();
+      let col = ends.findIndex(end => end <= it.s);
+      if (col < 0){ col = ends.length; ends.push(0); }
+      ends[col] = it.e;
+      it.col = col;
+      cluster.push(it);
+      clusterEnd = Math.max(cluster.length === 1 ? -1 : clusterEnd, it.e);
+    }
+    close();
+  }
+  const lane = (ref)=>{
+    const { col, cols } = lanes.get(ref) || { col: 0, cols: 1 };
+    return cols === 1 ? "" : `left:calc(56px + (100% - 62px) * ${col} / ${cols});width:calc((100% - 62px) / ${cols} - 2px);right:auto;`;
+  };
+
+  // Calendar events can't be moved from here
   for (const c of calItems){
     const top = (c.startMins - START_MINS)*PX_PER_MIN;
     const height = Math.max(20, (c.endMins - c.startMins)*PX_PER_MIN);
-    inner.append(el("div",{class:"block cal", style:`top:${top}px;height:${height}px;`},[
+    inner.append(el("div",{class:"block cal", style:`top:${top}px;height:${height}px;${lane(c)}`},[
       el("div",{class:"bt"},[document.createTextNode(c.title)]),
       el("div",{class:"bm"},[document.createTextNode(`${minsToHHMM(c.startMins)}–${minsToHHMM(Math.min(c.endMins, 1439))}${c.location ? ` • ${c.location}` : ""}`)])
     ]));
@@ -1570,7 +1595,7 @@ function scheduler(dateKeyStr, blocks, tasks, calItems=[]){
     const height = Math.max(15, (b.endMins - b.startMins)*PX_PER_MIN);
     const linked = b.taskId ? tasks.find(t=>t.id===b.taskId) : null;
 
-    const node = el("div",{class:"block", style:`top:${top}px;height:${height}px;`},[
+    const node = el("div",{class:"block", style:`top:${top}px;height:${height}px;${lane(b)}`},[
       el("div",{class:"bt"},[document.createTextNode(b.title || "Block")]),
       el("div",{class:"bm"},[document.createTextNode(`${minsToHHMM(b.startMins)}–${minsToHHMM(b.endMins)}${linked ? ` • ↳ ${linked.title}` : ""}`)]),
       el("div",{class:"resize"})
@@ -1817,7 +1842,7 @@ function goalList(items){
             el("div",{class:"h" + (g.isComplete ? " doneTitle" : "")},[document.createTextNode(g.title)])
           ]),
           el("div",{class:"m"},[document.createTextNode(meta || "")]),
-          (g.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
+          null
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openYearlyModal(g)}),
@@ -1855,7 +1880,7 @@ function monthlyList(items){
             el("div",{class:"h" + (m.isComplete ? " doneTitle" : "")},[document.createTextNode(m.title)])
           ]),
           el("div",{class:"m"},[document.createTextNode(meta || "")]),
-          (m.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
+          null
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openMonthlyModal(m)}),
@@ -1975,7 +2000,7 @@ function quarterlyList(items, yearly, retroByQ){
             el("div",{class:"h" + (q.isComplete ? " doneTitle" : "")},[document.createTextNode(q.title)])
           ]),
           el("div",{class:"m"},[document.createTextNode(meta || "")]),
-          (q.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
+          null
         ]),
         el("div",{class:"qRight"},[
           el("div",{class:"actions"},[
@@ -2282,7 +2307,7 @@ function touchpointsList(items, contacts, selectedMonth){
       el("div",{class:"top"},[
         el("div",{},[
           el("div",{class:"h"},[document.createTextNode(c?.name || "Unknown")]),
-          el("div",{class:"m"},[document.createTextNode(`${t.type || "check-in"} • ${dateStr}`)])
+          el("div",{class:"m"},[document.createTextNode(dateStr)])
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openTouchpointModal(contacts, t, selectedMonth)}),
@@ -2824,7 +2849,7 @@ el("div",{class:"row spread"},[
   const bBody = el("div",{class:"stack"},[
     el("div",{class:"row spread"},[
       el("div",{class:"muted small"},[document.createTextNode(`Body stats (${monthBio.length})`)]),
-      btn("+ Add",{kind:"ghost", onclick: ()=>openBioModal(null, selectedMonth)})
+      btn("+ Add",{onclick: ()=>openBioModal(null, selectedMonth)})
     ]),
     el("div",{class:"scroll-area fitScroll flexFill", style:"overflow-y:auto; max-height:280px;"},[bioList(monthBio, selectedMonth)])
   ]);
@@ -3529,7 +3554,6 @@ async function viewDay(settings, key){
     btn("← Back",{kind:"ghost", onclick:()=>{ location.hash = "weekly/" + key; }}),
     el("div",{},[
       el("div",{class:"h1"},[document.createTextNode(date.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric", year:"numeric"}))]),
-      el("div",{class:"muted"},[document.createTextNode(key)])
     ]),
     el("div",{})
   ]);
@@ -3546,7 +3570,7 @@ async function viewDay(settings, key){
 
   const tasksCard = card("Tasks", "", el("div",{class:"stack"}, dayTasks.length ? dayTasks.map(t=>el("div",{class:"row", style:"justify-content:space-between;"},[
     el("div",{},[document.createTextNode((t.status==="done" ? "✓ " : "• ") + t.title)]),
-    t.pillar ? badge(t.pillar) : el("span",{})
+    t.pillar ? el("div",{class:"muted small"},[document.createTextNode(pillarName(t.pillar))]) : el("span",{})
   ])) : [el("div",{class:"muted"},[document.createTextNode("No tasks saved for this day.")])]));
 
   const blocksCard = card("Time Blocks", "", el("div",{class:"stack"}, dayBlocks.length ? dayBlocks.map(b=>{
@@ -3593,7 +3617,7 @@ async function viewDay(settings, key){
     el("div",{class:"muted small"},[document.createTextNode((p.requestDetails||"").slice(0,120))])
   ])) : [el("div",{class:"muted"},[document.createTextNode("No prayers saved for this day.")])]));
 
-  return el("div",{class:"stack"},[
+  return el("div",{class:"stack daypage"},[
     header,
     scoreCard,
     el("div",{class:"grid2"},[tasksCard, blocksCard]),
