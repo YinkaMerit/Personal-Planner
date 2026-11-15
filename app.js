@@ -1,6 +1,7 @@
 import { getAll, put, del, exportAll, importAll } from "./db.js";
 import { uuid, dayKey, monthKey, localDayKey, startOfDay, addDays, clamp, formatDate, formatShort, minsToHHMM, hhmmToMins, weekStart } from "./utils.js";
 import * as sync from "./sync.js";
+import { parseICS, eventsOnDay } from "./calendar.js";
 
 // Global partner data cache
 let partnerScheduleData = null;
@@ -1052,6 +1053,103 @@ if (r.startsWith("day/")) return await viewDay(settings, r.split("/")[1]);
 }
 
 
+/* ---------- Apple Calendar (read-only) ---------- */
+// The phone's calendar can't be read by a web app, so this reads iCloud "Public Calendar" links.
+// iCloud doesn't allow web pages to fetch those directly; a small Cloudflare Worker relays them
+// (see cloudflare/calendar-relay).
+const CAL_RELAY_DEFAULT = "";
+const CAL_REFRESH_MS = 30 * 60000;
+let calEvents = [];
+
+function calCfg(){
+  try{
+    const c = JSON.parse(localStorage.getItem("tpp_cal_cfg") || "null") || {};
+    return { relay: c.relay || CAL_RELAY_DEFAULT, links: Array.isArray(c.links) ? c.links : [], at: c.at || 0, error: c.error || "" };
+  }catch(_){
+    return { relay: CAL_RELAY_DEFAULT, links: [], at: 0, error: "" };
+  }
+}
+function setCalCfg(cfg){
+  try{ localStorage.setItem("tpp_cal_cfg", JSON.stringify(cfg)); }catch(_){}
+}
+function loadCalendarCache(){
+  try{
+    const texts = JSON.parse(localStorage.getItem("tpp_cal_cache") || "[]");
+    calEvents = texts.flatMap(t => parseICS(t));
+  }catch(_){ calEvents = []; }
+}
+
+// Fetches every linked calendar. Returns true when the events changed.
+async function refreshCalendar(){
+  const cfg = calCfg();
+  if (!cfg.links.length){
+    calEvents = [];
+    try{ localStorage.removeItem("tpp_cal_cache"); }catch(_){}
+    return true;
+  }
+  if (!cfg.relay){
+    setCalCfg({ ...cfg, error: "No relay address set." });
+    return false;
+  }
+  try{
+    const texts = await Promise.all(cfg.links.map(async (link)=>{
+      const url = link.replace(/^webcal:/i, "https:");
+      const res = await fetch(`${cfg.relay}?url=${encodeURIComponent(url)}`);
+      if (!res.ok) throw new Error(`calendar_${res.status}`);
+      const text = await res.text();
+      if (!text.includes("BEGIN:VCALENDAR")) throw new Error("not_a_calendar");
+      return text;
+    }));
+    calEvents = texts.flatMap(t => parseICS(t));
+    // Kept for offline use; a very large calendar may not fit, in which case it is simply refetched next time
+    try{ localStorage.setItem("tpp_cal_cache", JSON.stringify(texts)); }catch(_){}
+    setCalCfg({ ...cfg, at: Date.now(), error: "" });
+    return true;
+  }catch(e){
+    setCalCfg({ ...cfg, error: navigator.onLine === false ? "Offline. Showing the last copy." : "Couldn't reach the calendar. Check the link and relay address." });
+    return false;
+  }
+}
+
+async function refreshCalendarIfStale(){
+  const cfg = calCfg();
+  if (!cfg.links.length || Date.now() - cfg.at < CAL_REFRESH_MS) return;
+  if (await refreshCalendar() && currentRouteKey === "dashboard") await navigate(route(), true);
+}
+loadCalendarCache();
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) refreshCalendarIfStale(); });
+setInterval(refreshCalendarIfStale, 5 * 60000);
+
+function calendarSettingsCard(){
+  const cfg = calCfg();
+  const links = el("textarea",{class:"input", placeholder:"webcal://p00-caldav.icloud.com/published/2/...", rows:"3", autocapitalize:"off", autocorrect:"off", spellcheck:"false"});
+  links.value = cfg.links.join("\n");
+  const relay = el("input",{class:"input", type:"url", placeholder:"https://...workers.dev", value: cfg.relay, autocapitalize:"off", autocorrect:"off"});
+
+  const status = cfg.error ? cfg.error
+    : cfg.links.length ? (cfg.at ? `${calEvents.length} events. Last updated ${new Date(cfg.at).toLocaleString("en-GB",{ day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })}.` : "Not loaded yet.")
+    : "No calendar linked.";
+
+  return card("Apple Calendar", "Shows your calendar events in the Schedule on the Today page. Read only.", el("div",{class:"stack"},[
+    el("div",{class:"muted small"},[document.createTextNode("In the Calendar app, tap the (i) next to a calendar, switch on Public Calendar, then Share Link and paste it here. One link per line. Anyone who has a link can see that calendar.")]),
+    rowLabel("Calendar links", links),
+    rowLabel("Relay address", relay),
+    el("div",{class:"muted small"},[document.createTextNode(status)]),
+    el("div",{class:"row"},[
+      btn("Save and refresh",{onclick: async ()=>{
+        const list = links.value.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+        const bad = list.find(x => !/^(webcal|https):\/\/[^/]*icloud\.com\/published\//i.test(x));
+        if (bad) return toast("That doesn't look like an iCloud public calendar link.");
+        setCalCfg({ relay: relay.value.trim().replace(/\/+$/, ""), links: list, at: 0, error: "" });
+        toast(list.length ? "Loading calendar" : "Calendar removed");
+        const ok = await refreshCalendar();
+        if (list.length) toast(ok ? `Calendar loaded: ${calEvents.length} events` : calCfg().error, 5000);
+        await navigate(route(), true);
+      }})
+    ])
+  ]));
+}
+
 /* ---------- Dashboard ---------- */
 async function viewDashboard(settings){
   const selectedDay = getSelectedDayKey();
@@ -1105,8 +1203,16 @@ async function viewDashboard(settings){
   ]);
   const tasksCard = card("To Do", "", tasksBody, btn("Add", { kind:"ghost", onclick: ()=>openTaskModal({ defaultDate: selectedDay }) }));
 
+  const calItems = eventsOnDay(calEvents, selectedDateObj);
+  const allDay = calItems.filter(e => e.allDay);
   const schedCard = card("Schedule", "Drag to move, pull the bottom edge to resize, double tap to edit.",
-    scheduler(selectedDay, dayBlocks, dayTasks),
+    el("div",{class:"stack"},[
+      allDay.length ? el("div",{class:"allday"}, allDay.map(e => el("div",{class:"allday-item"},[
+        el("span",{class:"allday-tag"},[document.createTextNode("All day")]),
+        document.createTextNode(e.title)
+      ]))) : null,
+      scheduler(selectedDay, dayBlocks, dayTasks, calItems.filter(e => !e.allDay))
+    ].filter(Boolean)),
     btn("Add", { kind:"ghost", onclick: ()=>openTimeBlockModal(selectedDay, dayTasks, null) }));
 
   const reviewCard = card("Daily Check-in", "", el("div",{class:"stack"},[
@@ -1370,7 +1476,7 @@ function taskList(tasks, qGoals){
 }
 
 /* ---------- Time-block Scheduler ---------- */
-function scheduler(dateKeyStr, blocks, tasks){
+function scheduler(dateKeyStr, blocks, tasks, calItems=[]){
   const wrap = el("div",{class:"scheduler"},[]);
   const inner = el("div",{class:"sched-inner"});
   inner.style.height = `${(END_MINS-START_MINS)*PX_PER_MIN}px`;
@@ -1379,6 +1485,16 @@ function scheduler(dateKeyStr, blocks, tasks){
     const y = (h*60 - START_MINS)*PX_PER_MIN;
     inner.append(el("div",{class:"hourline", style:`top:${y}px`},[
       el("div",{class:"hourlabel"},[document.createTextNode(`${String(h).padStart(2,"0")}:00`)])
+    ]));
+  }
+
+  // Calendar events sit behind your own blocks and can't be moved from here
+  for (const c of calItems){
+    const top = (c.startMins - START_MINS)*PX_PER_MIN;
+    const height = Math.max(20, (c.endMins - c.startMins)*PX_PER_MIN);
+    inner.append(el("div",{class:"block cal", style:`top:${top}px;height:${height}px;`},[
+      el("div",{class:"bt"},[document.createTextNode(c.title)]),
+      el("div",{class:"bm"},[document.createTextNode(`${minsToHHMM(c.startMins)}–${minsToHHMM(Math.min(c.endMins, 1439))}${c.location ? ` • ${c.location}` : ""}`)])
     ]));
   }
 
@@ -3823,6 +3939,7 @@ async function viewSettings(settings){
     header,
     card("Preferences", "", prefs),
     syncCard,
+    calendarSettingsCard(),
     backupCard,
     musicCard,
     aboutCard
@@ -3992,4 +4109,4 @@ function prettyDateRange(start, end){
 }
 
 // First render, once everything above is defined
-navigate(route(), true);
+navigate(route(), true).then(refreshCalendarIfStale);

@@ -32,11 +32,13 @@
     var portrait = window.innerHeight >= window.innerWidth;
     var shortSide = Math.min(screen.width, screen.height), longSide = Math.max(screen.width, screen.height);
     var screenW = portrait ? shortSide : longSide, screenH = portrait ? longSide : shortSide;
+    var DENSITY = 0.88;                                // same factor as "html{ zoom }" in styles.css
     var ratio = window.innerWidth / screenW;           // CSS px per screen point; 1 when not zoomed
     var zoomed = ratio > 1.05 && ratio < 2;
-    root.style.zoom = zoomed ? String(ratio) : "";
-    root.classList.toggle("narrow", zoomed && screenW < 560);
-    root.style.setProperty("--app-h", Math.round(zoomed ? screenH : screenH * ratio) + "px");
+    var zoom = (zoomed ? ratio : 1) * DENSITY;
+    root.style.zoom = String(zoom);
+    root.classList.toggle("narrow", zoomed && screenW / DENSITY < 560);
+    root.style.setProperty("--app-h", Math.ceil(screenH * ratio / zoom) + "px");
   }
   fit();
   window.addEventListener("resize", fit);

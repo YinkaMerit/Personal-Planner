@@ -939,3 +939,27 @@ input::-webkit-date-and-time-value{ text-align: left; }
 /* The ribbon tucks away once the page is scrolled so it never sits on top of the content */
 .ribbon{ transition: transform .25s ease; }
 .book.scrolled .ribbon{ transform: translateY(-100%); }
+
+/* Calendar events in the schedule (read only) */
+.block.cal{ left: 68px; right: 8px; background: #fff; border: 1px solid var(--sky); border-left: 3px solid var(--accent); cursor: default; touch-action: auto; }
+.block.cal .bt{ color: var(--accent-text); }
+.allday{ display: flex; flex-direction: column; gap: 6px; }
+.allday-item{ display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
+.allday-tag{ flex: 0 0 auto; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-text); }
+
+/* ---------- Density ----------
+   The whole interface is drawn a little smaller than its nominal sizes. The home-screen script in
+   index.html multiplies this same factor in, so change DENSITY there too. */
+html{ zoom: .88; }
+
+/* Quieter type and controls */
+.h1{ font-size: 32px; }
+.btn{ min-height: 36px; padding: 0 14px; font-size: 13px; letter-spacing: .2px; }
+.item .actions .btn, .li-actions .btn, .btn.small{ min-height: 32px; }
+.card-h{ padding-top: 12px; }
+.card-b{ padding: 10px 16px 14px; }
+.item .h, .task .h, .li-title{ font-size: 16px; }
+
+/* Date in the top bar: keep the value centred in its box */
+.topbar .date-input{ display: inline-flex; align-items: center; height: 36px; min-height: 36px !important; padding: 0 10px; line-height: 1; }
+.topbar .date-input::-webkit-date-and-time-value{ margin: 0; padding: 0; line-height: 34px; text-align: center; }
