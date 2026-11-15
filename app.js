@@ -38,7 +38,7 @@ const PILLARS = [
 
 const START_MINS = 0;
 const END_MINS = 24*60;
-const PX_PER_MIN = 1;  // schedule scale
+const PX_PER_MIN = 0.8;  // schedule scale: 48px per hour
 const SNAP = 15;       // 15-min snapping
 
 /* ---------- Selected Date (for viewing past/future days) ---------- */
@@ -52,8 +52,7 @@ function setSelectedDate(date) {
   // A bare YYYY-MM-DD parses as UTC, so pin it to local midnight
   selectedDate = date instanceof Date ? date : new Date(String(date).length === 10 ? date + "T00:00:00" : date);
   // Update the date picker in the header if it exists
-  const picker = document.getElementById("globalDatePicker");
-  if (picker) picker.value = dayKey(selectedDate);
+  document.querySelectorAll(".date-stepper .date-input").forEach(p => { p.value = dayKey(selectedDate); });
 }
 
 function getSelectedDayKey() {
@@ -502,7 +501,6 @@ function badge(text, kind=""){ return el("span",{class:`badge ${kind}`.trim()},[
 
 function openDrawer(){ drawer.classList.remove("hidden"); drawer.setAttribute("aria-hidden","false"); }
 function closeDrawer(){ drawer.classList.add("hidden"); drawer.setAttribute("aria-hidden","true"); }
-document.getElementById("btnMenu").addEventListener("click", openDrawer);
 document.getElementById("btnCloseMenu").addEventListener("click", closeDrawer);
 drawer.addEventListener("click", (e)=>{ if (e.target === drawer) closeDrawer(); });
 
@@ -580,19 +578,27 @@ async function importData(file){
   await navigate(route(), true);
 }
 
-/* ---------- Global Date Picker ---------- */
-const globalDatePicker = document.getElementById("globalDatePicker");
-globalDatePicker.value = dayKey(new Date());
-
+/* ---------- Day stepper (Today and Partner pages) ---------- */
 async function changeSelectedDate(date){
   stopAllAudio();
   setSelectedDate(date);
   await navigate(route(), true);
 }
-globalDatePicker.addEventListener("change", (e)=>{ if (e.target.value) changeSelectedDate(e.target.value); });
-document.getElementById("btnPrevDay").addEventListener("click", ()=>changeSelectedDate(addDays(selectedDate, -1)));
-document.getElementById("btnNextDay").addEventListener("click", ()=>changeSelectedDate(addDays(selectedDate, 1)));
-document.getElementById("btnToday").addEventListener("click", ()=>changeSelectedDate(new Date()));
+
+const CHEVRON_LEFT = '<svg aria-hidden="true" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2L4 7l5 5"/></svg>';
+const CHEVRON_RIGHT = '<svg aria-hidden="true" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg>';
+
+function dateStepper(){
+  const input = el("input",{type:"date", class:"date-input", "aria-label":"Date being viewed", value: dayKey(selectedDate)});
+  input.addEventListener("change", (e)=>{ if (e.target.value) changeSelectedDate(e.target.value); });
+  const kids = [
+    el("button",{class:"step", "aria-label":"Previous day", html: CHEVRON_LEFT, onclick: ()=>changeSelectedDate(addDays(selectedDate, -1))}),
+    input,
+    el("button",{class:"step", "aria-label":"Next day", html: CHEVRON_RIGHT, onclick: ()=>changeSelectedDate(addDays(selectedDate, 1))})
+  ];
+  if (!isSelectedDateToday()) kids.push(btn("Today",{kind:"ghost", onclick: ()=>changeSelectedDate(new Date())}));
+  return el("div",{class:"date-stepper"}, kids);
+}
 
 /* ---------- PWA ---------- */
 if ("serviceWorker" in navigator){
@@ -719,7 +725,7 @@ function closeBook(){
   setTimeout(()=>bookCover.classList.remove("closing"), coverAnimMs());
 }
 
-document.getElementById("btnOpenBook").addEventListener("click", openBook);
+document.querySelector("#bookCover .cover-cloth").addEventListener("click", openBook);
 document.getElementById("btnCloseBook").addEventListener("click", ()=>{ closeDrawer(); closeBook(); });
 paintCover();
 ensureSettings().then(s=>paintCover(s.userName)).catch(()=>{});
@@ -736,7 +742,39 @@ const PAGE_ORDER = ["dashboard", "goals", "relationships", "finance", "fitness",
 // Sections that have their own tab on the page edge; everything else sits behind "More"
 const TAB_ROUTES = ["dashboard", "goals", "relationships", "finance", "spiritual"];
 
+// Rows open on tap: the row's Edit/Open button becomes the row itself, and its Delete button
+// moves into the sheet that opens. Other buttons on the row (Reminder, Retro...) stay where they are.
+function enhanceRows(root){
+  root.querySelectorAll(".item").forEach(item=>{
+    const actions = item.querySelector(".actions");
+    const main = item.querySelector(".top > div:first-child");
+    if (!actions || !main) return;
+    const btns = [...actions.querySelectorAll("button.btn")];
+    const label = b => b.textContent.trim();
+    const primary = btns.find(b => label(b) === "Open") || btns.find(b => label(b) === "Edit");
+    if (!primary) return;
+    const remove = btns.find(b => label(b) === "Delete" || label(b) === "Del");
+
+    primary.hidden = true;
+    if (remove) remove.hidden = true;
+    item.classList.add("tappable");
+    main.setAttribute("role", "button");
+    main.tabIndex = 0;
+
+    const open = (e)=>{
+      if (e.target.closest("input, button, a")) return;
+      primary.click();
+      if (remove && modal.isOpen() && !modal.footer.querySelector(".btn.danger")){
+        (modal.footer.firstElementChild || modal.footer).prepend(btn("Delete",{kind:"danger", onclick: ()=>remove.click()}));
+      }
+    };
+    main.addEventListener("click", open);
+    main.addEventListener("keydown", (e)=>{ if (e.key === "Enter") open(e); });
+  });
+}
+
 function wrapPage(contentNode, routeKey){
+  enhanceRows(contentNode);
   const kids = [contentNode];
   const idx = PAGE_ORDER.indexOf(routeKey);
   if (idx >= 0) kids.push(el("div",{class:"page-foot"},[document.createTextNode(`page ${idx + 1}`)]));
@@ -1176,9 +1214,8 @@ async function viewDashboard(settings){
   const isBirthday = dayKey(selectedDateObj).slice(5) === BIRTHDAY_MD;
 
   const header = el("div",{class: isBirthday ? "dashboard-header birthday-header" : "dashboard-header"},[
-    el("div",{class:"kicker"},[document.createTextNode(selectedDateObj.toLocaleDateString("en-GB",{ day:"numeric", month:"long", year:"numeric" }))]),
     el("div",{class:"h1"},[document.createTextNode(isBirthday ? "Happy Birthday My Love 🎂💕" : selectedDateObj.toLocaleDateString("en-GB",{ weekday:"long" }))]),
-    isToday ? el("span") : el("div",{class:"subtle"},[document.createTextNode("You're looking at another day. Tap the ribbon to come back to today.")])
+    dateStepper()
   ]);
 
   const v = verseOfDay(selectedDay);
@@ -1201,11 +1238,11 @@ async function viewDashboard(settings){
   const tasksBody = el("div",{class:"stack"},[
     frogRequired && !hasFrog && dayTasks.length ? frogPicker(dayTasks) : taskList(dayTasks, qGoals)
   ]);
-  const tasksCard = card("To Do", "", tasksBody, btn("Add", { kind:"ghost", onclick: ()=>openTaskModal({ defaultDate: selectedDay }) }));
+  const tasksCard = card("To Do", "", tasksBody, btn("Add", { onclick: ()=>openTaskModal({ defaultDate: selectedDay }) }));
 
   const calItems = eventsOnDay(calEvents, selectedDateObj);
   const allDay = calItems.filter(e => e.allDay);
-  const schedCard = card("Schedule", "Drag to move, pull the bottom edge to resize, double tap to edit.",
+  const schedCard = card("Schedule", "Drag to move. Double tap to edit.",
     el("div",{class:"stack"},[
       allDay.length ? el("div",{class:"allday"}, allDay.map(e => el("div",{class:"allday-item"},[
         el("span",{class:"allday-tag"},[document.createTextNode("All day")]),
@@ -1213,7 +1250,7 @@ async function viewDashboard(settings){
       ]))) : null,
       scheduler(selectedDay, dayBlocks, dayTasks, calItems.filter(e => !e.allDay))
     ].filter(Boolean)),
-    btn("Add", { kind:"ghost", onclick: ()=>openTimeBlockModal(selectedDay, dayTasks, null) }));
+    btn("Add", { onclick: ()=>openTimeBlockModal(selectedDay, dayTasks, null) }));
 
   const reviewCard = card("Daily Check-in", "", el("div",{class:"stack"},[
     el("div",{class:"row spread"},[
@@ -1483,7 +1520,7 @@ function scheduler(dateKeyStr, blocks, tasks, calItems=[]){
 
   for (let h=0; h<=24; h++){
     const y = (h*60 - START_MINS)*PX_PER_MIN;
-    inner.append(el("div",{class:"hourline", style:`top:${y}px`},[
+    inner.append(el("div",{class:"hourline", style:`top:${y}px;height:${60*PX_PER_MIN}px`},[
       el("div",{class:"hourlabel"},[document.createTextNode(`${String(h).padStart(2,"0")}:00`)])
     ]));
   }
@@ -1568,8 +1605,14 @@ function scheduler(dateKeyStr, blocks, tasks, calItems=[]){
   // Auto-scroll to around 'now' (helps with 24h schedule)
   const now = new Date();
   const nowMins = now.getHours()*60 + now.getMinutes();
-  const target = Math.max(0, (nowMins - 120) * PX_PER_MIN);
-  setTimeout(()=>{ try { wrap.scrollTop = target; } catch(_){} }, 0);
+  const target = Math.max(0, (nowMins - 90) * PX_PER_MIN);
+  // The schedule isn't in the document yet while the page is being built, so wait until it is
+  let tries = 0;
+  const scrollToNow = ()=>{
+    if (wrap.isConnected) wrap.scrollTop = target;
+    else if (tries++ < 120) requestAnimationFrame(scrollToNow);
+  };
+  requestAnimationFrame(scrollToNow);
 
   return wrap;
 }
@@ -2120,15 +2163,15 @@ async function viewRelationships(){
   const isCurrentMonth = selectedMonth === currentMk;
   
   const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
-    btn("◀",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${prevMonth}`; }}),
+    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${prevMonth}`; }}),
     el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
-    btn("▶",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${nextMonth}`; }}),
+    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${nextMonth}`; }}),
     !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "relationships"; }}) : el("span")
   ]);
 
   const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode("People I Love")]),
-    el("div",{class:"subtle"},[document.createTextNode(`${monthTouchpoints.length} check-ins this month`)]),
+    el("div",{class:"subtle"},[document.createTextNode(`${monthTouchpoints.length} check-in${monthTouchpoints.length === 1 ? "" : "s"} this month`)]),
     monthNav
   ]);
 
@@ -2359,9 +2402,9 @@ async function viewFinance(){
   const isCurrentMonth = selectedMonth === currentMk;
   
   const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
-    btn("◀",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${prevMonth}`; }}),
+    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${prevMonth}`; }}),
     el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
-    btn("▶",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${nextMonth}`; }}),
+    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${nextMonth}`; }}),
     !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "finance"; }}) : el("span")
   ]);
 
@@ -2720,9 +2763,9 @@ async function viewFitness(){
   const totalSets = monthWorkouts.reduce((sum, w) => sum + (setsByWorkout.get(w.id)?.length || 0), 0);
   
   const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
-    btn("◀",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${prevMonth}`; }}),
+    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${prevMonth}`; }}),
     el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
-    btn("▶",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${nextMonth}`; }}),
+    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${nextMonth}`; }}),
     !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "fitness"; }}) : el("span")
   ]);
 
@@ -3646,7 +3689,8 @@ async function viewPartnerSchedule(settings) {
       partnerData?.lastUpdated 
         ? `Last updated: ${new Date(partnerData.lastUpdated).toLocaleString()}`
         : "View your partner's schedule"
-    )])
+    )]),
+    dateStepper()
   ]);
   
   if (!syncStatus.enabled || !partnerData) {

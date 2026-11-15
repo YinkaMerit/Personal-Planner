@@ -32,12 +32,9 @@
     var portrait = window.innerHeight >= window.innerWidth;
     var shortSide = Math.min(screen.width, screen.height), longSide = Math.max(screen.width, screen.height);
     var screenW = portrait ? shortSide : longSide, screenH = portrait ? longSide : shortSide;
-    var DENSITY = 0.88;                                // same factor as "html{ zoom }" in styles.css
     var ratio = window.innerWidth / screenW;           // CSS px per screen point; 1 when not zoomed
-    var zoomed = ratio > 1.05 && ratio < 2;
-    var zoom = (zoomed ? ratio : 1) * DENSITY;
-    root.style.zoom = String(zoom);
-    root.classList.toggle("narrow", zoomed && screenW / DENSITY < 560);
+    var zoom = ratio > 1.05 && ratio < 2 ? ratio : 1;
+    root.style.zoom = zoom === 1 ? "" : String(zoom);
     root.style.setProperty("--app-h", Math.ceil(screenH * ratio / zoom) + "px");
   }
   fit();
@@ -48,27 +45,6 @@
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <button class="iconbtn" id="btnMenu" aria-label="Open contents">
-      <svg aria-hidden="true" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 6h16M3 11h16M3 16h10"/></svg>
-    </button>
-    <div class="brand">
-      <div class="brand-title">Tee's Planner</div>
-    </div>
-    <div class="top-actions">
-      <div class="date-selector">
-        <button class="btn small" id="btnPrevDay" aria-label="Previous day">
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2L4 7l5 5"/></svg>
-        </button>
-        <input type="date" id="globalDatePicker" class="date-input" aria-label="Date being viewed">
-        <button class="btn small" id="btnNextDay" aria-label="Next day">
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2l5 5-5 5"/></svg>
-        </button>
-      </div>
-      <button class="btn small today" id="btnToday">Today</button>
-    </div>
-  </header>
-
   <aside class="drawer hidden" id="drawer" aria-hidden="true">
     <div class="drawer-panel">
       <div class="drawer-head">
@@ -100,16 +76,18 @@
     <div class="book">
       <div class="pagehost" id="pageHost"></div>
       <button class="ribbon" id="btnRibbon" aria-label="Go to today"></button>
-      <nav class="tabs" id="edgeTabs" aria-label="Sections">
-        <button class="tab" data-route="dashboard">Today</button>
-        <button class="tab" data-route="goals">Goals</button>
-        <button class="tab" data-route="relationships">People</button>
-        <button class="tab" data-route="finance">Money</button>
-        <button class="tab" data-route="spiritual">Faith</button>
-        <button class="tab" data-route="more">More</button>
-      </nav>
     </div>
   </main>
+
+  <!-- Index tabs along the bottom edge of the book -->
+  <nav class="tabbar" id="edgeTabs" aria-label="Sections">
+    <button class="tab" data-route="dashboard">Today</button>
+    <button class="tab" data-route="goals">Goals</button>
+    <button class="tab" data-route="relationships">People</button>
+    <button class="tab" data-route="finance">Money</button>
+    <button class="tab" data-route="spiritual">Faith</button>
+    <button class="tab" data-route="more">More</button>
+  </nav>
 </div>
 
 <!-- The cover. It swings open on the spine, then the title page follows. -->

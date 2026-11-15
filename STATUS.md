@@ -47,6 +47,19 @@ First screenshots from an iPhone 17 Pro Max showed two problems: everything draw
 - Calendar: `calendar.js` parses iCloud public calendar links (.ics) including repeating events. Events show read-only in the Schedule on Today, all-day events above it. Links and the relay address are entered in Settings, Apple Calendar. Refreshes every 30 minutes while open and keeps the last copy for offline.
 - The relay is a Cloudflare Worker in `cloudflare/calendar-relay` (`npx wrangler login` once, then `npx wrangler deploy` from that folder). It only fetches iCloud published calendars and only answers the planner's site. Once deployed, put its address in `CAL_RELAY_DEFAULT` in `app.js` so it is prefilled.
 
+## iPhone layout review (15 Nov, fifth release)
+
+Reviewed against Apple's Human Interface Guidelines after feedback that the app still looked oversized. Pages and features are unchanged; layout and controls were reworked:
+
+- Sizes are now plain iPhone points with no global shrink factor: body 14, labels 11 to 12.5, page title 28. Nothing is below 11.
+- Section tabs moved from the right page edge to index tabs along the bottom (readable, in thumb reach, 46pt tall). Content gets the full page width.
+- The top bar is gone. The day stepper lives in the Today (and Partner) page header; the contents drawer opens from More.
+- List rows open on tap (chevron cue). Their Edit and Delete buttons are hidden and Delete appears in the sheet that opens (`enhanceRows` in `app.js`). Extra row buttons such as Reminder and Retro remain.
+- Buttons have three weights (filled only for a sheet's main action) and look 32pt high with a 44pt tap area.
+- Schedule is 48pt per hour in a 300pt window and scrolls to the current time. Song card is more compact. Tapping anywhere on the cover opens it.
+
+Still to check on the phone: what happens to sheets when the keyboard opens (left to iOS's default behaviour).
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.

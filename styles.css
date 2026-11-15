@@ -1,5 +1,10 @@
 /* Tee's Planner - Navy Cloth theme
-   A clothbound book: navy cover, sky-blue foil, ruled paper pages. */
+   A clothbound book: navy cover, sky-blue foil, ruled paper pages.
+
+   Sizes are in iPhone points (1px here = 1pt on the phone). Rules of thumb used throughout:
+   - body text 14, never anything below 11
+   - controls look 32 high but always have a 44 tap area (see .btn::after)
+   - one scrolling area per page; sections sit behind the index tabs along the bottom */
 :root{
   --navy: #1e3a5f;
   --navy-deep: #162d4b;
@@ -13,13 +18,14 @@
   --whisper: #e8f4ff;
   --paper: #f8fbff;
   --card: #ffffff;
-  --line: rgba(74,144,217,.16);
+  --line: rgba(74,144,217,.14);
   --rule: #d6e6f7;
   --good: #2d6b52;
   --warn: #8b5e1a;
   --bad: #a8384a;
   --radius: 4px;
   --flip: 900ms;
+  --tabbar: 46px;
   --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --sans: "Karla", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --cloth:
@@ -35,6 +41,7 @@
 }
 
 *, *::before, *::after{ box-sizing: border-box; }
+[hidden]{ display: none !important; }
 
 html, body{
   height: 100%;
@@ -46,7 +53,7 @@ body{
   position: fixed;
   inset: 0;
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.4;
   color: var(--ink);
   background-color: var(--navy);
@@ -58,7 +65,7 @@ button{ touch-action: manipulation; }
 a{ color: var(--accent-text); }
 .hidden{ display: none !important; }
 .muted{ color: var(--muted); }
-.small{ font-size: 13px; }
+.small{ font-size: 12.5px; }
 
 /* ---------- App frame ---------- */
 .app{
@@ -66,71 +73,14 @@ a{ color: var(--accent-text); }
   inset: 0;
   display: flex;
   flex-direction: column;
-  padding: var(--sat) var(--sar) var(--sab) var(--sal);
+  padding: calc(var(--sat) + 4px) var(--sar) 0 var(--sal);
   overflow: hidden;
 }
-
-.topbar{
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 10px 6px 12px;
-  color: var(--sky);
-}
-.brand{ display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.brand-title{
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 19px;
-  color: var(--foil);
-  white-space: nowrap;
-}
-.brand-sub{ font-size: 11px; letter-spacing: 3px; text-transform: uppercase; white-space: nowrap; }
-.top-actions{ display: flex; align-items: center; gap: 8px; }
-
-.iconbtn{
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  background: none;
-  border: none;
-  border-radius: var(--radius);
-  color: inherit;
-  cursor: pointer;
-}
-.iconbtn svg{ width: 22px; height: 22px; }
-
-.date-selector{ display: flex; align-items: center; gap: 2px; }
-.date-input{
-  height: 36px;
-  padding: 0 8px;
-  border: 1px solid rgba(168,212,255,.45);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--foil);
-  font-size: 14px;
-  color-scheme: dark;
-  cursor: pointer;
-}
-.date-input:focus{ outline: 2px solid var(--sky); outline-offset: 1px; }
-.topbar .btn{
-  background: transparent;
-  border-color: transparent;
-  color: var(--sky);
-  min-height: 36px;
-  padding: 0 10px;
-}
-.topbar .btn.today{ border-color: rgba(168,212,255,.45); }
-
 .main{
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
-  padding: 0 10px 10px 16px;
+  padding: 0 8px 0 12px;
 }
 
 /* The paper block */
@@ -140,10 +90,10 @@ a{ color: var(--accent-text); }
   min-width: 0;
   min-height: 0;
   width: 100%;
-  max-width: 1040px;
+  max-width: 880px;
   margin: 0 auto;
   background: var(--paper);
-  border-radius: 3px 10px 10px 3px;
+  border-radius: 3px 10px 0 0;
   overflow: hidden;
 }
 .pagehost{
@@ -168,21 +118,21 @@ a{ color: var(--accent-text); }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 22px 48px 40px 20px;
-  background-image: repeating-linear-gradient(180deg, transparent 0 31px, var(--line) 31px 32px);
+  padding: 16px 14px 28px;
+  background-image: repeating-linear-gradient(180deg, transparent 0 27px, var(--line) 27px 28px);
   background-attachment: local;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 .pagecontent > *{ flex: 0 0 auto; max-width: 100%; }
 .page-foot{
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 8px;
   text-align: center;
   font-family: var(--serif);
   font-style: italic;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
 }
 
@@ -213,90 +163,129 @@ a{ color: var(--accent-text); }
 @keyframes castOut{ from{ opacity: 1; } to{ opacity: 0; } }
 @keyframes castIn{ from{ opacity: 0; } to{ opacity: 1; } }
 
-/* ---------- Ribbon bookmark and edge tabs ---------- */
+/* ---------- Ribbon bookmark (tap to return to today) ---------- */
 .ribbon{
   position: absolute;
   top: 0;
-  right: 76px;
+  right: 14px;
   z-index: 10;
   width: 44px;
-  height: 78px;
+  height: 56px;
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
+  transition: transform .25s ease;
 }
 .ribbon::before{
   content: "";
   position: absolute;
   top: 0;
-  left: 14px;
-  width: 16px;
-  height: 64px;
+  left: 15px;
+  width: 14px;
+  height: 44px;
   background: var(--accent);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
 }
+/* The ribbon tucks away once the page is scrolled so it never sits on top of the content */
+.book.scrolled .ribbon{ transform: translateY(-100%); }
 
-.tabs{
-  position: absolute;
-  right: 0;
-  top: 104px;
-  z-index: 10;
+/* ---------- Index tabs along the bottom of the book ---------- */
+.tabbar{
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  width: 100%;
+  max-width: 904px;
+  margin: 0 auto;
+  padding: 0 8px var(--sab) 12px;
 }
 .tab{
-  width: 34px;
-  height: clamp(54px, 9.4vh, 76px);
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  writing-mode: vertical-rl;
-  background: var(--whisper);
-  border: 1px solid var(--sky);
-  border-right: none;
-  border-radius: 6px 0 0 6px;
-  color: var(--ink);
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--tabbar);
+  padding: 0 2px 4px;
+  background: var(--navy-deep);
+  border: none;
+  border-radius: 0 0 8px 8px;
+  color: var(--sky);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
 }
-.tab.active{ background: var(--navy); border-color: var(--navy); color: #fff; }
+/* the open section's tab is paper, joined to the page above it */
+.tab.active{ background: var(--paper); color: var(--ink); }
 
 /* ---------- Type ---------- */
 .kicker{
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 3px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--accent-text);
 }
 .h1{
   font-family: var(--serif);
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 500;
-  line-height: 1.1;
-  margin: 2px 0 4px;
-  padding-right: 60px; /* keep clear of the ribbon */
+  line-height: 1.12;
+  margin: 0 0 2px;
+  padding-right: 52px; /* keep clear of the ribbon */
 }
-.h2{ font-family: var(--serif); font-size: 20px; font-weight: 500; }
-.subtle{ font-size: 14px; color: var(--muted); }
-.prose{ line-height: 1.6; white-space: pre-wrap; }
+.h2{ font-family: var(--serif); font-size: 17px; font-weight: 500; }
+.subtle{ font-size: 13px; color: var(--muted); }
+.prose{ line-height: 1.55; white-space: pre-wrap; }
 
 /* ---------- Layout helpers ---------- */
-.row{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 100%; }
+.row{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: 100%; }
 .row.spread{ justify-content: space-between; width: 100%; }
-.stack{ display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.grid, .grid2{ display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
-.fillPage, .fillCol, .goalsRightStack, .diaryPage{ display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.fillPage{ gap: 16px; }
-.form2, .form3{ display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
-.hr, hr{ height: 1px; border: none; background: var(--rule); margin: 4px 0; width: 100%; }
+.stack{ display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.grid, .grid2{ display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; align-items: start; }
+.fillPage, .fillCol, .goalsRightStack, .diaryPage{ display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.fillCol{ gap: 8px; }
+.form2, .form3{ display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; }
+.hr, hr{ height: 1px; border: none; background: var(--rule); margin: 2px 0; width: 100%; }
 .desktop-only, .mobile-only, .mobile-top-section{ display: contents; }
+.dashboard-root{ position: relative; }
+
+/* Day stepper on the Today and Partner pages */
+.date-stepper{ display: flex; align-items: center; gap: 2px; margin-left: -10px; }
+.step{
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  color: var(--accent-text);
+  cursor: pointer;
+  position: relative;
+}
+.step::after{ content: ""; position: absolute; inset: -4px 0; }
+.step svg{ width: 14px; height: 14px; }
+.date-input{
+  -webkit-appearance: none;
+  appearance: none;
+  height: 36px;
+  min-width: 0;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--accent-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .4px;
+  cursor: pointer;
+}
+.date-input::-webkit-date-and-time-value{ text-align: left; margin: 0; }
+.date-input::-webkit-calendar-picker-indicator{ opacity: .55; }
+.date-stepper .btn{ margin-left: 6px; }
 
 /* ---------- Cards ---------- */
 .card{
@@ -308,68 +297,77 @@ a{ color: var(--accent-text); }
 }
 .card-h{
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 14px 16px 0;
+  min-height: 32px;
+  padding: 8px 12px 0 14px;
 }
 .card-h .t{
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 3px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--accent-text);
 }
-.card-h .d{ font-size: 13px; color: var(--muted); margin-top: 3px; }
+.card-h .d{ font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .card-h .d:empty{ display: none; }
-.card-b{ padding: 12px 16px 16px; }
+.card-b{ padding: 6px 14px 12px; }
+/* Section cards repeat their purpose in the row under the title, so the description line is dropped there */
+.card.fill > .card-h .d, .yearlyCard > .card-h .d, .quarterlyCard > .card-h .d{ display: none; }
 
 .card.navy{ background: var(--navy); border-color: var(--navy); color: var(--foil); }
-.card.navy .card-h .t{ color: var(--sky); }
-.card.navy .card-h .d{ color: var(--sky); }
+.card.navy .card-h .t, .card.navy .card-h .d{ color: var(--sky); }
 
-.verse-text{ font-family: var(--serif); font-style: italic; font-size: 19px; line-height: 1.4; }
-.verse-ref{ font-size: 13px; color: var(--muted); margin-top: 8px; }
+.verse-text{ font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1.4; }
+.verse-ref{ font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 
-.banner{ border-top: 1px solid var(--rule); padding-top: 12px; }
 .banner .t{ display: none; }
-.banner .ref{ font-size: 13px; color: var(--muted); }
-.banner .txt{ font-family: var(--serif); font-style: italic; font-size: 17px; line-height: 1.4; margin-top: 4px; }
-.card-b > .banner, .card-b > .stack > .banner:first-child{ border-top: none; padding-top: 0; }
+.banner .ref{ font-size: 12.5px; color: var(--muted); }
+.banner .txt{ font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1.4; margin-top: 2px; }
 
-/* ---------- Buttons ---------- */
+.stats{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat-v{ font-family: var(--serif); font-size: 22px; line-height: 1.1; }
+.stat-l{ font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- Buttons ----------
+   Three weights: filled navy for the one main action in a sheet, tinted for actions on a page,
+   outlined (ghost) for everything secondary. */
 .btn{
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40px;
-  padding: 0 16px;
-  background: var(--navy);
-  border: 1px solid var(--navy);
+  min-height: 32px;
+  padding: 0 12px;
+  background: var(--whisper);
+  border: 1px solid var(--whisper);
   border-radius: var(--radius);
-  color: #fff;
-  font-size: 14px;
+  color: var(--ink);
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
 }
-.btn:active{ opacity: .8; }
-.btn.ghost{ background: transparent; border-color: var(--sky); color: var(--ink); }
+/* 44pt tap area without a 44pt-tall button */
+.btn::after{ content: ""; position: absolute; inset: -7px -2px; }
+.btn:active{ opacity: .7; }
+.btn.ghost{ background: transparent; border-color: var(--sky); }
 .btn.danger{ background: transparent; border-color: rgba(168,56,74,.35); color: var(--bad); }
 .btn.good{ background: transparent; border-color: rgba(45,107,82,.4); color: var(--good); }
-.btn.small{ min-height: 36px; padding: 0 10px; font-size: 13px; }
 .btn:disabled{ opacity: .5; cursor: not-allowed; }
-.filebtn{ position: relative; overflow: hidden; }
+.modal-footer .btn{ min-height: 40px; padding: 0 16px; font-size: 14px; }
+.modal-footer .btn:not(.ghost):not(.danger):not(.good){ background: var(--navy); border-color: var(--navy); color: #fff; }
+.filebtn{ overflow: hidden; margin: 0; }
 .filebtn input{ position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.item .actions .btn, .li-actions .btn{ min-height: 34px; padding: 0 10px; font-size: 13px; }
 
 /* ---------- Forms ---------- */
 .input, select, textarea, .textarea{
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border: 1px solid var(--sky);
   border-radius: var(--radius);
   background: #fff;
@@ -378,24 +376,35 @@ a{ color: var(--accent-text); }
   outline: none;
 }
 .input:focus, select:focus, textarea:focus, .textarea:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,144,217,.18); }
-textarea{ min-height: 88px; resize: vertical; }
-.textarea{ min-height: 260px; line-height: 1.6; font-family: var(--serif); font-size: 17px; }
-label, .label{ display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+textarea{ min-height: 76px; resize: vertical; }
+.textarea{ min-height: 240px; line-height: 1.6; font-family: var(--serif); }
+label, .label{ display: block; margin-bottom: 4px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
 .field{ min-width: 0; }
-.field-error{ color: var(--bad); font-size: 13px; margin-top: 4px; }
+.field-error{ color: var(--bad); font-size: 12.5px; margin-top: 4px; }
 input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); flex: 0 0 auto; }
+/* iOS date and time fields have their own minimum width and centre their text; keep them inside the form */
+.input[type="date"], .input[type="time"], .input[type="month"], .input[type="datetime-local"]{
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 42px;
+  text-align: left;
+}
+.input::-webkit-date-and-time-value{ text-align: left; }
 
 /* ---------- Badges ---------- */
 .badge{
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
-  padding: 0 8px;
+  min-height: 22px;
+  padding: 0 7px;
   border: 1px solid var(--sky);
   border-radius: 3px;
   background: var(--whisper);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -405,32 +414,47 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 
 /* ---------- Lists ---------- */
 .list{ display: flex; flex-direction: column; }
-.item{ padding: 12px 0; border-top: 1px solid var(--rule); }
+.item{ padding: 10px 0; border-top: 1px solid var(--rule); }
 .list > .item:first-child, .exerciseList > .item:first-child{ border-top: none; padding-top: 2px; }
-.item .top{ display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.item .top > div:first-child{ flex: 1 1 150px; min-width: 0; }
-.item .h{ font-family: var(--serif); font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
-.item .m{ font-size: 13px; color: var(--muted); margin-top: 3px; line-height: 1.35; overflow-wrap: anywhere; }
-.item .actions{ display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.item .qRight{ display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.item .top{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.item .top > div:first-child{ flex: 1 1 auto; min-width: 0; }
+.item .h{ font-family: var(--serif); font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
+.item .m{ font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; overflow-wrap: anywhere; }
+.item .actions{ flex: 0 0 auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.item .qRight{ flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .item.compact{ padding: 8px 0; }
 .leftRow{ display: flex; align-items: flex-start; gap: 10px; }
 .doneTitle{ text-decoration: line-through; color: var(--muted); }
 
-/* Task rows: round tick on the left like a paper checklist */
-.task{ display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); }
+/* Rows that open on tap (app.js enhanceRows): the whole row is the target, with a chevron as the cue */
+.item.tappable .top > div:first-child{ cursor: pointer; min-height: 32px; display: flex; flex-direction: column; justify-content: center; }
+.item.tappable .top::after{
+  content: "";
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin: 0 4px 0 2px;
+  border-top: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+  opacity: .6;
+  pointer-events: none;
+}
+
+/* Task rows: round tick on the left like a paper checklist; tap the task to edit it */
+.task{ display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--rule); }
 .list > .task:first-child{ border-top: none; padding-top: 2px; }
-.task .body{ flex: 1 1 auto; min-width: 0; }
-.task .h{ font-family: var(--serif); font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.task button.body{ flex: 1 1 auto; min-width: 0; min-height: 26px; display: block; padding: 0; background: none; border: none; text-align: left; cursor: pointer; }
+.task .h{ font-family: var(--serif); font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
 .task.done .h{ text-decoration: line-through; color: var(--muted); }
-.task .m{ font-size: 13px; color: var(--muted); margin-top: 3px; }
+.task .m{ font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.task .m:empty{ display: none; }
 .task .m .top-pri{ color: var(--accent-text); font-weight: 600; }
-.task .li-actions{ display: flex; gap: 6px; margin-top: 8px; }
 .chk{
   flex: 0 0 auto;
   width: 44px;
   height: 44px;
-  margin: -10px -12px -10px -11px;
+  margin: -10px -11px -10px -12px;
   padding: 0;
   background: none;
   border: none;
@@ -440,19 +464,20 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 }
 .chk::before{
   content: "";
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border: 1.5px solid var(--navy);
   border-radius: 50%;
 }
 .chk.done::before{
-  background: var(--navy) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='white' stroke-width='1.6'%3E%3Cpath d='M2.5 6.5l2.2 2.2L9.5 3.5'/%3E%3C/svg%3E") center / 12px no-repeat;
+  background: var(--navy) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='white' stroke-width='1.6'%3E%3Cpath d='M2.5 6.5l2.2 2.2L9.5 3.5'/%3E%3C/svg%3E") center / 11px no-repeat;
 }
 
 .listitem{
   width: 100%;
+  min-height: 44px;
   text-align: left;
-  padding: 12px 0;
+  padding: 10px 0;
   background: none;
   border: none;
   border-top: 1px solid var(--rule);
@@ -460,44 +485,38 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 }
 .diaryList > .listitem:first-child, .list > .listitem:first-child{ border-top: none; }
 .li-top{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.li-title{ font-family: var(--serif); font-size: 17px; }
-.li-meta{ font-size: 13px; color: var(--muted); white-space: nowrap; }
-.li-sub{ font-size: 14px; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere; }
+.li-title{ font-family: var(--serif); font-size: 15px; }
+.li-meta{ font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.li-sub{ font-size: 13px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
 .diaryList{ display: flex; flex-direction: column; }
-.diaryListWrap{ background: #fff; border: 1px solid var(--sky); border-radius: var(--radius); padding: 4px 16px; }
+.diaryListWrap{ background: #fff; border: 1px solid var(--sky); border-radius: var(--radius); padding: 2px 14px; }
 
-.exerciseGroup{ border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 10px; }
+.exerciseGroup{ border-top: 1px solid var(--rule); padding-top: 8px; margin-top: 8px; }
 .exerciseHeader{ display: flex; align-items: baseline; justify-content: space-between; }
-.exerciseHeader .h{ font-family: var(--serif); font-size: 18px; }
+.exerciseHeader .h{ font-family: var(--serif); font-size: 16px; }
 
 /* Lists flow with the page on phones; the inner scroll boxes only apply on wide screens */
 .scroll-area, .diaryListWrap{ max-height: none !important; overflow: visible !important; }
 
-.task button.body{ display: block; padding: 0; background: none; border: none; text-align: left; cursor: pointer; }
-.filebtn{ margin: 0; }
-.dashboard-root{ position: relative; }
-.stats{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.stat-v{ font-family: var(--serif); font-size: 28px; line-height: 1.1; }
-.stat-l{ font-size: 13px; color: var(--muted); margin-top: 2px; }
-
 /* ---------- Song of the Day ---------- */
-.song{ display: flex; flex-direction: column; gap: 14px; }
-.song-top{ display: flex; align-items: center; gap: 14px; }
+.card.navy .card-b{ padding-top: 4px; }
+.song{ display: flex; flex-direction: column; gap: 6px; }
+.song-top{ display: flex; align-items: center; gap: 12px; }
 .song-art{
   flex: 0 0 auto;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 3px;
   background: var(--navy-deep) center / cover no-repeat;
   border: 1px solid rgba(168,212,255,.3);
 }
 .song-info{ flex: 1 1 auto; min-width: 0; }
-.song-title{ font-family: var(--serif); font-size: 20px; line-height: 1.2; color: #fff; overflow-wrap: anywhere; }
-.song-artist{ font-size: 14px; color: var(--sky); margin-top: 2px; }
+.song-title{ font-family: var(--serif); font-size: 16px; line-height: 1.2; color: #fff; overflow-wrap: anywhere; }
+.song-artist{ font-size: 12.5px; color: var(--sky); margin-top: 1px; }
 .song-play{
   flex: 0 0 auto;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--sky);
@@ -506,13 +525,13 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   place-items: center;
   cursor: pointer;
 }
-.song-play svg{ width: 16px; height: 16px; }
-.song-progress{ display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--sky); font-variant-numeric: tabular-nums; }
-.song-track{ flex: 1 1 auto; height: 24px; display: flex; align-items: center; cursor: pointer; }
+.song-play svg{ width: 14px; height: 14px; }
+.song-progress{ display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--sky); font-variant-numeric: tabular-nums; }
+.song-track{ flex: 1 1 auto; height: 28px; display: flex; align-items: center; cursor: pointer; }
 .song-track > div{ width: 100%; height: 2px; background: rgba(168,212,255,.3); border-radius: 1px; }
 .song-track > div > div{ height: 100%; width: 0%; background: var(--sky); border-radius: 1px; }
-.song-foot{ display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; min-height: 24px; }
-.song-foot a{ color: var(--sky); padding: 6px 0; }
+.song-foot{ display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; margin-top: -4px; }
+.song-foot a{ color: var(--sky); padding: 4px 0; }
 .song-status{ color: var(--sky); }
 
 /* ---------- Scheduler ---------- */
@@ -521,53 +540,72 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   border-radius: var(--radius);
   background: #fff;
   overflow: auto;
-  max-height: 420px;
+  max-height: 300px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
-.sched-inner{ position: relative; background: linear-gradient(90deg, var(--paper) 0 62px, transparent 62px); }
-.hourline{ position: absolute; left: 0; right: 0; height: 60px; border-top: 1px solid var(--rule); }
-.hourlabel{ position: absolute; left: 10px; top: 4px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sched-inner{ position: relative; background: linear-gradient(90deg, var(--paper) 0 50px, transparent 50px); }
+.hourline{ position: absolute; left: 0; right: 0; border-top: 1px solid var(--rule); }
+.hourlabel{ position: absolute; left: 8px; top: 3px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .block{
   position: absolute;
-  left: 68px;
-  right: 8px;
+  left: 56px;
+  right: 6px;
   border-radius: 3px;
   border-left: 3px solid var(--navy);
   background: var(--whisper);
-  padding: 6px 10px 12px;
+  padding: 4px 8px 10px;
   overflow: hidden;
   cursor: grab;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
-.block .bt{ font-weight: 600; font-size: 14px; }
-.block .bm{ font-size: 12px; color: var(--muted); margin-top: 2px; }
-.block .resize{ position: absolute; left: 0; right: 0; bottom: 0; height: 12px; cursor: ns-resize; background: rgba(30,58,95,.08); }
+.block .bt{ font-weight: 600; font-size: 13px; line-height: 1.2; }
+.block .bm{ font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.block .resize{ position: absolute; left: 0; right: 0; bottom: 0; height: 10px; cursor: ns-resize; background: rgba(30,58,95,.08); }
+/* Calendar events (read only) */
+.block.cal{ background: #fff; border: 1px solid var(--sky); border-left: 3px solid var(--accent); cursor: default; touch-action: auto; }
+.block.cal .bt{ color: var(--accent-text); }
+.allday{ display: flex; flex-direction: column; gap: 4px; }
+.allday-item{ display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+.allday-tag{ flex: 0 0 auto; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent-text); }
 
-.progress{ height: 6px; border-radius: 3px; background: var(--whisper); overflow: hidden; }
+.progress{ height: 5px; border-radius: 3px; background: var(--whisper); overflow: hidden; }
 .progress > div{ height: 100%; width: 0%; background: var(--accent); }
 
 /* ---------- Drawer (contents page) ---------- */
 .drawer{ position: fixed; inset: 0; z-index: 60; background: rgba(10,22,38,.5); display: flex; }
 .drawer-panel{
-  width: min(320px, 86vw);
+  width: min(300px, 82vw);
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: calc(var(--sat) + 14px) 20px calc(var(--sab) + 16px) calc(var(--sal) + 20px);
+  padding: calc(var(--sat) + 10px) 20px calc(var(--sab) + 14px) calc(var(--sal) + 20px);
   background-color: var(--navy);
   background-image: var(--cloth);
   border-right: 1px solid rgba(168,212,255,.3);
   color: var(--foil);
   overflow-y: auto;
 }
-.drawer-head{ display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid rgba(168,212,255,.3); }
-.drawer-title{ font-size: 11px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: var(--sky); }
-.nav{ display: flex; flex-direction: column; padding: 6px 0; }
+.drawer-head{ display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; border-bottom: 1px solid rgba(168,212,255,.3); }
+.drawer-title{ font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--sky); }
+.iconbtn{
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  margin-right: -12px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+.iconbtn svg{ width: 20px; height: 20px; }
+.nav{ display: flex; flex-direction: column; padding: 4px 0; }
 .navitem{
-  min-height: 48px;
+  min-height: 44px;
   padding: 0;
   text-align: left;
   background: none;
@@ -575,13 +613,13 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   border-bottom: 1px solid rgba(168,212,255,.14);
   color: var(--foil);
   font-family: var(--serif);
-  font-size: 20px;
+  font-size: 17px;
   cursor: pointer;
 }
 .navitem.active{ color: #fff; font-style: italic; }
-.navitem.active::before{ content: ""; display: inline-block; width: 14px; height: 1px; margin-right: 10px; vertical-align: middle; background: var(--sky); }
-.drawer-foot{ margin-top: auto; padding-top: 14px; }
-.drawer-tip{ font-size: 13px; color: var(--sky); }
+.navitem.active::before{ content: ""; display: inline-block; width: 12px; height: 1px; margin-right: 8px; vertical-align: middle; background: var(--sky); }
+.drawer-foot{ margin-top: auto; padding-top: 12px; }
+.drawer-tip{ font-size: 12.5px; color: var(--sky); }
 
 /* ---------- Modal (sheet from the bottom on phones) ---------- */
 .modal-backdrop{
@@ -592,11 +630,11 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   align-items: flex-end;
   justify-content: center;
   background: rgba(10,22,38,.5);
-  padding: calc(var(--sat) + 12px) 0 0;
+  padding: calc(var(--sat) + 10px) 0 0;
 }
 .modal{
   width: 100%;
-  max-width: 640px;
+  max-width: 560px;
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -604,30 +642,33 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   border-radius: 12px 12px 0 0;
   overflow: hidden;
 }
-.modal-header{ flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 10px 8px 10px 20px; border-bottom: 1px solid var(--rule); }
-.modal-title{ font-family: var(--serif); font-size: 22px; font-weight: 500; }
-.modal-body{ flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 20px; }
-.modal-footer{ flex: 0 0 auto; display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px calc(var(--sab) + 12px); border-top: 1px solid var(--rule); }
-.modal-footer > div{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; width: 100%; }
+.modal-header{ flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 4px 16px; border-bottom: 1px solid var(--rule); }
+.modal-header .iconbtn{ color: var(--muted); }
+.modal-title{ font-family: var(--serif); font-size: 18px; font-weight: 500; }
+.modal-body{ flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px; }
+.modal-footer{ flex: 0 0 auto; display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px calc(var(--sab) + 10px); border-top: 1px solid var(--rule); }
+.modal-footer > div{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; width: 100%; }
 .modal-footer span:empty{ display: none; }
+/* destructive action sits apart from Cancel / Save, on the left */
+.modal-footer .btn.danger{ margin-right: auto; }
 
 /* ---------- Toast ---------- */
 .toast-notification{
   position: fixed;
   left: 50%;
-  bottom: calc(var(--sab) + 28px);
+  bottom: calc(var(--sab) + var(--tabbar) + 14px);
   z-index: 10000;
   width: max-content;
-  max-width: calc(100% - 40px);
-  padding: 12px 18px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
   border-radius: var(--radius);
   background: var(--navy-dark);
   border: 1px solid rgba(168,212,255,.4);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
   opacity: 0;
-  transform: translateX(-50%) translateY(12px);
+  transform: translateX(-50%) translateY(10px);
   transition: opacity .25s ease, transform .25s ease;
   pointer-events: none;
 }
@@ -677,14 +718,14 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   box-shadow: inset 14px 0 18px -10px rgba(30,58,95,.25);
   font-family: var(--serif);
 }
-.fly-kicker{ font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 4px; color: var(--muted); }
-.fly-name{ font-size: 44px; font-style: italic; line-height: 1; }
-.fly-rule{ width: 120px; height: 1px; background: var(--sky); }
-.fly-motto{ font-size: 15px; font-style: italic; color: var(--muted); }
+.fly-kicker{ font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 3px; color: var(--muted); }
+.fly-name{ font-size: 38px; font-style: italic; line-height: 1; }
+.fly-rule{ width: 100px; height: 1px; background: var(--sky); }
+.fly-motto{ font-size: 14px; font-style: italic; color: var(--muted); }
 
 /* board */
 .cover-board .front{ background: var(--paper); padding: 0 7px 7px 0; }
@@ -705,8 +746,9 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5vh;
+  gap: 4vh;
   padding: calc(var(--sat) + 24px) 78px calc(var(--sab) + 44px) 62px;
+  cursor: pointer;
 }
 .cover-spine{ position: absolute; left: 0; top: 0; bottom: 0; width: 34px; background: var(--navy-deep); box-shadow: inset -6px 0 8px rgba(0,0,0,.25), 2px 0 0 rgba(255,255,255,.05); }
 .cover-spine i{ position: absolute; left: 0; right: 0; height: 5px; background: var(--navy); box-shadow: 0 1px 0 rgba(0,0,0,.3); }
@@ -714,29 +756,29 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 .cover-spine i:nth-child(3){ bottom: 104px; } .cover-spine i:nth-child(4){ bottom: 90px; }
 .cover-band{ position: absolute; right: 38px; top: 0; bottom: 0; width: 12px; background: var(--navy-dark); box-shadow: -1px 0 0 rgba(0,0,0,.2), 1px 0 0 rgba(255,255,255,.04); }
 .cover-ribbon{ position: absolute; left: 96px; bottom: 0; width: 16px; height: 44px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); }
-.cover-plate{ width: 100%; max-width: 300px; border: 1px solid var(--sky); padding: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); }
+.cover-plate{ width: 100%; max-width: 250px; border: 1px solid var(--sky); padding: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); }
 .cover-plate > div{
   border: 1px solid rgba(168,212,255,.45);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: clamp(28px, 7vh, 64px) 12px;
+  gap: 16px;
+  padding: clamp(24px, 6vh, 52px) 12px;
 }
-.cover-name{ font-family: var(--serif); font-size: 58px; font-style: italic; line-height: 1; color: var(--foil); }
-.cover-word{ font-size: 12px; font-weight: 500; letter-spacing: 8px; padding-left: 8px; }
-.cover-rule{ width: 36px; height: 1px; background: var(--sky); }
-.cover-year{ font-family: var(--serif); font-size: 20px; letter-spacing: 4px; padding-left: 4px; }
-.cover-open{ width: 100%; max-width: 300px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.cover-date{ font-family: var(--serif); font-size: 16px; font-style: italic; color: var(--foil); }
+.cover-name{ font-family: var(--serif); font-size: 46px; font-style: italic; line-height: 1; color: var(--foil); }
+.cover-word{ font-size: 11px; font-weight: 500; letter-spacing: 7px; padding-left: 7px; }
+.cover-rule{ width: 32px; height: 1px; background: var(--sky); }
+.cover-year{ font-family: var(--serif); font-size: 17px; letter-spacing: 4px; padding-left: 4px; }
+.cover-open{ width: 100%; max-width: 250px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.cover-date{ font-family: var(--serif); font-size: 14px; font-style: italic; color: var(--foil); }
 .cover-open button{
   width: 100%;
-  height: 50px;
+  height: 44px;
   background: var(--sky);
   color: var(--navy);
   border: none;
   border-radius: var(--radius);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 3px;
   cursor: pointer;
@@ -750,11 +792,10 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   border: 8px solid var(--navy);
 }
 
-/* opening and closing */
+/* opening and closing: each leaf darkens as it turns away and its reverse side brightens as it comes round */
 #bookCover.opening, #bookCover.closing{ pointer-events: none; }
 #bookCover.opening .cover-board{ animation: coverOpen 1.7s cubic-bezier(.65,0,.35,1) both; }
 #bookCover.opening .cover-fly{ animation: coverOpen 1.7s cubic-bezier(.65,0,.35,1) .45s both; }
-/* each leaf darkens as it turns away and its reverse side brightens as it comes round */
 #bookCover.opening .cover-board .front .cover-shade{ animation: shadeIn 1.7s cubic-bezier(.65,0,.35,1) both; }
 #bookCover.opening .cover-board .back .cover-shade{ animation: shadeOutLate 1.7s cubic-bezier(.65,0,.35,1) both; }
 #bookCover.opening .cover-fly .front .cover-shade{ animation: shadeIn 1.7s cubic-bezier(.65,0,.35,1) .45s both; }
@@ -777,28 +818,37 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
   .form2{ grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
   .form3{ grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); }
 }
-@media (max-width: 559px){
-  .brand{ display: none; }
-  .topbar{ justify-content: space-between; }
-}
 @media (min-width: 900px){
-  .main{ padding: 6px 24px 24px; }
-  .pagecontent{ padding: 32px 72px 48px 44px; gap: 20px; }
-  .h1{ font-size: 44px; }
-  .grid{ grid-template-columns: 1.5fr 1fr; }
-  .grid2{ grid-template-columns: 1fr 1fr; }
-  .tabs{ top: 130px; }
-  .tab{ width: 40px; }
-  .ribbon{ right: 110px; }
+  .main{ padding: 8px 24px 0; }
+  .tabbar{ padding: 0 24px 16px; max-width: 928px; }
+  .pagecontent{ padding: 28px 40px 40px; gap: 16px; }
+  .h1{ font-size: 36px; }
+  .grid{ grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); }
+  .grid2{ grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .ribbon{ right: 40px; }
   .modal-backdrop{ align-items: center; padding: 24px; }
   .modal{ border-radius: 8px; max-height: calc(100vh - 48px); }
   .scroll-area{ max-height: 360px !important; overflow-y: auto !important; }
+  .scheduler{ max-height: 460px; }
 }
 
 @media (prefers-reduced-motion: reduce){
   :root{ --flip: 0ms; }
+  .ribbon{ transition: none; }
   #bookCover.opening *, #bookCover.closing *{ animation-duration: .01s !important; animation-delay: 0s !important; }
 }
+
+/* ---------- Standalone iPhone ----------
+   --app-h is the real screen height, set in index.html (see the note there). The document itself
+   is made that tall and the full-screen layers sit inside it, because position: fixed is measured
+   against a viewport that iOS reports too short. */
+html.standalone{ height: var(--app-h); overflow: visible; }
+html.standalone body{ position: relative; inset: auto; width: 100%; height: var(--app-h); overflow: hidden; }
+html.standalone .app,
+html.standalone #bookCover,
+html.standalone .drawer,
+html.standalone .modal-backdrop{ position: absolute; top: 0; right: 0; bottom: auto; left: 0; height: var(--app-h); }
+html.standalone .toast-notification{ position: absolute; }
 
 /* ==================== BIRTHDAY THEME (January 24th) ==================== */
 .birthday-mode {
@@ -907,59 +957,3 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 }
 
 /* ==================== END BIRTHDAY THEME ==================== */
-
-/* Section cards repeat their purpose in the row under the title, so the description line is dropped there */
-.card.fill > .card-h .d, .yearlyCard > .card-h .d, .quarterlyCard > .card-h .d{ display: none; }
-
-/* Standalone iPhone: --app-h is the real screen height, set in index.html (see the note there).
-   The document itself is made that tall and the full-screen layers sit inside it, because
-   position: fixed is measured against a viewport that iOS reports too short. */
-html.standalone{ height: var(--app-h); overflow: visible; }
-html.standalone body{ position: relative; inset: auto; width: 100%; height: var(--app-h); overflow: hidden; }
-html.standalone .app,
-html.standalone #bookCover,
-html.standalone .drawer,
-html.standalone .modal-backdrop{ position: absolute; top: 0; right: 0; bottom: auto; left: 0; height: var(--app-h); }
-html.standalone .toast-notification{ position: absolute; }
-.narrow .brand{ display: none; }
-
-/* iOS date and time fields have their own minimum width and centre their text; keep them inside the form */
-input[type="date"], input[type="time"], input[type="month"], input[type="datetime-local"]{
-  -webkit-appearance: none;
-  appearance: none;
-  display: block;
-  min-width: 0;
-  max-width: 100%;
-  min-height: 46px;
-  text-align: left;
-}
-input::-webkit-date-and-time-value{ text-align: left; }
-.date-input{ min-height: 36px !important; }
-
-/* The ribbon tucks away once the page is scrolled so it never sits on top of the content */
-.ribbon{ transition: transform .25s ease; }
-.book.scrolled .ribbon{ transform: translateY(-100%); }
-
-/* Calendar events in the schedule (read only) */
-.block.cal{ left: 68px; right: 8px; background: #fff; border: 1px solid var(--sky); border-left: 3px solid var(--accent); cursor: default; touch-action: auto; }
-.block.cal .bt{ color: var(--accent-text); }
-.allday{ display: flex; flex-direction: column; gap: 6px; }
-.allday-item{ display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
-.allday-tag{ flex: 0 0 auto; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-text); }
-
-/* ---------- Density ----------
-   The whole interface is drawn a little smaller than its nominal sizes. The home-screen script in
-   index.html multiplies this same factor in, so change DENSITY there too. */
-html{ zoom: .88; }
-
-/* Quieter type and controls */
-.h1{ font-size: 32px; }
-.btn{ min-height: 36px; padding: 0 14px; font-size: 13px; letter-spacing: .2px; }
-.item .actions .btn, .li-actions .btn, .btn.small{ min-height: 32px; }
-.card-h{ padding-top: 12px; }
-.card-b{ padding: 10px 16px 14px; }
-.item .h, .task .h, .li-title{ font-size: 16px; }
-
-/* Date in the top bar: keep the value centred in its box */
-.topbar .date-input{ display: inline-flex; align-items: center; height: 36px; min-height: 36px !important; padding: 0 10px; line-height: 1; }
-.topbar .date-input::-webkit-date-and-time-value{ margin: 0; padding: 0; line-height: 34px; text-align: center; }
