@@ -762,8 +762,9 @@ let currentRouteFull = null;
 let isNavigating = false;
 let pendingRoute = null;
 
-// Page order for next/prev navigation
-const PAGE_ORDER = ["dashboard", "goals", "relationships", "finance", "fitness", "spiritual", "weekly", "diary", "partner", "settings"];
+// Page order for next/prev navigation. The first five match the edge tabs left to right,
+// so a swipe always lands on the neighbouring tab.
+const PAGE_ORDER = ["dashboard", "goals", "relationships", "finance", "spiritual", "fitness", "weekly", "diary", "partner", "settings"];
 // Sections that have their own tab on the page edge; everything else sits behind "More"
 const TAB_ROUTES = ["dashboard", "goals", "relationships", "finance", "spiritual"];
 

@@ -127,6 +127,10 @@ Added the kinds of data the first pass lacked (monthly goals, 24 check-ins, cont
 - Every page change now goes through `go()` in app.js, which uses `location.replace` so no history builds up and the system gesture has nothing to act on. Do not set `location.hash` directly.
 - Not yet confirmed on the phone.
 
+## Page order matches the tabs (15 Nov, fourteenth release)
+
+- Swiping on from Money went to Wellness, which has no tab, before Faith. Faith now comes straight after Money, and Wellness follows it as the first page behind More. The contents list is in the same order.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
