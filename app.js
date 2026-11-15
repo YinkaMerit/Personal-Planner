@@ -517,7 +517,7 @@ drawer.addEventListener("click", (e)=>{ if (e.target === drawer) closeDrawer(); 
 
 document.querySelectorAll(".navitem[data-route]").forEach(b=>{
   b.addEventListener("click", ()=>{
-    location.hash = b.dataset.route;
+    go(b.dataset.route);
     closeDrawer();
   });
 });
@@ -677,7 +677,7 @@ async function diaryEnsureUnlock(settings, afterRoute){
       toast("Unlocked");
       try{ modal.close(); }catch(_){ }
       // Force page refresh with timestamp
-      location.hash = (afterRoute || "diary") + "?t=" + Date.now();
+      go((afterRoute || "diary") + "?t=" + Date.now());
     } else {
       toast("Wrong PIN");
     }
@@ -851,13 +851,13 @@ function getPrevPage(currentKey) {
 // Turning past either end of the book shuts it, like running out of pages
 function goNextPage() {
   const next = getNextPage(currentRouteKey);
-  if (next) location.hash = next;
+  if (next) go(next);
   else if (getPageIndex(currentRouteKey) === PAGE_ORDER.length - 1 && !isNavigating) closeBook();
 }
 
 function goPrevPage() {
   const prev = getPrevPage(currentRouteKey);
-  if (prev) location.hash = prev;
+  if (prev) go(prev);
   else if (getPageIndex(currentRouteKey) === 0 && !isNavigating) closeBook();
 }
 
@@ -962,20 +962,27 @@ function updatePageNavButtons(key = currentRouteKey) {
   });
 }
 
+// Change page without adding to the browser history. On the iPhone a drag from the screen edge
+// is the system's own back/forward gesture, which slides the whole app sideways; with no history
+// to move through it has nothing to do, and the planner's own page turn handles the swipe.
+function go(r){
+  location.replace("#" + r);
+}
+
 window.addEventListener("hashchange", ()=>navigate(route()));
 
 document.getElementById("edgeTabs").addEventListener("click", (e)=>{
   const t = e.target.closest(".tab");
   if (!t) return;
   if (t.dataset.route === "more") openDrawer();
-  else location.hash = t.dataset.route;
+  else go(t.dataset.route);
 });
 
 // The ribbon always brings you back to today
 document.getElementById("btnRibbon").addEventListener("click", ()=>{
   setSelectedDate(new Date());
   if (currentRouteFull === "dashboard") navigate("dashboard", true).then(scrollToTop);
-  else location.hash = "dashboard";
+  else go("dashboard");
 });
 
 // Swipe left/right to turn the page
@@ -1280,7 +1287,7 @@ async function viewDashboard(settings){
     : null;
 
   const overdueCard = (isToday && overdue.length)
-    ? card("Check-ins due", "Based on your reminders.", overdueList(overdue), btn("Open", {kind:"ghost", onclick: ()=>{ location.hash="relationships"; }}))
+    ? card("Check-ins due", "Based on your reminders.", overdueList(overdue), btn("Open", {kind:"ghost", onclick: ()=>{ go("relationships"); }}))
     : null;
 
   const tasksBody = el("div",{class:"stack"},[
@@ -2234,10 +2241,10 @@ async function viewRelationships(){
   const isCurrentMonth = selectedMonth === currentMk;
   
   const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
-    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${prevMonth}`; }}),
+    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ go(`relationships/${prevMonth}`); }}),
     el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
-    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `relationships/${nextMonth}`; }}),
-    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "relationships"; }}) : el("span")
+    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ go(`relationships/${nextMonth}`); }}),
+    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ go("relationships"); }}) : el("span")
   ]);
 
   const header = el("div",{},[
@@ -2482,10 +2489,10 @@ async function viewFinance(){
   const isCurrentMonth = selectedMonth === currentMk;
   
   const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
-    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${prevMonth}`; }}),
+    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ go(`finance/${prevMonth}`); }}),
     el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
-    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `finance/${nextMonth}`; }}),
-    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "finance"; }}) : el("span")
+    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ go(`finance/${nextMonth}`); }}),
+    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ go("finance"); }}) : el("span")
   ]);
 
   const header = el("div",{},[
@@ -2843,10 +2850,10 @@ async function viewFitness(){
   const totalSets = monthWorkouts.reduce((sum, w) => sum + (setsByWorkout.get(w.id)?.length || 0), 0);
   
   const monthNav = el("div",{class:"row", style:"justify-content:center; gap:12px; margin-bottom:8px;"},[
-    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${prevMonth}`; }}),
+    btn("‹",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ go(`fitness/${prevMonth}`); }}),
     el("div",{class:"h2", style:"min-width:120px; text-align:center;"},[document.createTextNode(formatMonthYear(selectedMonth))]),
-    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ location.hash = `fitness/${nextMonth}`; }}),
-    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ location.hash = "fitness"; }}) : el("span")
+    btn("›",{kind:"ghost", style:"padding:4px 10px;", onclick:()=>{ go(`fitness/${nextMonth}`); }}),
+    !isCurrentMonth ? btn("Today",{kind:"ghost", style:"padding:4px 8px; font-size:11px;", onclick:()=>{ go("fitness"); }}) : el("span")
   ]);
 
   const header = el("div",{},[
@@ -3500,9 +3507,9 @@ async function viewWeekly(settings, baseKey){
 
   const isThisWeek = fromKey === dayKey(weekStart(new Date(), !!settings.weekStartsMonday));
   const weekNav = el("div",{class:"row"},[
-    btn("Earlier",{kind:"ghost", onclick:()=>{ location.hash = "weekly/" + dayKey(addDays(ws,-7)); }}),
-    btn("Later",{kind:"ghost", onclick:()=>{ location.hash = "weekly/" + toKey; }}),
-    !isThisWeek ? btn("This week",{kind:"ghost", onclick:()=>{ location.hash = "weekly"; }}) : el("span")
+    btn("Earlier",{kind:"ghost", onclick:()=>{ go("weekly/" + dayKey(addDays(ws,-7))); }}),
+    btn("Later",{kind:"ghost", onclick:()=>{ go("weekly/" + toKey); }}),
+    !isThisWeek ? btn("This week",{kind:"ghost", onclick:()=>{ go("weekly"); }}) : el("span")
   ]);
 
   const header = el("div",{},[
@@ -3528,7 +3535,7 @@ async function viewWeekly(settings, baseKey){
     const d = addDays(ws, i);
     const k = dayKey(d);
     const n = tasks.filter(t=>t.scheduledDate === k).length;
-    return el("button",{class:"listitem", onclick:()=>{ location.hash = "day/" + k; }},[
+    return el("button",{class:"listitem", onclick:()=>{ go("day/" + k); }},[
       el("div",{class:"li-top"},[
         el("div",{class:"li-title"},[document.createTextNode(d.toLocaleDateString("en-GB",{ weekday:"long" }))]),
         el("div",{class:"li-meta"},[document.createTextNode(`${formatShort(d)}${n ? ` · ${n} task${n===1?"":"s"}` : ""}`)])
@@ -3568,7 +3575,7 @@ async function viewDay(settings, key){
   const bioDay = bio.filter(b=>(b.date||"").slice(0,10)===key).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")))[0];
 
   const header = el("div",{class:"row", style:"justify-content:space-between; align-items:center;"},[
-    btn("← Back",{kind:"ghost", onclick:()=>{ location.hash = "weekly/" + key; }}),
+    btn("← Back",{kind:"ghost", onclick:()=>{ go("weekly/" + key); }}),
     el("div",{},[
       el("div",{class:"h1"},[document.createTextNode(date.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric", year:"numeric"}))]),
     ]),
@@ -3675,7 +3682,7 @@ async function viewDiary(settings){
       await put("settings", settings);
       diarySetUnlocked(true); // unlock after setting PIN so user can add entries
       toast("PIN set - diary unlocked");
-      location.hash = "diary?t=" + Date.now();
+      go("diary?t=" + Date.now());
     }});
 
     return el("div",{class:"stack"},[
@@ -3712,14 +3719,14 @@ async function viewDiary(settings){
     const today = dayKey(new Date());
     const e = { id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), dateKey: today, title:"", content:"" };
     await put("diaryEntries", e);
-    location.hash = "diary/" + id;
+    go("diary/" + id);
   }});
 
   const btnLock = btn("Lock",{kind:"ghost", onclick: async ()=>{
     diarySetUnlocked(false);
     toast("Locked");
     // Force re-render by updating hash with timestamp then back to diary
-    location.hash = "diary?t=" + Date.now();
+    go("diary?t=" + Date.now());
   }});
 
   const btnChangePin = btn("Change PIN",{kind:"ghost", onclick: async ()=>{
@@ -3756,7 +3763,7 @@ async function viewDiary(settings){
         const title = (e.title||"").trim() || "(untitled)";
         const date = niceDay(e.dateKey);
         const preview = (e.content||"").trim().slice(0,140);
-        return el("button",{class:"listitem", onclick: ()=>{ location.hash = "diary/" + e.id; }},[
+        return el("button",{class:"listitem", onclick: ()=>{ go("diary/" + e.id); }},[
           el("div",{class:"li-top"},[
             el("div",{class:"li-title"},[document.createTextNode(title)]),
             el("div",{class:"li-meta"},[document.createTextNode(date)]),
@@ -3783,7 +3790,7 @@ async function viewDiaryEntry(settings, id){
   if(settings.diaryPinHash && !diaryIsUnlocked()){
     const body = el("div",{class:"stack"},[
       el("div",{class:"muted"},[document.createTextNode("Diary is locked. Unlock it from the Diary page.")]),
-      btn("Back to Diary",{kind:"ghost", onclick: ()=>{ location.hash = "diary"; }})
+      btn("Back to Diary",{kind:"ghost", onclick: ()=>{ go("diary"); }})
     ]);
     return el("div",{class:"stack"},[header, card("Locked", "", body)]);
   }
@@ -3796,7 +3803,7 @@ async function viewDiaryEntry(settings, id){
       header, 
       card("Not Found", "", el("div",{class:"stack"},[
         el("div",{class:"muted"},[document.createTextNode("Entry not found. It may have been deleted.")]),
-        btn("Back to Diary",{kind:"ghost", onclick: ()=>{ location.hash = "diary"; }})
+        btn("Back to Diary",{kind:"ghost", onclick: ()=>{ go("diary"); }})
       ]))
     ]);
   }
@@ -3806,7 +3813,7 @@ async function viewDiaryEntry(settings, id){
   const content = el("textarea",{class:"textarea", placeholder:"Write your poem or reflection...", rows:"14"});
   content.value = entry.content || "";
 
-  const btnBack = btn("Back",{kind:"ghost", onclick: ()=>{ location.hash = "diary"; }});
+  const btnBack = btn("Back",{kind:"ghost", onclick: ()=>{ go("diary"); }});
   const btnSave = btn("Save",{onclick: async ()=>{
     entry.dateKey = date.value || entry.dateKey;
     entry.title = title.value || "";
@@ -3820,7 +3827,7 @@ async function viewDiaryEntry(settings, id){
     if(!ok) return;
     await del("diaryEntries", entry.id);
     toast("Deleted");
-    location.hash = "diary?t=" + Date.now();
+    go("diary?t=" + Date.now());
   }});
 
   const actionRow = el("div",{class:"row"},[btnBack, btnSave, btnDelete]);
@@ -3898,7 +3905,7 @@ async function viewPartnerSchedule(settings) {
       header,
       card("Not connected", "", el("div",{class:"stack"},[
         el("div",{class:"muted"},[document.createTextNode("You haven't connected to a partner yet. Set it up in Settings, under Partner Sync.")]),
-        el("div",{class:"row"},[btn("Go to Settings",{onclick:()=>{ location.hash = "settings"; }})])
+        el("div",{class:"row"},[btn("Go to Settings",{onclick:()=>{ go("settings"); }})])
       ]))
     ]);
   }

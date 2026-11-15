@@ -121,6 +121,12 @@ Added the kinds of data the first pass lacked (monthly goals, 24 check-ins, cont
 - A sideways swipe on the cover opens the book, as well as a tap.
 - Checked with simulated touches in Chrome at 440 wide, not on the phone.
 
+## Edge swipe fix (15 Nov, thirteenth release)
+
+- Seen in a screen recording: dragging from the screen edge triggered the iPhone's own back/forward gesture, sliding the whole app (tabs included) sideways and sometimes showing a blank navy screen, then the planner's page turn fired as well.
+- Every page change now goes through `go()` in app.js, which uses `location.replace` so no history builds up and the system gesture has nothing to act on. Do not set `location.hash` directly.
+- Not yet confirmed on the phone.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
