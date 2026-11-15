@@ -45,7 +45,7 @@ First screenshots from an iPhone 17 Pro Max showed two problems: everything draw
 - Third release confirmed on the phone: full height, no band.
 - The interface is now drawn at 88% (`html{ zoom }` in `styles.css`, and `DENSITY` in the `index.html` script; keep the two equal) with slightly smaller headings and buttons, after feedback that it looked too big.
 - Calendar: `calendar.js` parses iCloud public calendar links (.ics) including repeating events. Events show read-only in the Schedule on Today, all-day events above it. Links and the relay address are entered in Settings, Apple Calendar. Refreshes every 30 minutes while open and keeps the last copy for offline.
-- The relay is a Cloudflare Worker in `cloudflare/calendar-relay` (`npx wrangler deploy` from that folder). It only fetches iCloud published calendars and only answers the planner's site. Once deployed, put its address in `CAL_RELAY_DEFAULT` in `app.js` so it is prefilled.
+- The relay is a Cloudflare Worker in `cloudflare/calendar-relay` (`npx wrangler login` once, then `npx wrangler deploy` from that folder). It only fetches iCloud published calendars and only answers the planner's site. Once deployed, put its address in `CAL_RELAY_DEFAULT` in `app.js` so it is prefilled.
 
 ## Known limits
 
