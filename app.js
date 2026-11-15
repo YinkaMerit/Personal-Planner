@@ -737,6 +737,20 @@ function closeBook(){
 }
 
 document.querySelector("#bookCover .cover-cloth").addEventListener("click", openBook);
+// A sideways swipe on the cover opens it too
+let coverSwipe = null;
+bookCover.addEventListener("touchstart", (e)=>{
+  const t = e.touches[0];
+  coverSwipe = e.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null;
+}, { passive:true });
+bookCover.addEventListener("touchend", (e)=>{
+  if (!coverSwipe) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - coverSwipe.x;
+  const dy = t.clientY - coverSwipe.y;
+  coverSwipe = null;
+  if (Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy) * 2) openBook();
+}, { passive:true });
 document.getElementById("btnCloseBook").addEventListener("click", ()=>{ closeDrawer(); closeBook(); });
 paintCover();
 ensureSettings().then(s=>paintCover(s.userName)).catch(()=>{});
@@ -834,14 +848,17 @@ function getPrevPage(currentKey) {
   return PAGE_ORDER[idx - 1];
 }
 
+// Turning past either end of the book shuts it, like running out of pages
 function goNextPage() {
   const next = getNextPage(currentRouteKey);
   if (next) location.hash = next;
+  else if (getPageIndex(currentRouteKey) === PAGE_ORDER.length - 1 && !isNavigating) closeBook();
 }
 
 function goPrevPage() {
   const prev = getPrevPage(currentRouteKey);
   if (prev) location.hash = prev;
+  else if (getPageIndex(currentRouteKey) === 0 && !isNavigating) closeBook();
 }
 
 // Page turn length comes from --flip in styles.css (0 when the phone asks for reduced motion)

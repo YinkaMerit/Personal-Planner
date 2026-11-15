@@ -115,6 +115,12 @@ Added the kinds of data the first pass lacked (monthly goals, 24 check-ins, cont
 - Goals: the extra "Completed" line under ticked goals is removed (the strike-through already says it).
 - Small consistency fixes: the body stats Add button matches the others, check-in rows show just the date.
 
+## Swipe to close and open (15 Nov, twelfth release)
+
+- Swiping back from the first page (Today) or forward from the last page (Settings) closes the book. Arrow keys do the same.
+- A sideways swipe on the cover opens the book, as well as a tap.
+- Checked with simulated touches in Chrome at 440 wide, not on the phone.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
