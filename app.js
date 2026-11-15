@@ -53,6 +53,11 @@ function setSelectedDate(date) {
   selectedDate = date instanceof Date ? date : new Date(String(date).length === 10 ? date + "T00:00:00" : date);
   // Update the date picker in the header if it exists
   document.querySelectorAll(".date-stepper .date-input").forEach(p => { p.value = dayKey(selectedDate); });
+  applyBirthdayTheme();
+}
+
+function applyBirthdayTheme() {
+  document.documentElement.classList.toggle("birthday", dayKey(selectedDate).slice(5) === BIRTHDAY_MD);
 }
 
 function getSelectedDayKey() {
@@ -1190,6 +1195,17 @@ function calendarSettingsCard(){
   ]));
 }
 
+/* ---------- Birthday garland ---------- */
+// Drawn roses on a swag, shown across the top of the Today page on the birthday
+const ROSE_GARLAND = (()=>{
+  const rose = (id, fill, light, line)=>`<g id="${id}"><circle r="12" fill="${fill}"/><path d="M-9 4a10 10 0 0 0 18 0" fill="none" stroke="${light}" stroke-width="1.4" stroke-linecap="round"/><path d="M-7 0a7 7 0 0 1 14 0" fill="none" stroke="${line}" stroke-width="1.3" stroke-linecap="round"/><path d="M-4 1.5a4.2 4.2 0 0 1 8-1.6a3 3 0 0 1-5 2.6" fill="none" stroke="${line}" stroke-width="1.3" stroke-linecap="round"/></g>`;
+  const leaves = [[30,30,60],[62,50,-150],[100,62,40],[146,68,-160],[216,68,-20],[262,62,140],[300,50,-30],[332,30,120]]
+    .map(([x,y,r])=>`<use href="#bdLeaf" transform="translate(${x} ${y}) rotate(${r})"/>`).join("");
+  const roses = [[16,18,.9,0],[48,40,1.1,1],[84,56,.85,0],[124,66,1,1],[160,71,.8,0],[181,72,1.25,1],[203,71,.8,0],[238,66,1,1],[278,56,.85,0],[314,40,1.1,1],[346,18,.9,0]]
+    .map(([x,y,k,deep])=>`<use href="#${deep ? "bdRose" : "bdRoseLight"}" transform="translate(${x} ${y}) scale(${k})"/>`).join("");
+  return `<svg aria-hidden="true" viewBox="0 0 362 92"><defs>${rose("bdRose","#e86a9f","#f7a8c6","#b0306a")}${rose("bdRoseLight","#f7a8c6","#ffd6e4","#d63384")}<path id="bdLeaf" d="M0 0c7-7 16-7 21 0c-5 7-14 7-21 0z" fill="#8fbf9f"/></defs><path d="M-4 6C70 70 292 70 366 6" fill="none" stroke="#8fbf9f" stroke-width="2"/>${leaves}${roses}</svg>`;
+})();
+
 /* ---------- Dashboard ---------- */
 async function viewDashboard(settings){
   const selectedDay = getSelectedDayKey();
@@ -1215,10 +1231,16 @@ async function viewDashboard(settings){
   const selectedDateObj = getSelectedDate();
   const isBirthday = dayKey(selectedDateObj).slice(5) === BIRTHDAY_MD;
 
-  const header = el("div",{class: isBirthday ? "dashboard-header birthday-header" : "dashboard-header"},[
-    el("div",{class:"h1"},[document.createTextNode(isBirthday ? "Happy Birthday My Love 🎂💕" : selectedDateObj.toLocaleDateString("en-GB",{ weekday:"long" }))]),
-    dateStepper()
-  ]);
+  const header = isBirthday
+    ? el("div",{class:"dashboard-header birthday-header"},[
+        el("div",{html: ROSE_GARLAND}),
+        el("div",{class:"h1"},[document.createTextNode("Happy Birthday,"), el("br"), document.createTextNode("my love")]),
+        dateStepper()
+      ])
+    : el("div",{class:"dashboard-header"},[
+        el("div",{class:"h1"},[document.createTextNode(selectedDateObj.toLocaleDateString("en-GB",{ weekday:"long" }))]),
+        dateStepper()
+      ]);
 
   const v = verseOfDay(selectedDay);
   const verseCard = card("Verse of the Day", "", el("div",{},[
@@ -1272,7 +1294,7 @@ async function viewDashboard(settings){
       ])
     : el("div",{class:"stack"},[verseCard, song, tasksCard, schedCard, overdueCard, reviewCard, myVerseCard].filter(Boolean));
 
-  return el("div",{class: isBirthday ? "stack dashboard-root birthday-mode" : "stack dashboard-root"},[header, body]);
+  return el("div",{class:"stack dashboard-root"},[header, body]);
 }
 
 function overdueList(items){
@@ -4155,4 +4177,5 @@ function prettyDateRange(start, end){
 }
 
 // First render, once everything above is defined
+applyBirthdayTheme();
 navigate(route(), true).then(refreshCalendarIfStale);

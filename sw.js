@@ -1,5 +1,5 @@
 // Bump this when the app files change so phones pick up the new version
-const CACHE_NAME = "tees-planner-v2-20261115g";
+const CACHE_NAME = "tees-planner-v2-20261115h";
 const ASSETS = [
   "./",
   "./index.html",

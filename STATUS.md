@@ -68,6 +68,10 @@ From a frame-by-frame look at a screen recording on the phone:
 - Tabs: the open tab only changed after the turn had finished. It now changes on the tap, stands 6pt taller than the others, and animates.
 - Sheets (add and edit forms): cloth header with a foil italic title, ruled paper body, small-caps labels, matching corners. Sheets and the contents drawer slide in.
 
+## Birthday theme (15 Nov, seventh release)
+
+On 24 January (or whenever that date is being viewed) the whole book turns rose pink: `html.birthday` in `styles.css` swaps the colour variables, and the Today page gets a rose garland header (`ROSE_GARLAND` in `app.js`). Chosen from three mockups ("Rose garden"). The old emoji-based birthday styles were removed; they clashed with the new design and hid the song title.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
