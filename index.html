@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tee's Planner">
@@ -17,6 +17,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./styles.css">
+<script>
+// Home-screen (standalone) sizing on iPhone.
+// 1. iOS reports a viewport that stops short of the bottom of the screen, leaving a dead band,
+//    so the full height is worked out from the screen size instead.
+// 2. If the page is being shown zoomed out (text looks small), scale it back to real size.
+(function(){
+  var root = document.documentElement;
+  function fit(){
+    var standalone = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    if (!standalone || !window.screen) return;
+    var portrait = window.innerHeight >= window.innerWidth;
+    var shortSide = Math.min(screen.width, screen.height), longSide = Math.max(screen.width, screen.height);
+    var screenW = portrait ? shortSide : longSide, screenH = portrait ? longSide : shortSide;
+    var ratio = window.innerWidth / screenW;           // CSS px per screen point; 1 when not zoomed
+    var zoomed = ratio > 1.05 && ratio < 2;
+    root.style.zoom = zoomed ? String(ratio) : "";
+    root.classList.toggle("narrow", zoomed && screenW < 560);
+    root.style.setProperty("--app-h", Math.round(zoomed ? screenH : screenH * ratio) + "px");
+  }
+  fit();
+  window.addEventListener("resize", fit);
+  window.addEventListener("orientationchange", function(){ setTimeout(fit, 250); });
+})();
+</script>
 </head>
 <body>
 <div class="app">

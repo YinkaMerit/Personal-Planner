@@ -909,3 +909,7 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 
 /* Section cards repeat their purpose in the row under the title, so the description line is dropped there */
 .card.fill > .card-h .d, .yearlyCard > .card-h .d, .quarterlyCard > .card-h .d{ display: none; }
+
+/* Standalone iPhone: --app-h is set from the real screen height in index.html (see the note there) */
+.app, #bookCover, .drawer, .modal-backdrop{ height: var(--app-h, auto); }
+.narrow .brand{ display: none; }

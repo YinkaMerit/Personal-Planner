@@ -3802,12 +3802,20 @@ async function viewSettings(settings){
     ])
   ]));
 
+  // Sizing details, handy when something looks the wrong size on a phone
+  const standalone = navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+  const aboutCard = card("About this device", "", el("div",{class:"muted small"},[document.createTextNode(
+    `Window ${window.innerWidth} x ${window.innerHeight}, screen ${screen.width} x ${screen.height}, ` +
+    `${standalone ? "home screen app" : "browser"}, zoom ${document.documentElement.style.zoom || "none"}`
+  )]));
+
   return el("div",{class:"stack"},[
     header,
     card("Preferences", "", prefs),
     syncCard,
     backupCard,
-    musicCard
+    musicCard,
+    aboutCard
   ]);
 }
 

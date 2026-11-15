@@ -36,6 +36,10 @@ Fixes
 - Home-screen icon is a real PNG. The service worker now picks up new versions and caches every file needed offline.
 - Removed the Spotify code: the sign-in could never complete and nothing used it.
 
+## iPhone sizing (15 Nov, second release)
+
+First screenshots from an iPhone 17 Pro Max showed two problems: everything drawn at about 75% size, and an empty navy band along the bottom. `index.html` now has a small script in the head that, for the home-screen app only, works out the real screen height and scales the page back up if it is being shown zoomed out. The viewport also no longer allows zooming. Settings has an "About this device" line with the measured sizes for diagnosing this. Not yet confirmed on the phone.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.
