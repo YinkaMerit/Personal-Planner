@@ -432,7 +432,9 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 .item .actions{ flex: 0 0 auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .item .qRight{ flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .item.compact{ padding: 8px 0; }
-.leftRow{ display: flex; align-items: flex-start; gap: 10px; }
+.leftRow{ display: flex; align-items: center; gap: 10px; }
+.leftRow input[type="checkbox"]{ margin: 0; }
+.leftRow ~ .m, .leftRow ~ .muted{ margin-left: 30px; }
 .doneTitle{ text-decoration: line-through; color: var(--muted); }
 
 /* Rows that open on tap (app.js enhanceRows): the whole row is the target, with a chevron as the cue */
@@ -503,6 +505,20 @@ input[type="checkbox"]{ width: 20px; height: 20px; accent-color: var(--navy); fl
 .exerciseGroup{ border-top: 1px solid var(--rule); padding-top: 8px; margin-top: 8px; }
 .exerciseHeader{ display: flex; align-items: baseline; justify-content: space-between; }
 .exerciseHeader .h{ font-family: var(--serif); font-size: 16px; }
+
+.show-more{
+  width: 100%;
+  min-height: 40px;
+  margin-top: 2px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 /* Workout sheet: weight, reps and Add on one line; logged sets as tappable rows */
 .set-entry{ display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; gap: 8px; align-items: end; }

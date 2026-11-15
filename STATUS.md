@@ -95,6 +95,16 @@ The Wellness page could already store sets, but each one took several taps throu
 - The workout list shows exercises, sets and total kg lifted. A new Personal bests card lists the heaviest set per exercise.
 - Stored data is unchanged (`workouts`, `workoutSets`), so old backups still load.
 
+## Holding up with lots of data (15 Nov, tenth release)
+
+Loaded the bulk test data (`generate-test-data.js`: 313 tasks, 187 transactions, 15 contacts, 44 workouts and so on) and went through each page at iPhone size. Nothing overflowed sideways, but lists ran on for many screens and some rows were noisy. Changes:
+
+- Any list longer than 7 rows shows its first 5 with "Show all N" (`collapseLongLists` in `app.js`); opened lists stay open while the app is open.
+- Contact rows show only the name and reminder; "Overdue" appears when it applies. The reminder is now a field in the contact sheet instead of a button on every row.
+- Quarterly goal rows have one retrospective button ("Write retro" or "Retro done") instead of a badge plus a button.
+- Money is written with thousands separators (£2,643.00). Dates in prayer, sermon, body stat and diary lists read "15 Nov 2026" instead of 2026-11-15.
+- Fixed the word "null" appearing under a spending category with no budget: `el()` now skips empty children.
+
 ## Known limits
 
 - Tested in desktop Chrome at iPhone size. Still to check on a real iPhone: the icon, sound with the silent switch on, swipe feel, and the cover animation speed.

@@ -460,7 +460,7 @@ function el(tag, attrs={}, children=[]){
     else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
     else n.setAttribute(k, v);
   }
-  for (const c of children) n.append(c);
+  for (const c of children) if (c != null && c !== false) n.append(c);
   return n;
 }
 function btn(text, opts={}){
@@ -498,6 +498,14 @@ function setFieldError(node, msg){
   if(!node) return;
   node.textContent = msg || "";
   if(msg) node.classList.remove("hidden"); else node.classList.add("hidden");
+}
+// £1,234.50
+function money(n){
+  return "£" + Number(n || 0).toLocaleString("en-GB",{ minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+// "2026-11-15" -> "15 Nov 2026"
+function niceDay(key){
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(key || "")) ? formatShort(new Date(key + "T00:00:00")) : String(key || "");
 }
 function pillarName(k){ return PILLARS.find(p=>p.key===k)?.name ?? k; }
 function badge(text, kind=""){ return el("span",{class:`badge ${kind}`.trim()},[document.createTextNode(text)]); }
@@ -776,8 +784,34 @@ function enhanceRows(root){
   });
 }
 
+// Long lists show their first few rows with a "Show all" control, so a page with months of
+// entries stays short. Which lists are open is remembered while the app stays open.
+const LIST_LIMIT = 5;
+const expandedLists = new Set();
+function collapseLongLists(root, routeKey){
+  root.querySelectorAll(".list, .diaryList").forEach((list, i)=>{
+    const rows = [...list.children].filter(c => c.matches(".item, .task, .listitem"));
+    if (rows.length <= LIST_LIMIT + 2) return;
+    const key = `${routeKey}:${i}`;
+    const extra = rows.slice(LIST_LIMIT);
+    const toggle = el("button",{class:"show-more"});
+    const paint = ()=>{
+      const open = expandedLists.has(key);
+      extra.forEach(r => { r.hidden = !open; });
+      toggle.textContent = open ? "Show fewer" : `Show all ${rows.length}`;
+    };
+    toggle.addEventListener("click", ()=>{
+      if (expandedLists.has(key)) expandedLists.delete(key); else expandedLists.add(key);
+      paint();
+    });
+    list.append(toggle);
+    paint();
+  });
+}
+
 function wrapPage(contentNode, routeKey){
   enhanceRows(contentNode);
+  collapseLongLists(contentNode, routeKey);
   const kids = [contentNode];
   const idx = PAGE_ORDER.indexOf(routeKey);
   if (idx >= 0) kids.push(el("div",{class:"page-foot"},[document.createTextNode(`page ${idx + 1}`)]));
@@ -1944,9 +1978,8 @@ function quarterlyList(items, yearly, retroByQ){
           (q.isComplete ? el("div",{class:"muted small"},[document.createTextNode("Completed")]) : el("span"))
         ]),
         el("div",{class:"qRight"},[
-          badge(hasRetro ? "Retro done" : "Retro missing", hasRetro ? "good" : "warn"),
           el("div",{class:"actions"},[
-            btn("Retro",{kind:"ghost", onclick: ()=>openRetroModal(q, retroByQ.get(q.id)||null)}),
+            btn(hasRetro ? "Retro done" : "Write retro",{kind: hasRetro ? "good" : "ghost", onclick: ()=>openRetroModal(q, retroByQ.get(q.id)||null)}),
             btn("Edit",{kind:"ghost", onclick: ()=>openQuarterlyModal(yearly, q)}),
             btn("Delete",{kind:"danger", onclick: async ()=>{
               if(!(await confirmDelete())) return;
@@ -2210,18 +2243,17 @@ function contactsList(contacts, ruleByContact, overdueSet){
   for (const c of contacts){
     const r = ruleByContact.get(c.id);
     const days = Number(r?.desiredEveryDays || 0);
-    const status = overdueSet.has(c.id) ? badge("Overdue","bad") : badge("OK","good");
+    const status = overdueSet.has(c.id) ? badge("Overdue","bad") : null;
 
     list.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{},[
           el("div",{class:"h"},[document.createTextNode(c.name)]),
-          el("div",{class:"m"},[document.createTextNode(days ? `Contact every ${days} day${days > 1 ? 's' : ''}` : "No reminder set")])
+          el("div",{class:"m"},[document.createTextNode(days ? `Get in touch every ${days} day${days > 1 ? 's' : ''}` : "No reminder")])
         ]),
         el("div",{class:"actions"},[
           status,
-          btn("Edit",{kind:"ghost", onclick: ()=>openContactModal(c)}),
-          btn("Reminder",{kind:"ghost", onclick: ()=>openRuleModal(c, r || null)}),
+          btn("Edit",{kind:"ghost", onclick: ()=>openContactModal(c, r || null)}),
           btn("Delete",{kind:"danger", onclick: async ()=>{
             if(!(await confirmDelete(c.name))) return;
             // Take the reminder and logged check-ins with the contact so nothing is left pointing at them
@@ -2263,8 +2295,9 @@ function touchpointsList(items, contacts, selectedMonth){
   return list;
 }
 
-function openContactModal(existing=null){
+function openContactModal(existing=null, rule=null){
   const isEdit = !!existing;
+  const every = el("input",{class:"input", type:"number", inputmode:"numeric", min:"1", max:"365", placeholder:"e.g., 7", value: rule?.desiredEveryDays || ""});
   const name = el("input",{class:"input", placeholder:"Name", value: existing?.name || ""});
   const errName = mkFieldError();
   const tags = el("input",{class:"input", placeholder:"Comma separated (optional)", value: (existing?.tags || []).join(", ")});
@@ -2272,6 +2305,7 @@ function openContactModal(existing=null){
 
   const body = el("div",{class:"stack"},[
     rowLabel("Name", name, errName),
+    rowLabel("Remind me to get in touch every (days, optional)", every),
     rowLabel("Tags", tags),
     rowLabel("Notes", notes)
   ]);
@@ -2281,14 +2315,22 @@ function openContactModal(existing=null){
     btn("Save",{onclick: async ()=>{
       setFieldError(errName,"");
       if (!name.value.trim()){ setFieldError(errName,"Name is required"); return; }
+      const contactId = existing?.id || uuid();
       await put("contacts", {
-        id: existing?.id || uuid(),
+        id: contactId,
         createdAt: existing?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         name: name.value.trim(),
         tags: tags.value.split(",").map(s=>s.trim()).filter(Boolean),
         notes: notes.value.trim()
       });
+      // The reminder is saved with the contact: a number sets it, an empty box removes it
+      const days = Number(every.value || 0);
+      if (days > 0){
+        await put("contactRules", { id: rule?.id || uuid(), createdAt: rule?.createdAt || new Date().toISOString(), contactId, desiredEveryDays: clamp(days, 1, 365) });
+      } else if (rule){
+        await del("contactRules", rule.id);
+      }
       modal.close();
       await navigate(route(), true);
     }})
@@ -2406,7 +2448,7 @@ async function viewFinance(){
 
   const header = el("div",{},[
     el("div",{class:"h1"},[document.createTextNode("My Money")]),
-    el("div",{class:"subtle"},[document.createTextNode(`£${spent.toFixed(2)} spent${income ? ` • £${income.toFixed(2)} income` : ""}`)]),
+    el("div",{class:"subtle"},[document.createTextNode(`${money(spent)} spent${income ? ` • ${money(income)} income` : ""}`)]),
     monthNav
   ]);
 
@@ -2456,8 +2498,8 @@ function budgetVsActual(budget, monthTx, selectedMonth){
   // Overview section (stays fixed)
   const overview = el("div",{class:"stack", style:"margin-bottom:8px;"},[
     el("div",{class:"row spread"},[
-      badge(totalBudget ? `Budget £${totalBudget.toFixed(2)}` : "No total budget", totalBudget ? "" : "warn"),
-      badge(`Actual £${totalTx.toFixed(2)}`, "")
+      badge(totalBudget ? `Budget ${money(totalBudget)}` : "No total budget", totalBudget ? "" : "warn"),
+      badge(`Actual ${money(totalTx)}`, "")
     ])
   ]);
 
@@ -2467,7 +2509,7 @@ function budgetVsActual(budget, monthTx, selectedMonth){
     p.firstChild.style.width = `${clamp(pct, 0, 100)}%`;
     p.firstChild.style.background = pct > 100 ? "rgba(210,90,90,0.8)" : pct > 80 ? "rgba(230,180,80,0.8)" : "rgba(80,180,120,0.8)";
     overview.append(p);
-    overview.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: £${rem.toFixed(2)} (${(100-pct).toFixed(0)}%)`)]));
+    overview.append(el("div",{class:"muted small"},[document.createTextNode(`Remaining: ${money(rem)} (${(100-pct).toFixed(0)}%)`)]));
   }
 
   // Categories section (will scroll)
@@ -2509,7 +2551,7 @@ function budgetVsActual(budget, monthTx, selectedMonth){
       el("div",{class:"top"},[
         el("div",{style:"flex:1;"},[
           el("div",{class:"h"},[document.createTextNode(c)]),
-          el("div",{class:"m"},[document.createTextNode(`Budget: ${b?`£${b.toFixed(2)}`:"not set"} • Spent: £${a.toFixed(2)}`)]),
+          el("div",{class:"m"},[document.createTextNode(`Budget: ${b?`${money(b)}`:"not set"} • Spent: ${money(a)}`)]),
           catProgress
         ]),
         el("div",{class:"actions", style:"flex-direction:column; gap:4px;"},[
@@ -2533,7 +2575,7 @@ function txList(items, selectedMonth){
     list.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{},[
-          el("div",{class:"h", style: t.direction==="income" ? "color:rgba(80,180,120,0.9);" : ""},[document.createTextNode(`${t.direction==="income"?"+":"-"}£${Number(t.amount||0).toFixed(2)}`)]),
+          el("div",{class:"h", style: t.direction==="income" ? "color:rgba(80,180,120,0.9);" : ""},[document.createTextNode(`${t.direction==="income"?"+":"-"}${money(Number(t.amount||0))}`)]),
           el("div",{class:"m"},[document.createTextNode(`${t.category || "General"} • ${formatDate(new Date(t.date))}`)])
         ]),
         el("div",{class:"actions"},[
@@ -2671,9 +2713,9 @@ async function openCategoryBudgetModal(categoryName, existingBudget, currentSpen
   
   const body = el("div",{class:"stack"},[
     el("div",{class:"muted small"},[document.createTextNode(`Category: "${categoryName}" • ${formatMonthYear(mk)}`)]),
-    el("div",{class:"muted small"},[document.createTextNode(`Current spend: £${currentSpend.toFixed(2)}`)]),
+    el("div",{class:"muted small"},[document.createTextNode(`Current spend: ${money(currentSpend)}`)]),
     rowLabel("Budget Amount (£)", budgetInput),
-    existingCatBudget ? el("div",{class:"muted small", style:"margin-top:8px;"},[document.createTextNode(`Current budget: £${existingCatBudget.toFixed(2)}`)]) : el("span")
+    existingCatBudget ? el("div",{class:"muted small", style:"margin-top:8px;"},[document.createTextNode(`Current budget: ${money(existingCatBudget)}`)]) : el("span")
   ]);
 
   const footer = el("div",{},[
@@ -3167,7 +3209,7 @@ function bioList(items, selectedMonth){
     list.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{},[
-          el("div",{class:"h"},[document.createTextNode(b.date)]),
+          el("div",{class:"h"},[document.createTextNode(niceDay(String(b.date).slice(0,10)))]),
           el("div",{class:"m"},[document.createTextNode(meta || "")])
         ]),
         el("div",{class:"actions"},[
@@ -3303,7 +3345,7 @@ function prayerList(items){
     return list;
   }
   for (const p of items.slice(0, 40)){
-    const meta = `Requested: ${p.dateRequested} • ${p.dateAnswered ? "Answered: "+p.dateAnswered : "Unanswered"}`;
+    const meta = `Asked ${niceDay(p.dateRequested)} • ${p.dateAnswered ? "Answered " + niceDay(p.dateAnswered) : "Not answered yet"}`;
     list.append(el("div",{class:"item"},[
       el("div",{class:"top"},[
         el("div",{},[
@@ -3373,7 +3415,7 @@ function sermonList(items){
       el("div",{class:"top"},[
         el("div",{},[
           el("div",{class:"h"},[document.createTextNode(s.title)]),
-          el("div",{class:"m"},[document.createTextNode(`${s.date} • ${s.application ? "Has application" : "No application"}`)])
+          el("div",{class:"m"},[document.createTextNode(`${niceDay(s.date)}${s.application ? " • Has application" : ""}`)])
         ]),
         el("div",{class:"actions"},[
           btn("Edit",{kind:"ghost", onclick: ()=>openSermonModal(s)}),
@@ -3433,7 +3475,7 @@ async function viewWeekly(settings, baseKey){
   ]);
   const stats = card("This week", "", el("div",{class:"stats"},[
     stat(`${tasksDone}/${weekTasks.length}`, "Tasks done"),
-    stat(`£${moneySpent.toFixed(2)}`, "Spent"),
+    stat(`${money(moneySpent)}`, "Spent"),
     stat(String(touchCount), "Check-ins with people"),
     stat(String(workoutCount), "Workouts"),
     stat(String(spiritualCount), "Prayers and sermon notes")
@@ -3496,7 +3538,7 @@ async function viewDay(settings, key){
     el("div",{class:"row", style:"gap:10px; flex-wrap:wrap;"},[
       badge(review ? ("Score " + (review.score||0)) : "No score"),
       badge(dayTasks.filter(t=>t.status==="done").length + "/" + dayTasks.length + " tasks done"),
-      badge("£" + spend.toFixed(2) + " spent"),
+      badge(money(spend) + " spent"),
       badge(dayTouch.length + " check-ins")
     ]),
     review ? el("div",{class:"muted"},[document.createTextNode(review.notes || "")]) : el("div",{class:"muted"},[document.createTextNode("No review saved for this day.")])
@@ -3518,11 +3560,11 @@ async function viewDay(settings, key){
 
   const moneyCard = card("Money", "", el("div",{class:"stack"},[
     el("div",{class:"row", style:"gap:10px; flex-wrap:wrap;"},[
-      badge("Spent £" + spend.toFixed(2)),
-      badge("In £" + income.toFixed(2))
+      badge("Spent " + money(spend)),
+      badge("In " + money(income))
     ]),
     ...(dayTx.length ? dayTx.map(t=>el("div",{class:"row", style:"justify-content:space-between;"},[
-      el("div",{},[document.createTextNode(`${t.direction==="expense" ? "Spent" : "In"} • £${Number(t.amount||0).toFixed(2)} • ${t.category || "Other"}`)]),
+      el("div",{},[document.createTextNode(`${t.direction==="expense" ? "Spent" : "In"} • ${money(Number(t.amount||0))} • ${t.category || "Other"}`)]),
       el("div",{class:"muted small"},[document.createTextNode((t.merchant||t.note||"").slice(0,50))])
     ])) : [el("div",{class:"muted"},[document.createTextNode("No spending saved for this day.")])])
   ]));
@@ -3671,7 +3713,7 @@ async function viewDiary(settings){
   const list = entries.length
     ? el("div",{class:"diaryList"}, entries.map(e=>{
         const title = (e.title||"").trim() || "(untitled)";
-        const date = e.dateKey || "";
+        const date = niceDay(e.dateKey);
         const preview = (e.content||"").trim().slice(0,140);
         return el("button",{class:"listitem", onclick: ()=>{ location.hash = "diary/" + e.id; }},[
           el("div",{class:"li-top"},[
